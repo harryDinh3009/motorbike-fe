@@ -1,0 +1,186 @@
+@charset "utf-8";
+
+/* region Start of table styling */
+table {
+	position: relative;
+	width: 100%;
+	text-align: center; font-size: 16px;
+	background-color: var(--white-color);
+	border-collapse: collapse;
+}
+table::before {
+	position: absolute; top: -1px;
+	content: "";
+	display: block;
+	width: 100%; height: 1px;
+	background-color: var(--black-color);
+}
+.ag-header-select-all {
+	margin: 0 !important;
+}
+.tbl_fixed {
+	table-layout: fixed;
+	word-break: break-all;
+}
+.tbl_col thead th {
+	padding: 8px 12px;
+	text-align: center; color: var(--tb-text--color);
+	font-weight: 500;
+	background-color: var(--tb-bg--color);
+	border-right: 1px solid var(--tb-boder--color1);
+	border-bottom: 1px solid var(--tb-boder--color2);
+}
+.tbl_col thead th:last-child {
+	border-right: none;
+}
+.tbl_col tbody tr > * {
+	padding: 8px 12px;
+	text-align: center; font-weight: 500;
+	border-right: 1px solid var(--tb-boder--color1);
+	border-bottom: 1px solid var(--tb-boder--color1);
+}
+.tbl_col tbody tr > *:last-child {
+	border-right: none;
+}
+.tbl_col tfoot th, .tbl_col tfoot td {
+	position: relative;
+	padding: 8px 12px;
+	text-align: center; font-weight: 500;
+	border-top: 1px solid var(--tb-text--color);
+	border-right: 1px solid var(--light-blue-gray);
+	border-bottom: 1px solid var(--tb-text--color);
+}
+.tbl_col tfoot th::before, .tbl_col tfoot td::before {
+	position: absolute; top: -1px; left: 0;
+	content: "";
+	display: inline-block;
+	width: 100%; height: 1px;
+	background-color: var(--tb-bg--color1);
+}
+.tbl_col tfoot *:last-child {
+	border-right: none;
+}
+
+table .icon_only {
+	vertical-align: sub;
+}
+
+table tr.disabled, table tr[disabled] {
+	background-color: var(--tb-bg--color);
+}
+
+.tbl_row tbody th {
+	padding: 8px 24px;
+	font-weight: 500; color: var(--tb-text--color);
+	background-color: var(--tb-bg--color);
+	border-bottom: 1px solid  var(--light-blue-gray);
+	font-size: 14px;
+}
+.tbl_row tbody td {
+	padding: 8px 24px;
+	font-weight: 500;
+	border-bottom: 1px solid  var(--light-blue-gray);
+}
+.tbl_row tfoot th, .tbl_row tfoot td {
+	padding: 8px 24px;
+}
+.tbl_hover tbody tr:hover {
+	background-color: rgba(237, 239, 242, 0.50);
+}
+.tbl_hover tbody tr.check {
+	background-color: #F1F7FB;
+}
+
+.td_input {
+	padding-top: 8px !important;
+	padding-bottom: 8px !important;
+}
+
+.scrollx_table {
+	width: 100%;
+	border-top: 1px solid var(--black-color);
+	overflow-x: auto;
+}
+.scrollx_table.lg table {
+	min-width: 1280px !important;
+}
+.scrollx_table.md table {
+	min-width: 1024px !important;
+}
+.scrollx_table.sm table {
+	min-width: 768px !important;
+}
+.scrollx_table.xs table {
+	min-width: 480px !important;
+}
+
+/* 이미지 & 테이블 */
+.img_table {
+	display: flex;
+	align-items: flex-start;
+}
+.img_table .mypage_img {
+	margin-bottom: 0 !important;
+}
+.img_table > div:nth-child(2) {
+	margin-left: 50px;
+	width: 100%;
+}
+
+/*custom*/
+tr > td.active {
+	color: var(--primary);
+	cursor: pointer;
+}
+.tbl_col tbody tr > * {
+	text-align: left;
+}
+/* endregion */
+
+/* region Start of datePicker styling */
+.datepicker_container {
+	position: relative;
+	width: 100%;
+}
+.datepicker-wrapper {
+	margin-top: 4px;
+	position: absolute;
+	z-index: 998;
+	opacity: 1;
+	overflow-y: auto;
+	max-height: 80vh;
+	border: 1px solid var(--gray);
+	border-radius: 4px;
+}
+.v-date-picker-header{
+	background-color: #0a7a46 !important;
+}
+.v-picker-title{
+	display: none;
+}
+.v-picker.v-sheet{
+	max-width: 320px !important;
+}
+.overlay_datepicker {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+.bottom-left {
+	left: 0;
+}
+
+.bottom-right {
+	right: 0;
+}
+.reveser_date {
+	top:-465px !important;
+}
+input.datepick {
+	padding-right: 35px;
+	background-image: url(../images/icon_calendar.svg);
+	background-position: right 10px top 49%;
+}
+/* endregion */

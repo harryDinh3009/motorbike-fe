@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", // Specify ECMAScript target version
+    "module": "ESNext", // Specify module code generation
+    "moduleResolution": "node", // Use Node.js module resolution
+    "composite": true, // Enable project references
+    "types": ["node"], // Include Node.js types
+    "strict": true // Enable all strict type-checking options
+  },
+  "include": [
+    "vite.config.*", // Include Vite config files
+    "vitest.config.*", // Include Vitest config files
+    "cypress.config.*", // Include Cypress config files
+    "nightwatch.conf.*", // Include Nightwatch config files
+    "playwright.config.*" // Include Playwright config files
+  ]
+}

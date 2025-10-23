@@ -1,0 +1,103 @@
+@charset "utf-8";
+
+/* 교육과정개발개편 상단 */
+.curridev_top .radio_tab_wrap{
+    margin-bottom: 24px;
+}
+
+.majorDerive_step ul{
+    position: relative;
+    display: flex;
+}
+
+.majorDerive_step li {
+    text-align: center;
+    flex:1;
+    position: relative;
+}
+
+.majorDerive_step li:not(:last-child) a:before{
+    position: absolute;
+    top: 19px;
+    left: 100%;
+    width: 100%;
+    content: '';
+    height: 2px;
+    border: 1px dashed rgba(137, 141, 156, 0.5);
+    transform: translateX(-50%);
+}
+
+.majorDerive_step li strong{
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    width: 39px; height: 39px; line-height: 36px;
+    color: #FB5757; font-size: 1.5rem; font-weight: 600;
+    background: var(--white);
+    border: 1px solid var(--light2);
+    border-radius: 50%;
+}
+
+.majorDerive_step li p{
+    display: block;
+    margin-top: 16px;
+    color: var(--dark1); font-size: 1.4rem; font-weight: 500; line-height: 2.4rem;
+    max-width: 86%;
+    word-wrap: break-word;
+    text-align: center;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.majorDerive_step li.on strong{
+    color: var(--white);
+    background: #FB5757;
+    border: 1px solid #FB5757
+}
+
+.majorDerive_step li.on p{
+    color: #FB5757; font-weight: 600;
+}
+
+
+/* 전공능력후보군 도출 */
+.curridev_box{
+    padding: 30px 38px;
+    background: var(--white);
+    border-radius: 1.4rem;
+    box-shadow: var(--shadow);
+}
+
+.curridev_box .tbl {
+    border-bottom: 1px solid var(--dark3);
+}
+
+.curridev_box .tbl table thead th{
+    background: rgba(214, 219, 226, 0.16);
+}
+
+.curridev_box .tbl table tbody td textarea{
+    margin: 0 auto;
+}
+
+.curridev_box .tbl table tbody td .select_row.md{
+    margin: 0 auto;
+}
+
+.curridev_box .tbl table tbody td.td_left{
+    padding-left: 28px;
+    text-align: left;
+}
+
+.curridev_box .tbl table tbody td .check_row{
+    width: 100%;
+}
+
+.curridev_box .guidetext{
+    margin-top: 16px;
+    color: var(--dark3); font-size: 1.4rem; font-weight: 500; line-height: 2.8rem;
+}
+
+.curridev_bottom .btn_area{
+    margin-top: 32px;
+}

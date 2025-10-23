@@ -1,0 +1,468 @@
+@charset "utf-8";
+
+/*unicode-range: U+0041-005A, U+0061-007A; - 영어 대문자, 소문자 */
+/* ================= 폰트 로드 ================= */
+@font-face {
+	font-family: 'NotoSansKR';
+	font-style: normal;
+	font-weight: 200;
+	src: url('../../fonts/NotoSansKR-Light.woff2') format('font-woff2'),
+		url('../../fonts/NotoSansKR-Light.woff') format('woff'),
+		url('../../fonts/NotoSansKR-Light.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'NotoSansKR';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../../fonts/NotoSansKR-Regular.woff2') format('font-woff2'),
+		url('../../fonts/NotoSansKR-Regular.woff') format('woff'),
+		url('../../fonts/NotoSansKR-Regular.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'NotoSansKR';
+	font-style: normal;
+	font-weight: 500;
+	src: url('../../fonts/NotoSansKR-Medium.woff2') format('font-woff2'),
+		url('../../fonts/NotoSansKR-Medium.woff') format('woff'),
+		url('../../fonts/NotoSansKR-Medium.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'NotoSansKR';
+	font-style: normal;
+	font-weight: 600;
+	src: url('../../fonts/NotoSansKR-Bold.woff2') format('font-woff2'),
+	url('../../fonts/NotoSansKR-Bold.woff') format('woff'),
+	url('../../fonts/NotoSansKR-Bold.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'NotoSansKR';
+	font-style: normal;
+	font-weight: 900;
+	src: url('../../fonts/NotoSansKR-Black.woff2') format('font-woff2'),
+	url('../../fonts/NotoSansKR-Black.woff') format('woff'),
+	url('../../fonts/NotoSansKR-Black.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 200;
+	src: url('../../fonts/Roboto-Light.woff2') format('font-woff2'),
+	url('../../fonts/Roboto-Light.woff') format('woff'),
+	url('../../fonts/Roboto-Light.ttf') format('truetype');
+	/* unicode-range: U+0041-005A, U+0061-007A; */
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../../fonts/Roboto-Regular.woff2') format('font-woff2'),
+	url('../../fonts/Roboto-Regular.woff') format('woff'),
+	url('../../fonts/Roboto-Regular.ttf') format('truetype');
+	/* unicode-range: U+0041-005A, U+0061-007A; */
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 500;
+	src: url('../../fonts/Roboto-Medium.woff2') format('font-woff2'),
+	url('../../fonts/Roboto-Medium.woff') format('woff'),
+	url('../../fonts/Roboto-Medium.ttf') format('truetype');
+	/* unicode-range: U+0041-005A, U+0061-007A; */
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 600;
+	src: url('../../fonts/Roboto-Bold.woff2') format('font-woff2'),
+	url('../../fonts/Roboto-Bold.woff') format('woff'),
+	url('../../fonts/Roboto-Bold.ttf') format('truetype');
+	/* unicode-range: U+0041-005A, U+0061-007A; */
+}
+
+/* ================= 기본 스타일 정의 및 초기화 ================= */
+
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+
+		/* 이미지 렌더링 - 사이즈 수정시 뚜렷하게 표시 */
+		image-rendering: -moz-crisp-edges;         /* Firefox */
+		image-rendering:   -o-crisp-edges;         /* Opera */
+		image-rendering: -webkit-optimize-contrast;/* Webkit (non-standard naming) */
+		image-rendering: crisp-edges;
+		-ms-interpolation-mode: nearest-neighbor;  /* IE (non-standard property) */
+}
+
+*,*:before,*:after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -o-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;  /* 스크롤바의 너비 */
+    height: 10px;  /* 스크롤바의 높이 */
+}
+body::-webkit-scrollbar {
+	width: 10px;  /* 스크롤바의 너비 */
+	height: 10px;  /* 스크롤바의 높이 */
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(88,93,114, 0.3); /* 스크롤바의 색상 */
+		background-clip : padding-box;
+    border: 2px solid transparent;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+}
+*::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0);  /*스크롤바 뒷 배경 색상*/
+}
+
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video, a {
+	font-family: "NotoSansKR", "Arial", sans-serif;
+	line-height: 2rem;
+	letter-spacing: -0.03em;
+	font-weight: normal;
+	font-style: normal;
+	vertical-align: middle;
+	background: transparent;
+	border: 0;
+	outline: 0;
+}
+
+html {
+	height: 100%;
+	font-size: 62.5%;
+	/* iOS와 IE에서 기기 회전시에 사용자가 확대하지 않아도 글씨 크기가 재조정되는 것을 방지 */
+	-ms-text-size-adjust: 100%;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	width: 100%; height: 100%;
+	color: var(--dark1); font-size: 1.4rem;
+	background-color: #F4F5FA;
+	overflow: hidden;
+	/* 웹폰트 사용시 폰트 부드럽게 랜더링 하기 */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+
+	/* 아이폰x 상단 safe-area 대응 */
+	padding-top: constant(safe-area-inset-top); /* iOS 11.0 */
+	padding-top: env(safe-area-inset-top); /* iOS 11.2 */
+}
+
+/* IE8/9에서 정의되지 않은 HTML5 요소를 'block'으로 지정, IE10/11, Firefox에서 정의되지 않은 `detail`, `summary` 를 `block`으로 지정, IE11에서 정의되지 않은 `main`을 `block`으로 지정 */
+article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
+	display: block;
+}
+
+/* main, section 아웃라인 제거 */
+main, section {
+	outline: none;
+}
+main:focus, section:focus {
+	outline: none;
+}
+
+/* IE8/9에서 `inline-block`으로 정의되지 않은 것을 올바르게 지정, Chrome, Firefox, Opera에서 `progress`의 세로 정렬을 표준화 */
+audio, canvas, progress, video {
+	display: inline-block;
+	vertical-align: baseline;
+}
+
+/* [hidden] 속성의 스타일이 IE 8/9/10에서 존재하지 않는 것을 해결. * IE 8/9/10/11, Safari, Firefox < 22 에서 `template` 요소를 숨김 */
+audio, canvas, progress, video {
+	display: inline-block;
+	vertical-align: baseline;
+}
+
+[hidden], template {
+	display: none;
+}
+
+a {
+	font-weight: inherit; font-family: inherit;
+	color: inherit;
+	text-decoration: none;
+	background-color: transparent; /* IE10에서 활성화(active)된 링크의 회색 배경을 제거 */
+	outline: 0;
+}
+a:link {
+	text-decoration: none;
+}
+a:focus {
+	text-decoration: none;
+	/* 모바일에서 outline 제거 */
+	outline: none;
+	-webkit-tap_highlight-color: rgba(0,0,0,0);
+}
+/* active/hover 상태일때에도 포커스된 요소의 가독성을 향상 */
+a:active,
+a:hover {
+	text-decoration: none;
+	outline: 0;
+}
+
+span{
+	font-size: inherit;
+	color: inherit; vertical-align: 0;
+}
+
+/* IE 8/9/10/11, Safari, Chrome에서 스타일 통일 */
+abbr[title] {
+	border-bottom: none; /* Chrome 57 에서 bnorder 스타일 제거 */
+	text-decoration: underline;
+	text-decoration: underline dotted;
+}
+
+/* Firefox 4+, Safari, Chrome에서 `bolder`로 설정되어 있는 것을 수정 */
+b, strong {
+	font-weight: normal;
+}
+
+/* Safari, Chrome에서 존재하지 않는 스타일을 부여 */
+dfn {
+	font-style: italic;
+}
+
+/* IE 8/9에서 존재하지 않는 스타일을 부여 */
+mark {
+	background: #ff9;
+}
+
+/* 브라우저마다 다른 글꼴 크기를 통일 */
+small {
+	font-size: 80%;
+}
+
+/* `sub`과 `sup`요소가 모든 브라우저에서 `line-height`에 영향을 미치는 것을 예방 */
+sub, sup {
+	position: relative;
+	font-size: 75%;
+	line-height: 0;
+	vertical-align: baseline;
+}
+sup {
+	top: -0.5em;
+}
+sub {
+	bottom: -0.25em;
+}
+
+/* Fiorefox에서 스타일 수정, Edge/IE overflow 수정 */
+hr {
+	margin: 1em 0;
+	height: 0;
+	border-top: 1px solid #dddddd;
+	box-sizing: content-box;
+	overflow: visible;
+}
+
+/* NotosansKR 폰트 사용시 IE에서 네모박스로 나타나는 오류 제거 */
+br {
+	font-family: 'Arial', sans-serif !important;
+}
+
+/* IE 8/9/10에서 `a` 요소안에 이미지가 위치할 경우 생기는 테두리 제거 */
+img {
+	vertical-align: middle;
+	border: 0;
+}
+
+/* IE 9/10/11에서 `svg` 요소가 영역의 크기를 벗어나지 않도록 수정 */
+svg:not(:root) {
+	overflow: hidden;
+}
+
+button {
+	cursor: pointer; letter-spacing: -0.05em;
+	background: transparent;
+}
+
+/* 폰트관련 속성 통일 및 상속되지 않는 문제 해결, Firefox 4+, Safari, Chrome 에서 margin이 서로 다른것 초기화 */
+button, input, optgroup, select, textarea {
+	margin: 0;
+	font-family: NotoSansKR, 'Arial', sans-serif;
+	outline: 0;
+
+}
+
+/* IE 8/9/10/11, Edge에서 overflow 속성값이 'hidden'인것을 수정 */
+button, input {
+	overflow: visible;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+	-webkit-box-shadow: 0 0 0px 1000px var(--white) inset;
+	box-shadow: 0 0 0px 1000px var(--white) inset;
+}
+
+/* `button`과 `select` 요소에 `text-transform` 상속이 일치하지 않는 것을 해결 * 모든 다른 폼 컨트롤 요소는 `text-transform` 값을 상속하지 않는다. * IE 8/9/10/11, Firefox, Opera에서 `button` 요소의 스타일 상속 수정. * Firefox에서 `select` 요소의 스타일 상속 수정 */
+button, select {
+	/* 1 */
+	text-transform: none;
+}
+
+/* 1. Android 4.0.*에서 `audio`와 `video` 컨트롤을 파괴하는 웹킷 버그를 방지, 2. iOS에서 클릭가능한 `input` 유형에 스타일링을 할 수 없는 것을 수정 */
+button,
+[type="button"], /* 1 */
+[type="reset"],
+[type="submit"] {
+	border: 0;
+	box-shadow: none;
+	-webkit-appearance: button;
+	-moz-appearance: button;
+
+}
+
+/* disabled된 요소의 기본 커서를 재설정 */
+button[disabled],
+html input[disabled] {
+	cursor: default;
+	border: 1px solid saddlebrown !important;
+}
+
+/* Firefox 4+에서 내부 `padding`과 `border`를 제거 */
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
+	padding: 0;
+	border-style: none;
+}
+
+/* Restore the focus styles unset by the previous rule */
+button:-moz-focusring,
+[type="button"]:-moz-focusring,
+[type="reset"]:-moz-focusring,
+[type="submit"]:-moz-focusring {
+	outline: 1px dotted ButtonText;
+}
+
+/* Correct the cursor style of increment and decrement buttons in Chrome */
+[type="number"]::-webkit-inner-spin-button,
+[type="number"]::-webkit-outer-spin-button {
+	margin: 0;
+	height: auto;
+	-webkit-appearance: none;
+	appearance: none;
+}
+
+/* 1. Correct the odd appearance in Chrome and Safari, 2. Correct the outline style in Safari */
+[type="search"] {
+	-webkit-appearance: textfield;
+	/* 1 */
+	outline-offset: -2px;
+	/* 2 */
+}
+
+/* MAC OS X의 Safari, Chrome에서 내부(inner) `padding`과 검색 취소 버튼을 제거, Safari (but not Chrome) clips the cancel button when the search input has, padding (and `textfield` appearance) */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+	-webkit-appearance: none;
+}
+
+/* 1. Correct the inability to style clickable types in iOS and Safari, 2. Change font properties to `inherit` in Safari */
+::-webkit-file-upload-button {
+	-webkit-appearance: button;
+	/* 1 */
+	font: inherit;
+	/* 2 */
+}
+
+/* 스타일 초기화 */
+input[type="text"], button, textarea, select {
+	box-shadow: 0;
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+	border-radius: 0;
+}
+input[type="text"]::-ms-clear{
+	display: none;
+}
+input[type="image"] {
+	border: 0;
+}
+
+/* Correct the padding in Firefox */
+fieldset {
+	padding: 0.35em 0.75em 0.625em;
+}
+
+legend {
+	display: none;
+}
+
+/* IE 8/9/10/11에서 기본 세로 스크롤바를 제거 및 리사이즈 불가 */
+textarea {
+	display: block; /* chrome에서 자동 아래여래 생기는거 방지 */
+	overflow: auto;
+	resize: none;
+}
+
+/* 입력란 활성화시 아웃라인 제거 */
+input:focus {
+	outline: none;
+}
+textarea:focus {
+	outline: none;
+}
+
+/* Add the correct vertical alignment in Chrome, Firefox, and Opera */
+progress {
+	vertical-align: baseline;
+}
+
+/* 1. Add the correct box sizing in IE 10, 2. Remove the padding in IE 10 */
+[type="checkbox"],
+[type="radio"] {
+	box-sizing: border-box;
+	/* 1 */
+	padding: 0;
+	/* 2 */
+}
+
+/* 테이블 요소 사이의 간격을 제거 */
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	border: 0;
+}
+td, th {
+	padding: 0;
+	vertical-align: middle;
+	text-align: left;
+}
+caption {
+	display: none;
+}
+
+/* 리스트 스타일 제거 */
+ol, ul, li {
+	list-style: none;
+}
+
+/* @media screen and (max-width: 768px) {
+	html{
+		font-size: 58.333%;
+	}
+} */

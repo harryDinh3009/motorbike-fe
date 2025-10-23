@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <g id="btn_ico_addclass_delete" transform="translate(14 -2.216)">
+    <g id="그룹_204370" data-name="그룹 204370" transform="translate(-17)">
+      <g id="delete" transform="translate(18.728 5.216) rotate(45)">
+        <path id="선_29" data-name="선 29" d="M.5,18h-1V0h1Z" transform="translate(9)" fill="#fff"/>
+        <path id="선_30" data-name="선 30" d="M.5,18h-1V0h1Z" transform="translate(18 9) rotate(90)" fill="#fff"/>
+      </g>
+      <rect id="사각형_113819" data-name="사각형 113819" width="32" height="32" transform="translate(3 2.216)" fill="none"/>
+    </g>
+  </g>
+</svg>

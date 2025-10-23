@@ -1,0 +1,20 @@
+@charset "utf-8";
+
+
+/* 교육과정 인증제 승인 관리 */
+.certisys_box{
+  padding: 60px 74px 20px;
+  background: var(--white);
+  border-radius: 1.4rem;
+  box-shadow: var(--shadow);
+}
+
+
+/* 교육과정 인증제 심사 */
+
+.certisys_eval .major_info{
+  padding: 40px 50px;
+  background: var(--white);
+  border-radius: 1.4rem;
+  box-shadow: var(--shadow);
+}

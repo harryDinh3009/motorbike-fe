@@ -1,0 +1,312 @@
+@charset "utf-8";
+.tbl table input::placeholder {
+	color: var(--light2) !important;
+}
+.tbl table input:-moz-input-placeholder {
+	color: var(--light2) !important;
+}
+.tbl table input:-ms-placeholder {
+	color: var(--light2) !important;
+}
+.tbl table input:-ms-input-placeholder {
+	color: var(--light2) !important;
+}
+
+.tbl table textarea::placeholder {
+	color: var(--light2) !important;
+}
+.tbl table textarea:-moz-input-placeholder {
+	color: var(--light2) !important;
+}
+.tbl table textarea:-ms-placeholder {
+	color: var(--light2) !important;
+}
+.tbl table textarea:-ms-input-placeholder {
+	color: var(--light2) !important;
+}
+
+.tbl table input:disabled::placeholder {
+	color: var(--light3) !important;
+}
+.tbl table input:-moz-input-placeholder {
+	color: var(--light3) !important;
+}
+.tbl table input:-ms-placeholder {
+	color: var(--light3) !important;
+}
+.tbl table input:-ms-input-placeholder {
+	color: var(--light3) !important;
+}
+
+.tbl {
+  position: relative;
+  /*border-top: 1px solid var(--dark1);*/
+}
+.tbl table {
+	width: 100%;
+	text-align: center; font-size: 1.6rem;
+	background-color: var(--white);
+	border-bottom: 1px solid var(--light1);
+}
+.tbl table thead th {
+	padding: 15px 6px;
+	color: var(--dark3); font-weight: 500; text-align: center; line-height: 2.4rem;
+	border-bottom: 1px solid var(--light3);
+}
+.tbl table tbody th, .tbl table tfoot th {
+	padding: 13px 6px;
+	text-align: center; font-weight: 500; line-height: 2.4rem;
+	border-bottom: 1px solid var(--light1);
+}
+.tbl table tbody td, .tbl table tfoot td {
+	padding: 13px 6px;
+	text-align: center;  line-height: 2.4rem; font-weight: 500; 
+	border-bottom: 1px solid var(--light1);
+}
+
+.tbl_col table tbody td.td_input, .tbl_col table tfoot td.td_input {
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+.tbl.last_border_bn table, .tbl.last_border_bn tbody tr:last-of-type td, .tbl.last_border_bn tbody tr:last-child th {
+	border-bottom: none;
+}
+
+/* 테이블 색상 */
+.tbl.tbl_color {
+	border-top: 1px solid var(--dark3);
+}
+.tbl.tbl_color table th{
+	background: #FFF5F2;
+} 
+
+/* 세로형 테이블 */
+/* .tbl_col table thead th {
+	padding: 15px;
+	font-weight: 500;
+} 
+.tbl_col table tbody td {
+	position: relative; 
+} */
+
+/* 가로형 테이블 */
+.tbl_row table {
+	/* font-size: 1.4rem; */
+	font-size: 1.6rem;
+}
+.tbl_row table tbody th {
+	/* padding: 16px; */
+	padding: 18px 24px;
+	text-align: left; color: #2c2c2c; font-weight: 500;
+	background: rgba(237,239,242, 0.4); 
+}
+.tbl_row table tbody td {
+	/* padding: 8px 30px; */
+	padding: 18px 0 18px 24px;
+	text-align: left; 
+}
+
+
+
+/* 반응형 가로 스크롤 */
+.scrollx_tbl_xs, .scrollx_tbl_sm, .scrollx_tbl_md, .scrollx_tbl_lg, .scrollx_tbl_xl, .scrollx_tbl_xxl {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.scrollx_tbl_xs > table {
+	min-width: 500px;
+}
+.scrollx_tbl_sm > table {
+	min-width: 600px;
+}
+.scrollx_tbl_md > table {
+	min-width: 800px;
+}
+.scrollx_tbl_lg > table {
+	min-width: 1000px;
+}
+.scrollx_tbl_xl > table {
+	min-width: 1200px;
+}
+.scrollx_tbl_xxl > table {
+	min-width: 1600px;
+}
+
+/* .scrollx_tbl_xs table[data-v-32683533] {
+	min-width: 500px;
+}
+.scrollx_tbl_sm table[data-v-32683533] {
+	min-width: 600px;
+}
+.scrollx_tbl_md table[data-v-32683533] {
+	min-width: 800px;
+}
+.scrollx_tbl_lg table[data-v-32683533] {
+	min-width: 1000px;
+}
+.scrollx_tbl_xl table[data-v-32683533] {
+	min-width: 1200px;
+}
+.scrollx_tbl_xxl table[data-v-32683533] {
+	min-width: 1600px;
+} */
+
+/* 테이블 input */
+.tbl table td .radio_row {
+	margin-right: 32px;
+}
+
+.tbl table td .info_wrap {
+	margin-top: 8px;
+}
+.tbl table td .info_wrap .info {
+	display: block;
+}
+.tbl table td .info {
+	display: inline-block;
+	font-size: 1.2rem; color: var(--dark3); line-height: 2rem; font-weight: 500;
+}
+
+.tbl table tbody input.form_style {
+	height: 36px;
+}
+.tbl table tbody .letter_count input {
+  padding: 8px 52px 8px 12px;
+}
+.tbl table tbody .letter_count_wrap input {
+	padding: 8px 12px;
+}
+
+.tbl .input_flex {
+	display: flex;
+	flex-wrap: wrap;
+}
+/* .tbl .input_flex .input_section {
+	flex: 1;
+} */
+.tbl .input_section {
+	display: inline-block; 
+	margin-right: 17px;
+	margin-top: 1px; margin-bottom: 1px;
+}
+.tbl .input_section:last-child {
+	margin-right: 0;
+}
+.tbl .input_section .radio_row {
+	margin-right: 16px;
+}
+.input_row {
+	display: inline-block;
+	margin-left: 0;
+}
+.input_start:has(+.input_row) {
+	display: inline-block;
+	margin-right: 16px;
+	font-weight: 500;
+}
+.input_row + .input_end {
+	display: inline-block;
+	margin-left: 16px;
+	font-weight: 500;
+}
+.input_tilde {
+	display: inline-block;
+	margin: 0 16px;
+}
+.input_txt {
+	display: inline-block;
+	margin-left: 12px;
+	font-weight: 500;
+	vertical-align: 0;
+}
+
+.tbl_row table tbody th.bg_th2 {
+	background-color: rgba(237, 239, 242, 0.3);
+}
+
+/* 테이블 search day */
+.input_section .search_day.form_style {
+	width: 160px; height: 36px;
+}
+.input_section .search_day .v-field__input {
+	padding-top: 0;
+	min-height: 36px;
+}
+
+/* select 테이블 */
+.tbl_check table tbody tr {
+	transition : 0.2s;
+}
+.tbl_check table tbody tr.on {
+	background-color: #F5FAFE !important;
+}
+.tbl_check table tbody tr:hover {
+	background-color: rgba(237,239,242, 0.5);
+}
+
+/* 바디만 스크롤 테이블 */ 
+.tbl_scroll {
+	margin-right: -10px;
+	border-top: none;
+}
+.tbl_scroll.tbl > table { 
+  width: calc(100% - 8.5px);
+	border-top: 1px solid var(--dark1);
+}
+.tbl_scroll_body {
+  max-height: 320px;
+  overflow-y: scroll;
+}
+.scrollx_tbl_xs .tbl_scroll_body {
+  min-width: 500px;
+}
+.scrollx_tbl_sm .tbl_scroll_body {
+  min-width: 600px;
+}
+.scrollx_tbl_md .tbl_scroll_body {
+  min-width: 800px;
+}
+.scrollx_tbl_lg .tbl_scroll_body {
+  min-width: 1000px;
+}
+.scrollx_tbl_xl .tbl_scroll_body {
+	min-width: 1216px;
+}
+.scrollx_tbl_xxl .tbl_scroll_body {
+	min-width: 1600px;
+}
+.tbl_scroll_body table {
+  min-width: auto;
+}
+
+
+/* table min-height */
+.tbl .table_minhg{
+	display: table;
+}
+.tbl .table_minhg span.dp_tablecell{
+	display: table-cell;
+	vertical-align: middle;
+	word-break: break-word;
+}
+
+@media screen and (max-width: 1280px) {
+	.tbl .input_flex {
+		display: block;
+	}
+	.tbl .input_flex .input_section {
+		margin-right: 35px; margin-bottom: 2px;
+	}
+	.tbl .input_flex .input_section.empty {
+		margin-right: 0;
+		width: 0;
+	}
+	.input_start:has(+.input_row) {
+		margin-right: 12px;
+	}
+	.input_row + .input_end {
+		margin-left: 10px;
+	}
+}
