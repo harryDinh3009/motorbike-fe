@@ -97,7 +97,7 @@ const contractListInit = [
 const ContractComponent = () => {
   const pageTitle = "Quản lý hợp đồng";
   const breadcrumbItems = [
-    { label: "Home", path: "/", icon: <HomeOutlined /> },
+    { label: "Dashboard", path: "/", icon: <HomeOutlined /> },
     { label: "Quản lý hợp đồng", path: "/contract" },
   ];
 

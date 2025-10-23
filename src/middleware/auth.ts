@@ -17,7 +17,7 @@ const authMiddleware = () => {
     }
 
     if (userInfo && location.pathname === SCREEN.login.path) {
-      navigate(SCREEN.home.path);
+      navigate(SCREEN.dashboard.path);
     }
   }, [navigate, location]);
 };

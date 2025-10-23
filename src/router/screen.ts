@@ -3,9 +3,9 @@ export const SCREEN = {
     path: "/login",
     name: "Login",
   },
-  home: {
+  dashboard: {
     path: "/",
-    name: "Home",
+    name: "Dashboard",
   },
   notFound: {
     path: "/not-found",
@@ -22,6 +22,10 @@ export const SCREEN = {
   contractMng: {
     path: "/contract",
     name: "Contract",
+  },
+  motorbikeModel: {
+    path: "/motorbike-model",
+    name: "MotorbikeModel",
   },
   motorbike: {
     path: "/motorbike",

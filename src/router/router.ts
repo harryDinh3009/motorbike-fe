@@ -30,8 +30,8 @@ export const routes: RouteType[] = [
     },
     children: [
       {
-        path: SCREEN.home.path,
-        name: SCREEN.home.name,
+        path: SCREEN.dashboard.path,
+        name: SCREEN.dashboard.name,
         component: getView("dashboard/index"),
       },
       {

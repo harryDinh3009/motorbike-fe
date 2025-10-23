@@ -62,7 +62,7 @@ interface UserType {
 const Template = () => {
   const pageTitle = "Template UI";
   const breadcrumbItems = [
-    { label: "Home", path: "/", icon: <HomeOutlined /> },
+    { label: "Dashboard", path: "/", icon: <HomeOutlined /> },
     { label: "User Profile", path: "/user", icon: <UserOutlined /> },
     { label: "Template", path: "/template" },
   ] as any;

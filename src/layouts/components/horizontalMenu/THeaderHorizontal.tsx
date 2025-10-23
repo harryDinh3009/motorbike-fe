@@ -25,12 +25,17 @@ const THeaderHorizontal = () => {
 
   const subMenus = [
     {
+      name: "Quản lý mẫu xe",
+      path: SCREEN.motorbikeModel?.path || "#",
+      subMenus: [],
+    },
+    {
       name: "Quản lý xe pháo",
       path: SCREEN.motorbike?.path || "#",
       subMenus: [],
     },
     {
-      name: "Quản lý hợp đồng",
+      name: "Hợp đồng thuê xe",
       path: SCREEN.contractMng.path,
       subMenus: [],
     },
