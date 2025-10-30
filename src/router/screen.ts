@@ -23,6 +23,14 @@ export const SCREEN = {
     path: "/contract",
     name: "Contract",
   },
+  contractCreate: {
+    path: "/contract/create",
+    name: "contractCreate",
+  },
+  contractDetail: {
+    path: "/contract/detail/:id",
+    name: "contractDetail",
+  },
   motorbikeModel: {
     path: "/motorbike-model",
     name: "MotorbikeModel",

@@ -39,6 +39,16 @@ export const routes: RouteType[] = [
         name: SCREEN.contractMng.name,
         component: getView("contract/index"),
       },
+      {
+        path: SCREEN.contractCreate.path,
+        name: SCREEN.contractCreate.name,
+        component: getView("contract/create"),
+      },
+      {
+        path: SCREEN.contractDetail.path,
+        name: SCREEN.contractDetail.name,
+        component: getView("contract/detail"),
+      },
     ],
   },
   {

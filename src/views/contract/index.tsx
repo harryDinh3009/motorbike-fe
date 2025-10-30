@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ModalSaveContract from "./modal/ModalSaveContract";
+import { useNavigate } from "react-router-dom";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import { HomeOutlined, CarOutlined } from "@ant-design/icons";
@@ -25,74 +25,211 @@ const statusList = [
   { value: "cancelled", label: "Đã hủy" },
 ];
 
+// Contract type definition
+interface InvoiceItem {
+  id: number;
+  desc: string;
+  amount: number;
+}
+
+interface Contract {
+  id: number;
+  code: string;
+  source: string;
+  customer: string;
+  car: string;
+  startDate: string;
+  endDate: string;
+  branchRent: string;
+  branchReturn: string;
+  total: number;
+  paid: number;
+  remain: number;
+  status: string;
+  extraFee: number;
+  invoice: InvoiceItem[];
+}
+
+// Dummy data mới cho hợp đồng
 const contractListInit = [
   {
     id: 1,
+    code: "HD001",
+    source: "Walk-in",
     customer: "Nguyễn Văn A",
-    car: "Toyota Camry",
-    startDate: "2025-10-20",
-    endDate: "2025-10-22",
-    pricePerDay: 500000,
+    car: "Vision 110 (33R4-00005)",
+    startDate: "01/10/2025",
+    endDate: "03/10/2025",
+    branchRent: "CN1",
+    branchReturn: "CN1",
+    total: 400000,
+    paid: 400000,
+    remain: 0,
+    status: "done",
     extraFee: 0,
-    status: "new",
-    total: 1000000,
-    invoice: [{ id: 1, desc: "Tiền thuê xe", amount: 1000000 }],
+    invoice: [],
   },
   {
     id: 2,
-    customer: "Trần Thị B",
-    car: "Honda CRV",
-    startDate: "2025-11-01",
-    endDate: "2025-11-05",
-    pricePerDay: 700000,
-    extraFee: 50000,
-    status: "renting",
-    total: 2950000,
-    invoice: [
-      { id: 1, desc: "Tiền thuê xe", amount: 2800000 },
-      { id: 2, desc: "Phụ phí", amount: 150000 },
-    ],
+    code: "HD002",
+    source: "Facebook",
+    customer: "Lê Thị B",
+    car: "Sirius (30Z3-22221); Wave RS (30H2-11110)",
+    startDate: "02/10/2025",
+    endDate: "04/10/2025",
+    branchRent: "CN1",
+    branchReturn: "CN2",
+    total: 750000,
+    paid: 500000,
+    remain: 250000,
+    status: "return",
+    extraFee: 0,
+    invoice: [],
   },
   {
     id: 3,
-    customer: "Lê Văn C",
-    car: "Kia Morning",
-    startDate: "2025-09-15",
-    endDate: "2025-09-18",
-    pricePerDay: 400000,
+    code: "HD003",
+    source: "Hotline",
+    customer: "Phạm Minh C",
+    car: "Air Blade (29B1-88888)",
+    startDate: "03/10/2025",
+    endDate: "05/10/2025",
+    branchRent: "CN3",
+    branchReturn: "CN3",
+    total: 500000,
+    paid: 0,
+    remain: 500000,
+    status: "done",
     extraFee: 0,
-    status: "finished",
-    total: 1200000,
-    invoice: [{ id: 1, desc: "Tiền thuê xe", amount: 1200000 }],
+    invoice: [],
   },
   {
     id: 4,
-    customer: "Nguyễn Văn A",
-    car: "Honda CRV",
-    startDate: "2025-08-10",
-    endDate: "2025-08-12",
-    pricePerDay: 700000,
-    extraFee: 100000,
-    status: "cancelled",
-    total: 1500000,
-    invoice: [
-      { id: 1, desc: "Tiền thuê xe", amount: 1400000 },
-      { id: 2, desc: "Phụ phí", amount: 100000 },
-    ],
+    code: "HD004",
+    source: "Hotline",
+    customer: "Trần Quốc D",
+    car: "SH Mode (59B2-23456)",
+    startDate: "04/10/2025",
+    endDate: "05/10/2025",
+    branchRent: "CN2",
+    branchReturn: "CN2",
+    total: 400000,
+    paid: 400000,
+    remain: 0,
+    status: "done",
+    extraFee: 0,
+    invoice: [],
   },
   {
     id: 5,
-    customer: "Trần Thị B",
-    car: "Toyota Camry",
-    startDate: "2025-12-01",
-    endDate: "2025-12-03",
-    pricePerDay: 500000,
+    code: "HD005",
+    source: "Walk-in",
+    customer: "Vũ Anh E",
+    car: "Wave Alpha (36A1-12345)",
+    startDate: "04/10/2025",
+    endDate: "05/10/2025",
+    branchRent: "CN3",
+    branchReturn: "CN3",
+    total: 200000,
+    paid: 0,
+    remain: 200000,
+    status: "renting",
     extraFee: 0,
-    status: "new",
-    total: 1000000,
-    invoice: [{ id: 1, desc: "Tiền thuê xe", amount: 1000000 }],
+    invoice: [],
+  },
+  {
+    id: 6,
+    code: "HD006",
+    source: "Facebook",
+    customer: "Nguyễn Thu F",
+    car: "Vision 110 (33R4-00006)",
+    startDate: "05/10/2025",
+    endDate: "07/10/2025",
+    branchRent: "CN1",
+    branchReturn: "CN1",
+    total: 400000,
+    paid: 200000,
+    remain: 200000,
+    status: "return",
+    extraFee: 0,
+    invoice: [],
+  },
+  {
+    id: 7,
+    code: "HD007",
+    source: "Hotline",
+    customer: "Lâm Hải G",
+    car: "Exciter 150 (59C2-77777)",
+    startDate: "05/10/2025",
+    endDate: "07/10/2025",
+    branchRent: "CN2",
+    branchReturn: "CN2",
+    total: 700000,
+    paid: 700000,
+    remain: 0,
+    status: "done",
+    extraFee: 0,
+    invoice: [],
+  },
+  {
+    id: 8,
+    code: "HD008",
+    source: "Zalo",
+    customer: "Đặng Thị H",
+    car: "Air Blade (29B1-88889)",
+    startDate: "06/10/2025",
+    endDate: "07/10/2025",
+    branchRent: "CN1",
+    branchReturn: "CN1",
+    total: 250000,
+    paid: 0,
+    remain: 250000,
+    status: "renting",
+    extraFee: 0,
+    invoice: [],
+  },
+  {
+    id: 9,
+    code: "HD009",
+    source: "Hotline",
+    customer: "Nguyễn Đức I",
+    car: "Lead 125 (30E1-09090); Vision (33R4-00009)",
+    startDate: "06/10/2025",
+    endDate: "07/10/2025",
+    branchRent: "CN3",
+    branchReturn: "CN3",
+    total: 700000,
+    paid: 700000,
+    remain: 0,
+    status: "done",
+    extraFee: 0,
+    invoice: [],
+  },
+  {
+    id: 10,
+    code: "HD010",
+    source: "Walk-in",
+    customer: "Phan Mỹ K",
+    car: "Wave Alpha (36B1-45678)",
+    startDate: "07/10/2025",
+    endDate: "08/10/2025",
+    branchRent: "CN3",
+    branchReturn: "CN3",
+    total: 200000,
+    paid: 0,
+    remain: 200000,
+    status: "cancelled",
+    extraFee: 0,
+    invoice: [],
   },
 ];
+
+const statusMap: Record<string, string> = {
+  done: "Hoàn thành",
+  return: "Đã trả xe",
+  renting: "Đã nhận xe",
+  cancelled: "Đã huỷ",
+};
 
 const ContractComponent = () => {
   const pageTitle = "Quản lý hợp đồng";
@@ -101,22 +238,13 @@ const ContractComponent = () => {
     { label: "Quản lý hợp đồng", path: "/contract" },
   ];
 
+  const navigate = useNavigate();
+
   // State filter
   const [filter, setFilter] = useState({ customer: "", car: "", status: "" });
   // State contract list
-  const [contractList, setContractList] = useState(contractListInit);
-  // State create contract
-  const [form, setForm] = useState({
-    customer: "",
-    car: "",
-    startDate: "",
-    endDate: "",
-    pricePerDay: 0,
-    extraFee: 0,
-  });
-  // Modal state
-  const [isOpenModal, setIsOpenModal] = useState(false);
-  const [editContract, setEditContract] = useState<any>(null);
+  const [contractList, setContractList] =
+    useState<Contract[]>(contractListInit);
 
   // Filter contracts
   const filteredContracts = contractList.filter((c) => {
@@ -129,91 +257,6 @@ const ContractComponent = () => {
       (!filter.status || c.status === filter.status)
     );
   });
-
-  // Tính tổng tiền thuê
-  const calcTotal = () => {
-    if (!form.startDate || !form.endDate || !form.pricePerDay) return 0;
-    const start = new Date(form.startDate);
-    const end = new Date(form.endDate);
-    const days = Math.max(
-      1,
-      Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-    );
-    return days * form.pricePerDay + (form.extraFee || 0);
-  };
-
-  // Mở modal thêm hợp đồng
-  const handleOpenAddContract = () => {
-    setEditContract(null);
-    setIsOpenModal(true);
-  };
-
-  // Mở modal chỉnh sửa hợp đồng
-  const handleOpenEditContract = (contract: any) => {
-    setEditContract(contract);
-    setIsOpenModal(true);
-  };
-
-  // Lưu hợp đồng (thêm hoặc sửa)
-  const handleSaveContract = (data: any) => {
-    if (editContract) {
-      // Sửa
-      setContractList((prev) =>
-        prev.map((c) => (c.id === editContract.id ? { ...c, ...data } : c))
-      );
-    } else {
-      // Thêm
-      const total = (() => {
-        if (!data.startDate || !data.endDate || !data.pricePerDay) return 0;
-        const start = new Date(data.startDate);
-        const end = new Date(data.endDate);
-        const days = Math.max(
-          1,
-          Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-        );
-        return days * data.pricePerDay + (data.extraFee || 0);
-      })();
-      const newContract = {
-        ...data,
-        id: contractList.length + 1,
-        customer:
-          customers.find((cu) => cu.value === data.customer)?.label || "",
-        car: cars.find((ca) => ca.value === data.car)?.label || "",
-        status: "new",
-        total,
-        invoice: [
-          { id: 1, desc: "Tiền thuê xe", amount: total - (data.extraFee || 0) },
-          ...(data.extraFee
-            ? [{ id: 2, desc: "Phụ phí", amount: data.extraFee }]
-            : []),
-        ],
-      };
-      setContractList([...contractList, newContract]);
-    }
-    setIsOpenModal(false);
-  };
-
-  // Thêm phụ phí cho hợp đồng
-  const handleAddExtraFee = (id: number) => {
-    const fee = prompt("Nhập số tiền phụ phí");
-    const feeNum = Number(fee);
-    if (!feeNum || feeNum <= 0) return;
-    setContractList((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              extraFee: (c.extraFee || 0) + feeNum,
-              total: (c.total || 0) + feeNum,
-              invoice: [
-                ...c.invoice,
-                { id: c.invoice.length + 1, desc: "Phụ phí", amount: feeNum },
-              ],
-            }
-          : c
-      )
-    );
-  };
 
   // Đổi trạng thái hợp đồng
   const handleChangeStatus = (id: number, newStatus: string) => {
@@ -312,123 +355,147 @@ const ContractComponent = () => {
               <ButtonBase
                 label="Thêm hợp đồng"
                 className="btn_primary"
-                onClick={handleOpenAddContract}
+                onClick={() => navigate("/contract/create")}
                 style={{ marginLeft: "auto" }}
               />
             </div>
             <TableBase
               data={filteredContracts}
               columns={[
-                { title: "ID", dataIndex: "id", key: "id", width: "6%" },
+                {
+                  title: "Mã hợp đồng",
+                  dataIndex: "code",
+                  key: "code",
+                  width: "7%",
+                },
+                {
+                  title: "Nguồn",
+                  dataIndex: "source",
+                  key: "source",
+                  width: "7%",
+                },
                 {
                   title: "Khách hàng",
                   dataIndex: "customer",
                   key: "customer",
-                  width: "12%",
+                  width: "10%",
                 },
-                { title: "Xe", dataIndex: "car", key: "car", width: "12%" },
+                {
+                  title: "Xe thuê",
+                  dataIndex: "car",
+                  key: "car",
+                  width: "13%",
+                },
                 {
                   title: "Ngày thuê",
                   dataIndex: "startDate",
                   key: "startDate",
-                  width: "10%",
+                  width: "8%",
                 },
                 {
                   title: "Ngày trả",
                   dataIndex: "endDate",
                   key: "endDate",
-                  width: "10%",
-                },
-                {
-                  title: "Giá/ngày",
-                  dataIndex: "pricePerDay",
-                  key: "pricePerDay",
-                  width: "10%",
-                  render: (val: number) => `${val.toLocaleString()}₫`,
-                },
-                {
-                  title: "Phụ phí",
-                  dataIndex: "extraFee",
-                  key: "extraFee",
                   width: "8%",
-                  render: (val: number) => `${val?.toLocaleString()}₫`,
+                },
+                {
+                  title: "Chi nhánh thuê",
+                  dataIndex: "branchRent",
+                  key: "branchRent",
+                  width: "7%",
+                },
+                {
+                  title: "Chi nhánh trả",
+                  dataIndex: "branchReturn",
+                  key: "branchReturn",
+                  width: "7%",
                 },
                 {
                   title: "Tổng tiền",
                   dataIndex: "total",
                   key: "total",
-                  width: "10%",
-                  render: (val: number) => `${val?.toLocaleString()}₫`,
+                  width: "8%",
+                  render: (val: number) => val.toLocaleString(),
+                },
+                {
+                  title: "Đã trả",
+                  dataIndex: "paid",
+                  key: "paid",
+                  width: "8%",
+                  render: (val: number) => val.toLocaleString(),
+                },
+                {
+                  title: "Còn lại",
+                  dataIndex: "remain",
+                  key: "remain",
+                  width: "8%",
+                  render: (val: number) => val.toLocaleString(),
                 },
                 {
                   title: "Trạng thái",
                   dataIndex: "status",
                   key: "status",
-                  width: "10%",
-                  render: (val: string, record: any) => (
-                    <SelectboxBase
-                      value={val}
-                      options={statusList}
-                      onChange={(newVal: string | string[]) =>
-                        handleChangeStatus(
-                          record.id,
-                          typeof newVal === "string" ? newVal : newVal[0] || ""
-                        )
-                      }
-                      disabled={record.status !== "new"}
-                    />
-                  ),
-                },
-                {
-                  title: "Invoice",
-                  dataIndex: "invoice",
-                  key: "invoice",
-                  width: "12%",
-                  render: (val: any[]) => (
-                    <ul className="font_13">
-                      {val.map((inv) => (
-                        <li key={inv.id}>
-                          {inv.desc}: {inv.amount.toLocaleString()}₫
-                        </li>
-                      ))}
-                    </ul>
+                  width: "8%",
+                  render: (val: string) => (
+                    <span className={`contract-status ${val}`}>
+                      {statusMap[val] || val}
+                    </span>
                   ),
                 },
                 {
                   title: "Thao tác",
                   key: "actions",
-                  width: "10%",
+                  width: "12%",
                   render: (_: any, record: any) => (
                     <div className="dp_flex btn_group">
                       <ButtonBase
-                        label="Chỉnh sửa"
+                        label="Xem"
                         className="btn_gray mg_r10"
-                        onClick={() => handleOpenEditContract(record)}
+                        onClick={() => {
+                          // Điều hướng sang trang chi tiết hợp đồng
+                          navigate(`/contract/detail/${record.id}`);
+                        }}
                       />
                       <ButtonBase
-                        label="Thêm phụ phí"
-                        className="btn_gray"
-                        disabled={record.status !== "new"}
-                        onClick={() => handleAddExtraFee(record.id)}
+                        label="In"
+                        className="btn_gray mg_r10"
+                        onClick={() => {
+                          /* handle print */
+                        }}
                       />
+                      {record.status !== "cancelled" && (
+                        <>
+                          <ButtonBase
+                            label="Chỉnh sửa"
+                            className="btn_gray mg_r10"
+                            onClick={() => {
+                              /* handle edit if needed */
+                            }}
+                          />
+                          <ButtonBase
+                            label="Hủy"
+                            className="btn_gray mg_r10"
+                            onClick={() => {
+                              /* handle cancel */
+                            }}
+                          />
+                          <ButtonBase
+                            label="Thanh toán"
+                            className="btn_gray"
+                            onClick={() => {
+                              /* handle payment */
+                            }}
+                          />
+                        </>
+                      )}
                     </div>
                   ),
                 },
               ]}
-              pageSize={5}
+              pageSize={10}
             />
           </div>
         </ContainerBase>
-
-        {/* Modal add/edit hợp đồng */}
-        <ModalSaveContract
-          open={isOpenModal}
-          onClose={() => setIsOpenModal(false)}
-          onSave={handleSaveContract}
-          contract={editContract}
-          customers={customers}
-          cars={cars}
-        />
       </div>
     </div>
   );
