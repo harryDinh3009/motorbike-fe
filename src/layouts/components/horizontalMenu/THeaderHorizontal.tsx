@@ -2,7 +2,13 @@ import Logo from "@/assets/images/common/images_vite_react.jpg";
 import { gnbOneDepth, headerStyle, mobileGnb } from "@/assets/js/common";
 import { SCREEN } from "@/router/screen";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+type MenuItem = {
+  name: string;
+  path: string;
+  subMenus?: MenuItem[];
+};
 
 const THeaderHorizontal = () => {
   const [userInfo, setUserInfo] = useState<{
@@ -23,10 +29,10 @@ const THeaderHorizontal = () => {
     gnbOneDepth();
   }, []);
 
-  const subMenus = [
+  const subMenus: MenuItem[] = [
     {
-      name: "Quản lý mẫu xe",
-      path: SCREEN.motorbikeModel?.path || "#",
+      name: "Trang chủ",
+      path: SCREEN.dashboard?.path || "#",
       subMenus: [],
     },
     {
@@ -39,7 +45,29 @@ const THeaderHorizontal = () => {
       path: SCREEN.contractMng.path,
       subMenus: [],
     },
+    {
+      name: "Quản lý phụ thu",
+      path: SCREEN.surcharge?.path || "#",
+      subMenus: [],
+    },
+    {
+      name: "Chi nhánh",
+      path: SCREEN.branch?.path || "#",
+      subMenus: [],
+    },
+    {
+      name: "Nhân viên",
+      path: SCREEN.employee?.path || "#",
+      subMenus: [],
+    },
+    {
+      name: "Khách hàng",
+      path: SCREEN.customer?.path || "#",
+      subMenus: [],
+    },
   ];
+
+  const navigate = useNavigate();
 
   return (
     <div className="header_wrap">
@@ -59,7 +87,13 @@ const THeaderHorizontal = () => {
               {userInfo.lastLoginDate && `[${userInfo.lastLoginDate}]`} [
               {currentDate}]
             </p>{" "}
-            <button type="button" className="btn_logout">
+            <button
+              type="button"
+              className="btn_logout"
+              onClick={() => {
+                navigate(SCREEN.login.path);
+              }}
+            >
               Đăng xuất
             </button>
           </div>

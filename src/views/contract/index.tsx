@@ -6,6 +6,8 @@ import { HomeOutlined, CarOutlined } from "@ant-design/icons";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
+import InputBase from "@/component/common/input/InputBase";
+import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 
 // Dummy data
 const customers = [
@@ -23,6 +25,17 @@ const statusList = [
   { value: "renting", label: "Đang thuê" },
   { value: "finished", label: "Đã kết thúc" },
   { value: "cancelled", label: "Đã hủy" },
+];
+
+const branchList = [
+  { value: "CN1", label: "Chi nhánh 1" },
+  { value: "CN2", label: "Chi nhánh 2" },
+  { value: "CN3", label: "Chi nhánh 3" },
+];
+
+const dateTypeList = [
+  { value: "startDate", label: "Ngày thuê" },
+  { value: "endDate", label: "Ngày trả" },
 ];
 
 // Contract type definition
@@ -241,7 +254,14 @@ const ContractComponent = () => {
   const navigate = useNavigate();
 
   // State filter
-  const [filter, setFilter] = useState({ customer: "", car: "", status: "" });
+  const [filter, setFilter] = useState({
+    search: "",
+    dateType: "startDate",
+    date: null as string | null,
+    branchRent: "",
+    branchReturn: "",
+    status: "",
+  });
   // State contract list
   const [contractList, setContractList] =
     useState<Contract[]>(contractListInit);
@@ -269,75 +289,89 @@ const ContractComponent = () => {
     <div className="content_wrap">
       <div id="content" className="grid_content">
         <BreadcrumbBase title={pageTitle} items={breadcrumbItems} />
-        {/* Bộ lọc hợp đồng - layout chuẩn Template Form Control Search */}
+
+        {/* Bộ lọc hợp đồng - layout theo ảnh mới */}
         <ContainerBase>
-          <div className="box_section">
-            <p className="box_title_sm">Bộ lọc hợp đồng</p>
-            <div className="box_section">
-              <div className="search_box col_3">
-                <ul>
-                  <li>
-                    <p className="ta_c">Khách hàng</p>
-                    <SelectboxBase
-                      value={filter.customer}
-                      options={[
-                        { value: "", label: "Khách hàng" },
-                        ...customers,
-                      ]}
-                      onChange={(val: string | string[]) =>
-                        setFilter({
-                          ...filter,
-                          customer:
-                            typeof val === "string" ? val : val[0] || "",
-                        })
-                      }
-                    />
-                  </li>
-                  <li>
-                    <p className="ta_c">Xe</p>
-                    <SelectboxBase
-                      value={filter.car}
-                      options={[{ value: "", label: "Xe" }, ...cars]}
-                      onChange={(val: string | string[]) =>
-                        setFilter({
-                          ...filter,
-                          car: typeof val === "string" ? val : val[0] || "",
-                        })
-                      }
-                    />
-                  </li>
-                  <li>
-                    <p className="ta_c">Trạng thái</p>
-                    <SelectboxBase
-                      value={filter.status}
-                      options={[
-                        { value: "", label: "Trạng thái" },
-                        ...statusList,
-                      ]}
-                      onChange={(val: string | string[]) =>
-                        setFilter({
-                          ...filter,
-                          status: typeof val === "string" ? val : val[0] || "",
-                        })
-                      }
-                    />
-                  </li>
-                </ul>
-                <div className="dp_flex btn_group btn_end">
-                  <ButtonBase
-                    label="Tìm kiếm"
-                    className="btn_primary icon_search"
-                    onClick={() => {}}
-                  />
-                  <ButtonBase
-                    label="Làm mới"
-                    className="btn_lightgray icon_reset"
-                    onClick={() =>
-                      setFilter({ customer: "", car: "", status: "" })
-                    }
-                  />
-                </div>
-              </div>
+          <div className="box_section" style={{ paddingBottom: 0 }}>
+            <div
+              className="dp_flex"
+              style={{
+                alignItems: "flex-end",
+                flexWrap: "wrap",
+                gap: 16,
+              }}
+            >
+              <InputBase
+                modelValue={filter.search}
+                placeholder="Tìm theo tên khách, SDT, số hợp đồng, biển số xe"
+                prefixIcon="search"
+                style={{ minWidth: 320, flex: 1 }}
+                onChange={(val) =>
+                  setFilter({ ...filter, search: val as string })
+                }
+              />
+              <SelectboxBase
+                value={filter.dateType}
+                options={dateTypeList}
+                style={{ minWidth: 120 }}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    dateType: typeof val === "string" ? val : val[0] || "",
+                  })
+                }
+              />
+              <DatePickerBase
+                value={filter.date}
+                placeholder="Chọn ngày"
+                style={{ minWidth: 140 }}
+                onChange={(val) =>
+                  setFilter({ ...filter, date: val as string })
+                }
+              />
+              <SelectboxBase
+                value={filter.branchRent}
+                options={[
+                  { value: "", label: "Chi nhánh thuê" },
+                  ...branchList,
+                ]}
+                style={{ minWidth: 140 }}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    branchRent: typeof val === "string" ? val : val[0] || "",
+                  })
+                }
+              />
+              <SelectboxBase
+                value={filter.branchReturn}
+                options={[{ value: "", label: "Chi nhánh trả" }, ...branchList]}
+                style={{ minWidth: 140 }}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    branchReturn: typeof val === "string" ? val : val[0] || "",
+                  })
+                }
+              />
+              <SelectboxBase
+                value={filter.status}
+                options={[{ value: "", label: "Trạng thái" }, ...statusList]}
+                style={{ minWidth: 120 }}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    status: typeof val === "string" ? val : val[0] || "",
+                  })
+                }
+              />
+              <ButtonBase
+                label="Xuất Excel"
+                className="btn_yellow"
+                icon={<CarOutlined />}
+                style={{ marginLeft: 8, minWidth: 120 }}
+                onClick={() => {}}
+              />
             </div>
           </div>
         </ContainerBase>

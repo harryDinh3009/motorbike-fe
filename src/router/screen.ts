@@ -31,12 +31,24 @@ export const SCREEN = {
     path: "/contract/detail/:id",
     name: "contractDetail",
   },
-  motorbikeModel: {
-    path: "/motorbike-model",
-    name: "MotorbikeModel",
-  },
   motorbike: {
     path: "/motorbike",
     name: "Motorbike",
+  },
+  branch: {
+    path: "/branch",
+    name: "Branch",
+  },
+  employee: {
+    path: "/employee",
+    name: "Employee",
+  },
+  customer: {
+    path: "/customer",
+    name: "Customer",
+  },
+  surcharge: {
+    path: "/surcharge",
+    name: "Surcharge",
   },
 };

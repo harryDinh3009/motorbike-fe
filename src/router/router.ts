@@ -49,6 +49,31 @@ export const routes: RouteType[] = [
         name: SCREEN.contractDetail.name,
         component: getView("contract/detail"),
       },
+      {
+        path: SCREEN.branch.path,
+        name: SCREEN.branch.name,
+        component: getView("branch/index"),
+      },
+      {
+        path: SCREEN.employee.path,
+        name: SCREEN.employee.name,
+        component: getView("employee/index"),
+      },
+      {
+        path: SCREEN.customer.path,
+        name: SCREEN.customer.name,
+        component: getView("customer/index"),
+      },
+      {
+        path: SCREEN.surcharge.path,
+        name: SCREEN.surcharge.name,
+        component: getView("surcharge/index"),
+      },
+      {
+        path: SCREEN.motorbike.path,
+        name: SCREEN.motorbike.name,
+        component: getView("motorbike/index"),
+      },
     ],
   },
   {
