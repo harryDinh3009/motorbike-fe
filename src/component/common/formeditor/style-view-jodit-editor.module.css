@@ -1,0 +1,11 @@
+.view_editor_jodit {
+  border: none !important;
+  margin-top: -10px;
+  border-radius: 10px;
+  min-height: 70px !important;
+  cursor: pointer;
+}
+
+.view_editor_jodit .jodit-status-bar .jodit-powered-by {
+  display: none !important;
+}

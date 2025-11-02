@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.app.json", // Extend the main app configuration
+  "exclude": [],
+  "compilerOptions": {
+    "composite": true, // Enable project references
+    "lib": ["DOM", "ESNext"], // Include necessary libraries for DOM and ESNext features
+    "types": ["node", "jsdom"] // Include types for Node.js and JSDOM
+  }
+}

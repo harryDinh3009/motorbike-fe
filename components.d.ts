@@ -1,0 +1,77 @@
+// src/global.d.ts
+declare module "react" {
+  interface GlobalComponents {
+    ActiveStatusGridComponent: React.FC;
+    AdminDashBoardChart: React.FC;
+    BarChart: React.FC;
+    BaseDatePicker: React.FC;
+    "BaseDatePicker.bak": React.FC;
+    BlockInput: React.FC;
+    Breadcrumb: React.FC;
+    BtnGridComponent: React.FC;
+    ButtonBase: React.FC;
+    ButtonGridComponent: React.FC;
+    ButtonHome: React.FC;
+    CheckboxBase: React.FC;
+    CheckboxGrid: React.FC;
+    ClientGuide: React.FC;
+    CollapseBase: React.FC;
+    ColumnChart: React.FC;
+    Currency: React.FC;
+    DatePickerComponent: React.FC;
+    DatePickerComponentV2: React.FC;
+    DonutChart: React.FC;
+    ExportFileExcel: React.FC;
+    GridComponent: React.FC;
+    GridComponentNotice: React.FC;
+    GridComponentV2: React.FC;
+    HelloWorld: React.FC;
+    IconBase: React.FC;
+    IconFb: React.FC;
+    IconIns: React.FC;
+    IconLeft: React.FC;
+    IconRight: React.FC;
+    IconSetting: React.FC;
+    IconYt: React.FC;
+    InputBase: React.FC;
+    InputBaseV2: React.FC;
+    InputDrawBase: React.FC;
+    InputFileBase: React.FC;
+    InputGridComponent: React.FC;
+    InputGroupBase: React.FC;
+    InputTextBase: React.FC;
+    LineChart: React.FC;
+    LinkGridComponent: React.FC;
+    LinkGridCustomComponent: React.FC;
+    ListCheckBoxBase: React.FC;
+    LoadingComponent: React.FC;
+    MonthDatePicker: React.FC;
+    MonthPickerComponent: React.FC;
+    PieChart: React.FC;
+    PopupView: React.FC;
+    RadiobuttonBase: React.FC;
+    ReadFileExcel: React.FC;
+    RouterLink: typeof import("react-router-dom")["Link"];
+    RouterView: React.FC; // Use a component for RouterView
+    SelectBoxBase: React.FC;
+    SelectBoxBaseCheckBox: React.FC;
+    SelectBoxBaseSearch: React.FC;
+    SelectComponent: React.FC;
+    SemiDonut: React.FC;
+    SweetAlert: React.FC;
+    TextArea: React.FC;
+    TextAreaBase: React.FC;
+    TheWelcome: React.FC;
+    TimeLineGridComponent: React.FC;
+    TModal: React.FC;
+    TModalConfirm: React.FC;
+    TModalModify: React.FC;
+    TModalQR: React.FC;
+    TModalSignConfirmation: React.FC;
+    VDateInput: React.FC;
+    VueSelect: React.FC;
+    VueSwiper: React.FC;
+    WelcomeItem: React.FC;
+    Wrapper: React.FC;
+  }
+}

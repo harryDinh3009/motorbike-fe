@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", // Specify ECMAScript target version
+    "module": "ESNext", // Specify module code generation
+    "jsx": "react-jsx", // Use the new JSX transform
+    "strict": true, // Enable all strict type-checking options
+    "baseUrl": ".", // Base directory to resolve non-relative module names
+    "paths": {
+      "@/*": ["src/*"] // Allow alias imports
+    },
+    "moduleResolution": "node", // Use Node.js module resolution strategy
+    "esModuleInterop": true, // Enables emit interoperability between CommonJS and ES Modules
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true // Ensure consistent file naming
+  },
+  "include": [
+    ".env.d.ts", // Include environment variable type definitions
+    "src/**/*" // Include all TypeScript files in the src directory
+  ],
+  "exclude": [
+    "node_modules", // Exclude node_modules
+    "build", // Exclude build output
+    "dist" // Exclude distribution files
+  ]
+}

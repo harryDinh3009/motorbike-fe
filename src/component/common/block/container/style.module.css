@@ -1,0 +1,19 @@
+.containerComponent {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0px 0px 20px 1px rgba(148, 148, 148, 0.3);
+  color: black; 
+}
+
+.containerComponent.dark-mode {
+  background-color: rgb(49, 49, 49) !important;
+  color: rgb(233, 233, 233) !important;
+}
+
+@media (max-width: 768px) {
+  .containerComponent {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    padding-bottom: 5px !important;
+  }
+}

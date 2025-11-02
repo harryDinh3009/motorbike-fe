@@ -1,0 +1,554 @@
+@charset "utf-8";
+
+/* 교육과정 진행 현황 */
+.dshb_edu .flex {
+  display: flex;
+  justify-content: space-between;
+  flex-flow: wrap;
+  row-gap: 20px;
+}
+
+.dshb_edu .chart {
+  position: relative;
+  padding: 32px;
+  width: 308px; height: 265px;
+  border-radius: 1.4rem;
+}
+
+.dshb_edu .chart::before {
+  position: absolute; bottom: 77px;
+  content: "";
+  width: calc(100% - 32px - 32px); height: 2px;
+  background: url(/src/assets/images/adminDashboard/border_dashed.png) no-repeat center bottom;
+}
+
+.dshb_edu .chart p {
+  margin-bottom: 25px;
+  color: var(--dark1);
+  font-size: 1.8rem; font-weight: 500;
+}
+
+.chart01 {
+  background: #ffebd1;
+}
+.chart02 {
+  background: #ceeefb;
+}
+.chart03 {
+  background: #e4f2cf;
+}
+.chart04 {
+  background: #f6dde0;
+}
+.chart05 {
+  background: #d8e7fe;
+}
+.chart06 {
+  background: #c6f1e7;
+}
+.chart07 {
+  background: #efe6ff;
+}
+.chart08 {
+  background: #ceeefb;
+}
+
+.dshb_edu .donut_chart .apexcharts-canvas circle {
+  pointer-events: none;
+}
+.dshb_edu .donutchart_tooltip span {
+  display: inline-block;
+  padding: 0 12px;
+  font-size: 12px; font-weight: 600; line-height: 3rem;
+}
+
+/* 핵심역량 진행 현황 */
+.dshb_core {
+  padding: 40px 40px 0;
+  background: var(--white);
+  border-radius: 1.4rem;
+  /* box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.06); */
+  box-shadow: var(--shadow);
+}
+
+.dshb_core .core_state {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.dshb_core .diag {
+  display: flex;
+  padding: 30px;
+  width: calc(50% - 20px);
+  height: 168px;
+  border: 1px solid #d6dbe2;
+  border-radius: 1.4rem;
+}
+
+.dshb_core .diag .diag_texts {
+  position: relative;
+  width: calc(100% - 334px);
+}
+
+.dshb_core .diag .diag_texts .school_year {
+  color: var(--dark3); font-size: 1.6rem; font-weight: 500; line-height: 2.4rem;
+  margin-bottom: 4px;
+}
+
+.dshb_core .diag .diag_texts .diag_text {
+  color: var(--dark1); font-size: 1.8rem; font-weight: 600; line-height: 2.4rem;
+}
+
+.dshb_core .diag .diag_texts .date {
+  position: absolute; bottom: 0; left: 0;
+  color: var(--dark3); font-size: 1.6rem; font-weight: 500;
+}
+
+.dshb_core .diag .diag_box {
+  display: flex;
+  padding: 0 10px;
+  width: 334px; height: 108px;
+  justify-content: center;
+  align-items: center;
+  background: #f7f8f9;
+  border-radius: 1.4rem;
+}
+
+.dshb_core .diag .diag_box p {
+  position: relative;
+  width: 105px;
+  color: var(--dark3); font-size: 1.6rem; font-weight: 500; line-height: 2.4rem; text-align: center;
+}
+
+.dshb_core .diag .diag_box p span {
+  display: block;
+  margin-top: 4px;
+  color: var(--dark1); font-size: 1.6rem; font-weight: 500; line-height: 2.4rem;
+}
+
+.dshb_core .diag .diag_box p:nth-child(2)::before {
+  position: absolute; top: 50%; left: 0;
+  content: "";
+  width: 1px; height: 45px;
+  background: #d6dbe2;
+  transform: translateY(-50%);
+}
+
+.dshb_core .diag .diag_box p:nth-child(2)::after {
+  position: absolute; top: 50%; right: 0;
+  content: "";
+  width: 1px; height: 45px;
+  background: #d6dbe2;
+  transform: translateY(-50%);
+}
+
+.core_chart {
+  display: flex;
+  justify-content: space-between;
+}
+.core_chart > div {
+  width: 47%;
+}
+.core_chart > div strong{
+  color: var(--dark1); font-size: 1.6rem; font-weight: 500;
+}
+.chart-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* 임시 */
+
+/* 교육과정 산출물 */
+.section_tit_wrap .sub_tit_sm{
+  margin-top: 9px;
+  color: var(--dark3); font-size: 1.6rem; line-height: 2.4rem;
+}
+
+.edu_output {
+  display: flex;
+  align-items: center;
+}
+.edu_output .section_tit_wrap {
+  position: relative;
+  margin: 0;
+  width: calc(100% - 1020px);
+}
+.edu_output .section_tit_wrap a{
+  margin-top: 70px;
+}
+.edu_output .output_list{
+  display: flex;
+  justify-content: space-between;
+  width: 1020px;
+}
+
+#selectboxYear {
+  background-color: var(--white-color) !important;
+}
+
+.edu_output .output_list a{
+  cursor: pointer;
+}
+
+.edu_output .output_list li{
+  position: relative;
+  padding: 85px 0;
+  width: 240px; height: 310px;
+  background: var(--white);
+  border-radius: 2.4rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.edu_output .output_list li > a >  p{
+  padding: 120px 0 0;
+  color: var(--dark3); font-size: 2rem; font-weight: 600; line-height: 2.6rem; text-align: center;
+  background-repeat: no-repeat; background-position: center top;
+}
+
+.edu_output .output_list li:nth-child(1) > a > p{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_icon01.png);
+}
+.edu_output .output_list li:nth-child(2) > a > p{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_icon02.png);
+}
+.edu_output .output_list li:nth-child(3) > a > p{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_icon03.png);
+}
+
+.edu_output .output_list li:nth-child(4) > a > p{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_icon04.png);
+}
+
+.edu_output .output_list li .hover{
+  position: absolute; top: 0; left: 0;
+  display: flex;
+  justify-content: center;
+  flex-flow: column;
+  width: 100%; height: 100%;
+  text-align: center;
+  background-repeat: no-repeat; background-position: center;
+  opacity: 0;
+  transition: all 0.3s;
+}
+.edu_output .output_list li .hover::before{
+  position: absolute; top: 0; left: 0;
+  content: '';
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.24);
+}
+
+.edu_output .output_list li:nth-child(1) .hover{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_bg01.png);
+}
+.edu_output .output_list li:nth-child(2) .hover{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_bg02.png);
+}
+.edu_output .output_list li:nth-child(3) .hover{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_bg03.png);
+}
+.edu_output .output_list li:nth-child(4) .hover{
+  background-image: url(/src/assets/images/adminDashboard/edu_output_bg04.png);
+}
+
+
+
+.edu_output .output_list li .hover strong{
+  z-index: 1;
+  color: var(--white); font-size: 2rem; font-weight: 600; line-height: 2.6rem;
+}
+.edu_output .output_list li .hover p{
+  z-index: 1;
+  margin-top: 20px;
+  color: var(--white); font-size: 1.4rem; line-height: 2.2rem;
+}
+
+.edu_output .output_list li:hover .hover{
+  opacity: 1;
+}
+
+
+/* 공지사항 */
+.dshb_notice{
+  padding: 90px 0;
+  background: rgba(214, 219, 226, 0.4);
+}
+
+.dshb_notice .flex{
+  display: flex;
+  justify-content: space-between;
+}
+
+.dshb_notice .section_tit_wrap{
+  margin: 0;
+}
+.dshb_notice .section_tit_wrap .radio_tab_wrap{
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
+  margin-top: 46px;
+}
+
+.dshb_notice .notice_list{
+  margin-right: 60px;
+  display: table;
+  width: 796px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.dshb_notice .notice_list li{
+  display: table-row-group;
+  font-size: 1.6rem;
+}
+
+.dshb_notice .notice_list li p{
+  display: table-cell;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--light2);
+}
+
+.dshb_notice .notice_list li:last-child p{
+  border-bottom: none;
+}
+
+.dshb_notice .notice_list li p.title{
+  color: var(--dark1); font-weight: 500;
+}
+.dshb_notice .notice_list li p.title a{
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.dshb_notice .notice_list li p.writer{
+  padding: 18px 24px;
+  width: 12%;
+  color: var(--dark3);
+}
+
+.dshb_notice .notice_list li p.date{
+  position: relative;
+  width: 12%;
+  color: var(--dark3); font-size: 1.4rem; text-align: right;
+}
+
+.dshb_notice .notice_list li p.date::before{
+  position: absolute; top: 50%; left: 0;
+  content: '';
+  width: 1px; height: 14px;
+  background: var(--light2);
+  transform: translateY(-50%);
+}
+
+/* 자료실 */
+.dshb_refer .refer_list{
+  display: flex;
+  gap: 20px;
+  padding: 40px;
+  background: var(--white);
+  border-radius: 1.4rem;
+  box-shadow: var(--shadow);
+}
+
+.dshb_refer .refer_list > div{
+  position: relative;
+  width: 226px; height: 240px;
+  background: rgba(235, 235, 235, 0.42);
+  border-radius: 1.4rem;
+}
+
+.dshb_refer .refer_list > div a{
+  display: block;
+  padding: 32px 24px;
+  width: 100%; height: 100%;
+}
+
+.dshb_refer .refer_list > div .title{
+  width:100%;
+  color: var(--dark1); font-size: 1.8rem; font-weight: 600; line-height: 2.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.dshb_refer .refer_list > div .label{
+  position: absolute; top: 96px;
+}
+
+.dshb_refer .refer_list > div strong{
+  position: absolute; bottom: 32px;
+  color: var(--dark3); font-size: 1.4rem; font-weight: 500;
+}
+.dshb_refer .refer_list > div strong .name{
+  position: relative;
+  padding-right: 12px;
+}
+
+.dshb_refer .refer_list > div strong .name::before{
+  position: absolute; top: 50%; right: 0;
+  content: '';
+  width: 1px; height: 12px;
+  background: var(--dark3);
+  transform: translateY(-50%);
+}
+
+
+.dshb_refer .refer_list > div strong .date{
+  padding-left: 12px;
+}
+
+
+
+
+
+
+/*----- 교수 대시보드 -----*/
+
+/* 바로가기 */
+.stf_shortcuts .shortcuts_title{
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.stf_shortcuts .shortcuts_title p{
+  margin-top: 9px;
+  color: var(--dark3); font-size: 2rem; line-height: 3rem;
+}
+
+.stf_shortcuts .shortcuts_list{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+}
+
+.stf_shortcuts .shortcuts_list > a{
+  position: relative;
+  height: 299px;
+  border-radius: 1.4rem;
+  background-position: right 32px top 24px;
+  background-repeat: no-repeat;
+}
+
+.stf_shortcuts .shortcuts_list > a strong{
+  position: absolute; left: 32px; bottom: 24px;
+  color: var(--white); font-size: 2rem; font-weight: 600; line-height: 3rem;
+}
+
+.stf_shortcuts .shortcuts_list .sbjt_profile{
+  background-color: #4CCBEA;
+  background-image: url(/src/assets/images/staffDashboard/shortcuts_sbjt_profile.png);
+}
+.stf_shortcuts .shortcuts_list .prof_ability{
+  background-color: #BC8FFF;
+  background-image: url(/src/assets/images/staffDashboard/shortcuts_prof_ability.png);
+}
+.stf_shortcuts .shortcuts_list .sbjt_certi{
+  background-color: #009596;
+  background-image: url(/src/assets/images/staffDashboard/shortcuts_sbjt_certi.png);
+}
+.stf_shortcuts .shortcuts_list .stf_ability{
+  background-color: #94EF8D;
+  background-image: url(/src/assets/images/staffDashboard/shortcuts_stf_ability.png);
+}
+
+
+/* 강의계획서 작성 & CQI 작성 */
+.write_tbl_box{
+  padding: 60px 63px;
+  background: var(--white);
+  border-radius: 1.4rem;
+  box-shadow: var(--shadow);
+}
+.write_tbl_box .tbl table tbody td{
+  padding: 23px 6px;
+}
+.write_tbl_box .tbl table tbody td span{
+  font-weight: 500;
+}
+.write_tbl_box .tbl table tbody td.sts span{
+  color: #898D9C;
+}
+.write_tbl_box .tbl table tbody td .color_bl{
+  color: #29A4FF;
+}
+.write_tbl_box .tbl table tbody td.sts .color_gn{
+  color: #43B448;
+}
+
+/* 교직원 봉사활동 신청 */
+.volunteer_recrt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.volunteer_recrt .section_tit_wrap {
+  position: relative;
+  margin: 0;
+}
+.volunteer_recrt .section_tit_wrap a{
+  margin-top: 16px;
+}
+.volunteer_recrt .volunteer_list{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+.volunteer_recrt .volunteer_list li{
+  position: relative;
+  width: 300px; height: 250px;
+  background: var(--white);
+  border-radius: 1.4rem;
+  box-shadow: var(--shadow);
+}
+.volunteer_recrt .volunteer_list li a{
+  display: block;
+  padding: 24px 32px;
+  width: 100%; height: 100%;
+}
+.volunteer_recrt .volunteer_list li .status{
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 25px;
+}
+.volunteer_recrt .volunteer_list li .type{
+  position: relative;
+  color: var(--dark1); font-size: 1.4rem; font-weight: 500; line-height: 2.2rem;
+}
+.volunteer_recrt .volunteer_list li .type::before{
+  position: absolute; top: 50%; left: -12px;
+  content: '';
+  width: 1px; height: 12px;
+  background: var(--dark3);
+  transform: translateY(-50%);
+}
+.volunteer_recrt .volunteer_list li .title{
+  width:100%;
+  color: var(--dark1); font-size: 1.8rem; font-weight: 600; line-height: 2.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.volunteer_recrt .volunteer_list li .period{
+  position: absolute; bottom: 24px;
+}
+.volunteer_recrt .volunteer_list li .period strong{
+  display: block;
+  margin-top: 4px;
+  color: var(--dark3); font-size: 1.6rem; font-weight: 500; line-height: 2.4rem;
+}
+
+.volunteer_recrt .volunteer_list li .period strong span{
+  display: inline-block;
+  margin-right: 6px;
+}

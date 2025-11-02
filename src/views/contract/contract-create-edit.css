@@ -1,0 +1,51 @@
+/* contract-table-edit: style giống ảnh mẫu */
+.contract-table-edit {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+.contract-table-edit th, .contract-table-edit td {
+  border: none;
+  padding: 14px 10px;
+  font-size: 15px;
+  background: #fff;
+  color: #222;
+}
+.contract-table-edit th {
+  font-weight: 600;
+  background: #f7f8fa;
+  border-bottom: 1px solid #eee;
+}
+.contract-table-edit tr:not(:last-child) td {
+  border-bottom: 1px solid #eee;
+}
+.input-edit {
+  border: 1px solid #e0e3e8;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 15px;
+  background: #fff;
+  outline: none;
+  transition: border 0.2s;
+}
+.input-edit:focus {
+  border-color: #4096ff;
+}
+.contract-btn-yellow {
+  background: #ffc800 !important;
+  color: #222 !important;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 15px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: background 0.2s;
+}
+.contract-btn-yellow:hover {
+  background: #ffb300 !important;
+}

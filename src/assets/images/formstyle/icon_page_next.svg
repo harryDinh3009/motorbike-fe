@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <g id="ico_dropdown_n" transform="translate(16 0) rotate(90)">
+    <rect id="사각형_39" data-name="사각형 39" width="16" height="16" transform="translate(16 16) rotate(180)" fill="none" opacity="0"/>
+    <path id="합치기_4" data-name="합치기 4" d="M8.361,6.07,5.046,2.516,1.732,6.07A1,1,0,1,1,.269,4.706L4.072.627A1,1,0,0,1,5.046,0a1,1,0,0,1,.975.628l3.8,4.077A1,1,0,1,1,8.361,6.07Z" transform="translate(3 4.612)" fill="#ccced4"/>
+  </g>
+</svg>

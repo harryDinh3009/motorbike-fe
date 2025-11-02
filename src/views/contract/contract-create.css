@@ -1,0 +1,122 @@
+/* contract-create.css */
+.content_wrap {
+  padding: 32px 16px;
+  background: #f7f8fa;
+  min-height: 100vh;
+}
+
+.grid_content {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.box_section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 24px 20px;
+  margin-bottom: 24px;
+}
+
+.box_title_sm {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: #222;
+}
+
+.dp_flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.contract-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.contract-table th, .contract-table td {
+  border: 1px solid #eee;
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 15px;
+}
+
+.contract-table th {
+  background: #f2f4f7;
+  font-weight: 500;
+}
+
+.contract-table td {
+  background: #fff;
+}
+
+input[type="date"], input[type="number"], textarea, .ant-select-selector {
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 15px !important;
+  outline: none !important;
+  transition: border 0.2s;
+  background: #fff !important;
+}
+
+input[type="date"]:focus, input[type="number"]:focus, textarea:focus, .ant-select-focused .ant-select-selector {
+  border-color: #4096ff !important;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.contract-action-btn {
+  background: #4096ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.contract-action-btn:hover {
+  background: #1765ad;
+}
+
+.btn_gray {
+  background: #f2f4f7;
+  color: #222;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn_gray:hover {
+  background: #e0e3e8;
+}
+
+@media (max-width: 768px) {
+  .grid_content {
+    max-width: 100%;
+    padding: 0 4px;
+  }
+  .box_section {
+    padding: 16px 6px;
+  }
+  .dp_flex {
+    flex-direction: column;
+    gap: 10px !important;
+  }
+  .contract-table th, .contract-table td {
+    font-size: 13px;
+    padding: 7px 4px;
+  }
+}
