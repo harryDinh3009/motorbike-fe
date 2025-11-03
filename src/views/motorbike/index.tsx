@@ -1,191 +1,220 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import InputBase from "@/component/common/input/InputBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
-import { HomeOutlined, EditOutlined, DeleteOutlined, PlusOutlined, FileExcelOutlined, ImportOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  FileExcelOutlined,
+  ImportOutlined,
+} from "@ant-design/icons";
 import ModalSaveMotorbike from "./ModalSaveMotorbike";
+import {
+  searchCars,
+  getCarModels,
+  getCarTypes,
+  getCarConditions,
+  getCarStatuses,
+  saveCar,
+  deleteCar,
+  exportCarExcel,
+  importCarExcel,
+} from "@/service/business/carMng/carMng.service";
+import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import { CarSearchDTO, CarDTO } from "@/service/business/carMng/carMng.type";
+import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 
-const branchOptions = [
-  { value: "", label: "Chi nhánh" },
-  { value: "1", label: "Chi nhánh 1" },
-  { value: "2", label: "Chi nhánh 2" },
-];
-const modelOptions = [
-  { value: "", label: "Mẫu xe" },
-  { value: "Honda Wave Alpha", label: "Honda Wave Alpha" },
-  { value: "Yamaha Sirius", label: "Yamaha Sirius" },
-  { value: "Yamaha PG-1", label: "Yamaha PG-1" },
-  { value: "Honda XR150", label: "Honda XR150" },
-  { value: "Honda Winner 150", label: "Honda Winner 150" },
-];
-const typeOptions = [
-  { value: "", label: "Loại xe" },
-  { value: "Xe số", label: "Xe số" },
-  { value: "Xe ga", label: "Xe ga" },
-  { value: "Xe cào cào", label: "Xe cào cào" },
-  { value: "Xe tay côn", label: "Xe tay côn" },
-];
-const statusOptions = [
-  { value: "", label: "Trạng thái" },
-  { value: "active", label: "Hoạt động" },
-  { value: "not_ready", label: "Không sẵn sàng" },
-  { value: "lost", label: "Bị mất" },
-  { value: "broken", label: "Hỏng hóc" },
-];
-const conditionOptions = [
-  { value: "", label: "Tình trạng xe" },
-  { value: "Nguyên vẹn", label: "Nguyên vẹn" },
-  { value: "Hỏng hóc", label: "Hỏng hóc" },
-];
-
-const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-  active: { label: "Hoạt động", color: "#27ae60", bg: "#eafbe7" },
-  not_ready: { label: "Không sẵn sàng", color: "#f5a623", bg: "#fffbe6" },
-  lost: { label: "Bị mất", color: "#ff4d4f", bg: "#fff1f0" },
-  broken: { label: "Hỏng hóc", color: "#ff4d4f", bg: "#fff1f0" },
-};
-
-const motorbikeListInit = [
+const statusMap: Record<string, { label: string; color: string; bg: string }> =
   {
-    id: 1,
-    model: "Honda Wave Alpha",
-    license: "34E-06869",
-    type: "Xe số",
-    branch: "Chi nhánh 1",
-    priceDay: "120,000",
-    priceHour: "120,000",
-    condition: "Nguyên vẹn",
-    status: "active",
-  },
-  {
-    id: 2,
-    model: "Yamaha Sirius",
-    license: "34E-06869",
-    type: "Xe số",
-    branch: "Chi nhánh 1",
-    priceDay: "120,000",
-    priceHour: "130,000",
-    condition: "Nguyên vẹn",
-    status: "active",
-  },
-  {
-    id: 3,
-    model: "Yamaha PG-1",
-    license: "34E-06869",
-    type: "Xe ga",
-    branch: "Chi nhánh 1",
-    priceDay: "120,000",
-    priceHour: "140,000",
-    condition: "Nguyên vẹn",
-    status: "not_ready",
-  },
-  {
-    id: 4,
-    model: "Honda XR150",
-    license: "34E-06869",
-    type: "Xe cào cào",
-    branch: "Chi nhánh 1",
-    priceDay: "120,000",
-    priceHour: "120,000",
-    condition: "Hỏng hóc",
-    status: "lost",
-  },
-  {
-    id: 5,
-    model: "Honda Winner 150",
-    license: "34E-06869",
-    type: "Xe tay côn",
-    branch: "Chi nhánh 1",
-    priceDay: "120,000",
-    priceHour: "120,000",
-    condition: "Hỏng hóc",
-    status: "lost",
-  },
-  {
-    id: 6,
-    model: "Honda Wave Alpha",
-    license: "34E-06869",
-    type: "Xe số",
-    branch: "Chi nhánh 1",
-    priceDay: "120,000",
-    priceHour: "120,000",
-    condition: "Nguyên vẹn",
-    status: "active",
-  },
-  {
-    id: 7,
-    model: "Yamaha Sirius",
-    license: "34E-06869",
-    type: "Xe số",
-    branch: "Chi nhánh 2",
-    priceDay: "120,000",
-    priceHour: "120,000",
-    condition: "Nguyên vẹn",
-    status: "not_ready",
-  },
-  {
-    id: 8,
-    model: "Yamaha PG-1",
-    license: "34E-06869",
-    type: "Xe ga",
-    branch: "Chi nhánh 2",
-    priceDay: "120,000",
-    priceHour: "140,000",
-    condition: "Nguyên vẹn",
-    status: "lost",
-  },
-  {
-    id: 9,
-    model: "Honda Wave Alpha",
-    license: "34E-06869",
-    type: "Xe số",
-    branch: "Chi nhánh 2",
-    priceDay: "120,000",
-    priceHour: "120,000",
-    condition: "Nguyên vẹn",
-    status: "active",
-  },
-  {
-    id: 10,
-    model: "Yamaha Sirius",
-    license: "34E-06869",
-    type: "Xe số",
-    branch: "Chi nhánh 2",
-    priceDay: "120,000",
-    priceHour: "120,000",
-    condition: "Nguyên vẹn",
-    status: "not_ready",
-  },
-];
+    ACTIVE: { label: "Hoạt động", color: "#27ae60", bg: "#eafbe7" },
+    AVAILABLE: { label: "Hoạt động", color: "#27ae60", bg: "#eafbe7" },
+    NOT_READY: { label: "Không sẵn sàng", color: "#f5a623", bg: "#fffbe6" },
+    LOST: { label: "Bị mất", color: "#ff4d4f", bg: "#fff1f0" },
+    BROKEN: { label: "Hỏng hóc", color: "#ff4d4f", bg: "#fff1f0" },
+    INACTIVE: { label: "Ngừng hoạt động", color: "#bdbdbd", bg: "#f5f5f5" },
+  };
 
 const MotorbikeList = () => {
-  const [filter, setFilter] = useState({
-    search: "",
-    branch: "",
-    model: "",
-    type: "",
+  const [filter, setFilter] = useState<any>({
+    keyword: "",
+    branchId: "",
+    carType: "",
     condition: "",
-    status: "",
+    status: undefined,
+    page: 1,
+    size: 10,
   });
-  const [motorbikes, setMotorbikes] = useState(motorbikeListInit);
+  const [loading, setLoading] = useState(false);
+  const [motorbikes, setMotorbikes] = useState<CarDTO[]>([]);
+  const [total, setTotal] = useState(0);
 
-  // Thêm state cho modal
+  // Filter options state
+  const [branchOptions, setBranchOptions] = useState([
+    { value: "", label: "Chi nhánh" },
+  ]);
+  const [typeOptions, setTypeOptions] = useState([
+    { value: "", label: "Loại xe" },
+  ]);
+  const [conditionOptions, setConditionOptions] = useState([
+    { value: "", label: "Tình trạng xe" },
+  ]);
+  const [statusOptions, setStatusOptions] = useState([
+    { value: "", label: "Trạng thái" },
+  ]);
+
+  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editMotorbike, setEditMotorbike] = useState<any>(null);
+  const [importing, setImporting] = useState(false);
 
-  const filteredMotorbikes = motorbikes.filter((m) =>
-    (!filter.search ||
-      m.model.toLowerCase().includes(filter.search.toLowerCase()) ||
-      m.license.toLowerCase().includes(filter.search.toLowerCase())) &&
-    (!filter.branch || m.branch === branchOptions.find(b => b.value === filter.branch)?.label) &&
-    (!filter.model || m.model === filter.model) &&
-    (!filter.type || m.type === filter.type) &&
-    (!filter.condition || m.condition === filter.condition) &&
-    (!filter.status || m.status === filter.status)
-  );
+  // Fetch filter options
+  useEffect(() => {
+    getAllActiveBranches().then((res) => {
+      setBranchOptions([
+        { value: "", label: "Chi nhánh" },
+        ...(res.data || []).map((b: BranchDTO) => ({
+          value: b.id,
+          label: b.name,
+        })),
+      ]);
+    });
+    getCarTypes().then((res) => {
+      setTypeOptions([
+        { value: "", label: "Loại xe" },
+        ...(res.data || []).map((t: string) => ({
+          value: t,
+          label: t,
+        })),
+      ]);
+    });
+    getCarConditions().then((res) => {
+      setConditionOptions([
+        { value: "", label: "Tình trạng xe" },
+        ...(res.data || []).map((c: string) => ({
+          value: c,
+          label: c,
+        })),
+      ]);
+    });
+    getCarStatuses().then((res) => {
+      setStatusOptions([
+        { value: "", label: "Trạng thái" },
+        ...(res.data || []).map((s: any) => ({
+          value: s.code,
+          label: s.name,
+        })),
+      ]);
+    });
+  }, []);
+
+  // Fetch list
+  const fetchMotorbikes = async (params: any) => {
+    setLoading(true);
+    try {
+      // Convert empty string to undefined for API
+      const cleanParams: CarSearchDTO = {
+        ...params,
+        keyword: params.keyword?.trim() ? params.keyword : undefined,
+        branchId: params.branchId || undefined,
+        carType: params.carType || undefined,
+        condition: params.condition || undefined,
+        status: params.status || undefined,
+      };
+      const res = await searchCars(cleanParams);
+      setMotorbikes(res.data.data);
+      setTotal(res.data.totalElements);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMotorbikes(filter);
+  }, [filter]);
+
+  // Table pagination
+  const handleTableChange = (page: number, pageSize: number) => {
+    setFilter((prev) => ({
+      ...prev,
+      page,
+      size: pageSize,
+    }));
+  };
+
+  // Xuất Excel
+  const handleExportExcel = async () => {
+    setLoading(true);
+    try {
+      const blob = await exportCarExcel(filter);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "danh_sach_xe.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Xử lý nhập Excel
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      await importCarExcel(file);
+      fetchMotorbikes(filter);
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  };
+
+  // Xử lý xóa xe
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa xe này?")) {
+      setLoading(true);
+      try {
+        await deleteCar(id);
+        fetchMotorbikes(filter);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Xử lý sửa xe
+  const handleEdit = (record: any) => {
+    setEditMotorbike({
+      ...record,
+      license: record.licensePlate,
+      branch: record.branchId,
+      year: record.yearOfManufacture,
+      odometer: record.currentOdometer,
+      image: record.imageUrl,
+      value: record.value,
+      frameNo: record.frameNumber,
+      engineNo: record.engineNumber,
+      regNo: record.registrationNumber,
+      regName: record.registeredOwnerName,
+      regPlace: record.registrationPlace,
+      insuranceNo: record.insuranceContractNumber,
+      insuranceExpire: record.insuranceExpiryDate,
+      carType: record.carType,
+      dailyPrice: record.dailyPrice,
+      hourlyPrice: record.hourlyPrice,
+      status: record.status,
+    });
+    setShowModal(true);
+  };
 
   return (
     <div className="content_wrap">
@@ -199,58 +228,92 @@ const MotorbikeList = () => {
         />
         <ContainerBase>
           <div className="box_section" style={{ paddingBottom: 0 }}>
-            <div className="dp_flex" style={{ gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+            <div
+              className="dp_flex"
+              style={{ gap: 16, alignItems: "center", flexWrap: "wrap" }}
+            >
               <InputBase
-                modelValue={filter.search}
+                modelValue={filter.keyword}
                 placeholder="Tìm theo tên xe, biển số"
                 prefixIcon="search"
                 style={{ minWidth: 320, flex: 1 }}
-                onChange={val => setFilter({ ...filter, search: val as string })}
+                onChange={(val) =>
+                  setFilter({ ...filter, keyword: val as string, page: 1 })
+                }
               />
               <SelectboxBase
-                value={filter.branch}
+                value={filter.branchId}
                 options={branchOptions}
                 style={{ minWidth: 140 }}
-                onChange={val => setFilter({ ...filter, branch: typeof val === "string" ? val : val[0] || "" })}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    branchId: typeof val === "string" ? val : val[0] || "",
+                    page: 1,
+                  })
+                }
               />
               <SelectboxBase
-                value={filter.model}
-                options={modelOptions}
-                style={{ minWidth: 140 }}
-                onChange={val => setFilter({ ...filter, model: typeof val === "string" ? val : val[0] || "" })}
-              />
-              <SelectboxBase
-                value={filter.type}
+                value={filter.carType}
                 options={typeOptions}
                 style={{ minWidth: 140 }}
-                onChange={val => setFilter({ ...filter, type: typeof val === "string" ? val : val[0] || "" })}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    carType: typeof val === "string" ? val : val[0] || "",
+                    page: 1,
+                  })
+                }
               />
               <SelectboxBase
                 value={filter.condition}
                 options={conditionOptions}
                 style={{ minWidth: 140 }}
-                onChange={val => setFilter({ ...filter, condition: typeof val === "string" ? val : val[0] || "" })}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    condition: typeof val === "string" ? val : val[0] || "",
+                    page: 1,
+                  })
+                }
               />
               <SelectboxBase
-                value={filter.status}
+                value={filter.status || ""}
                 options={statusOptions}
                 style={{ minWidth: 140 }}
-                onChange={val => setFilter({ ...filter, status: typeof val === "string" ? val : val[0] || "" })}
+                onChange={(val) =>
+                  setFilter({
+                    ...filter,
+                    status: val === "" ? undefined : val,
+                    page: 1,
+                  })
+                }
               />
               <ButtonBase
                 label="Xuất Excel"
                 className="btn_yellow"
                 icon={<FileExcelOutlined />}
                 style={{ minWidth: 140 }}
-                onClick={() => {}}
+                onClick={handleExportExcel}
+                loading={loading}
               />
-              <ButtonBase
-                label="Nhập Excel"
-                className="btn_yellow"
-                icon={<ImportOutlined />}
-                style={{ minWidth: 140 }}
-                onClick={() => {}}
-              />
+              <label style={{ minWidth: 140 }}>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  style={{ display: "none" }}
+                  onChange={handleImportExcel}
+                  disabled={importing}
+                />
+                <ButtonBase
+                  label={importing ? "Đang nhập..." : "Nhập Excel"}
+                  className="btn_yellow"
+                  icon={<ImportOutlined />}
+                  style={{ minWidth: 140 }}
+                  onClick={() => {}}
+                  disabled={importing}
+                />
+              </label>
               <ButtonBase
                 label="Thêm xe"
                 className="btn_primary"
@@ -267,28 +330,56 @@ const MotorbikeList = () => {
         <ContainerBase>
           <div className="box_section">
             <TableBase
-              data={filteredMotorbikes}
+              data={motorbikes}
+              loading={loading}
               columns={[
                 {
                   title: "STT",
                   dataIndex: "id",
                   key: "id",
                   width: 60,
-                  render: (_: any, __: any, idx: number) => idx + 1,
+                  render: (_: any, __: any, idx: number) =>
+                    filter.page
+                      ? (filter.page - 1) * (filter.size || 10) + idx + 1
+                      : idx + 1,
                 },
                 { title: "Mẫu xe", dataIndex: "model", key: "model" },
-                { title: "Biển số", dataIndex: "license", key: "license" },
-                { title: "Loại xe", dataIndex: "type", key: "type" },
-                { title: "Chi nhánh sở hữu", dataIndex: "branch", key: "branch" },
-                { title: "Giá ngày (Đ)", dataIndex: "priceDay", key: "priceDay" },
-                { title: "Giá giờ (Đ)", dataIndex: "priceHour", key: "priceHour" },
-                { title: "Tình trạng xe", dataIndex: "condition", key: "condition" },
+                {
+                  title: "Biển số",
+                  dataIndex: "licensePlate",
+                  key: "licensePlate",
+                },
+                { title: "Loại xe", dataIndex: "carType", key: "carType" },
+                {
+                  title: "Chi nhánh sở hữu",
+                  dataIndex: "branchName",
+                  key: "branchName",
+                },
+                {
+                  title: "Giá ngày (Đ)",
+                  dataIndex: "dailyPrice",
+                  key: "dailyPrice",
+                  render: (val: number) =>
+                    val != null ? val.toLocaleString() : "",
+                },
+                {
+                  title: "Giá giờ (Đ)",
+                  dataIndex: "hourlyPrice",
+                  key: "hourlyPrice",
+                  render: (val: number) =>
+                    val != null ? val.toLocaleString() : "",
+                },
+                {
+                  title: "Tình trạng xe",
+                  dataIndex: "condition",
+                  key: "condition",
+                },
                 {
                   title: "Trạng thái",
                   dataIndex: "status",
                   key: "status",
                   width: 120,
-                  render: (val: string) => (
+                  render: (val: string, record: any) => (
                     <span
                       style={{
                         background: statusMap[val]?.bg,
@@ -302,7 +393,7 @@ const MotorbikeList = () => {
                         textAlign: "center",
                       }}
                     >
-                      {statusMap[val]?.label}
+                      {record.statusNm || statusMap[val]?.label || val}
                     </span>
                   ),
                 },
@@ -313,22 +404,26 @@ const MotorbikeList = () => {
                   render: (_: any, record: any) => (
                     <div className="dp_flex" style={{ gap: 8 }}>
                       <ButtonBase
+                        label=""
                         icon={<EditOutlined />}
                         className="btn_gray"
-                        onClick={() => {}}
+                        onClick={() => handleEdit(record)}
                         title="Sửa"
                       />
                       <ButtonBase
+                        label=""
                         icon={<DeleteOutlined />}
                         className="btn_gray"
-                        onClick={() => {}}
+                        onClick={() => handleDelete(record.id)}
                         title="Xóa"
                       />
                     </div>
                   ),
                 },
               ]}
-              pageSize={10}
+              pageSize={filter.size || 10}
+              totalPages={total}
+              onPageChange={handleTableChange}
             />
           </div>
         </ContainerBase>
@@ -339,18 +434,49 @@ const MotorbikeList = () => {
             setShowModal(false);
             setEditMotorbike(null);
           }}
-          onSave={(motorbike) => {
-            setMotorbikes([
-              ...motorbikes,
-              { ...motorbike, id: motorbikes.length + 1, status: "active" },
-            ]);
+          onSave={async (motorbike) => {
+            // Chuẩn hóa dữ liệu trước khi gửi
+            const payload = {
+              ...(editMotorbike?.id ? { id: editMotorbike.id } : {}),
+              model: motorbike.model,
+              licensePlate: motorbike.license,
+              carType: motorbike.carType,
+              branchId: motorbike.branch,
+              dailyPrice: motorbike.dailyPrice
+                ? Number(motorbike.dailyPrice)
+                : undefined,
+              hourlyPrice: motorbike.hourlyPrice
+                ? Number(motorbike.hourlyPrice)
+                : undefined,
+              condition: motorbike.condition,
+              currentOdometer: motorbike.odometer
+                ? Number(motorbike.odometer)
+                : undefined,
+              status: motorbike.status || "ACTIVE",
+              imageUrl: motorbike.image,
+              note: motorbike.note,
+              yearOfManufacture: motorbike.year
+                ? Number(motorbike.year)
+                : undefined,
+              origin: motorbike.origin,
+              value: motorbike.value ? Number(motorbike.value) : undefined,
+              frameNumber: motorbike.frameNo,
+              engineNumber: motorbike.engineNo,
+              color: motorbike.color,
+              registrationNumber: motorbike.regNo,
+              registeredOwnerName: motorbike.regName,
+              registrationPlace: motorbike.regPlace,
+              insuranceContractNumber: motorbike.insuranceNo,
+              insuranceExpiryDate: motorbike.insuranceExpire || undefined,
+            };
+            await saveCar(payload);
             setShowModal(false);
             setEditMotorbike(null);
+            fetchMotorbikes(filter);
           }}
         />
       </div>
     </div>
   );
 };
-
 export default MotorbikeList;

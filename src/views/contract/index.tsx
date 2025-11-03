@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
@@ -7,24 +7,19 @@ import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import InputBase from "@/component/common/input/InputBase";
-import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
+import { searchContracts } from "@/service/business/contractMng/contractMng.service";
+import {
+  ContractSearchDTO,
+  ContractDTO,
+} from "@/service/business/contractMng/contractMng.type";
 
-// Dummy data
-const customers = [
-  { value: "1", label: "Nguyễn Văn A" },
-  { value: "2", label: "Trần Thị B" },
-  { value: "3", label: "Lê Văn C" },
-];
-const cars = [
-  { value: "1", label: "Toyota Camry" },
-  { value: "2", label: "Honda CRV" },
-  { value: "3", label: "Kia Morning" },
-];
 const statusList = [
-  { value: "new", label: "Mới tạo" },
-  { value: "renting", label: "Đang thuê" },
-  { value: "finished", label: "Đã kết thúc" },
-  { value: "cancelled", label: "Đã hủy" },
+  { value: "DRAFT", label: "Nháp" },
+  { value: "CONFIRMED", label: "Đã xác nhận" },
+  { value: "DELIVERED", label: "Đã giao xe" },
+  { value: "RETURNED", label: "Đã trả xe" },
+  { value: "COMPLETED", label: "Hoàn thành" },
+  { value: "CANCELLED", label: "Đã hủy" },
 ];
 
 const branchList = [
@@ -38,210 +33,13 @@ const dateTypeList = [
   { value: "endDate", label: "Ngày trả" },
 ];
 
-// Contract type definition
-interface InvoiceItem {
-  id: number;
-  desc: string;
-  amount: number;
-}
-
-interface Contract {
-  id: number;
-  code: string;
-  source: string;
-  customer: string;
-  car: string;
-  startDate: string;
-  endDate: string;
-  branchRent: string;
-  branchReturn: string;
-  total: number;
-  paid: number;
-  remain: number;
-  status: string;
-  extraFee: number;
-  invoice: InvoiceItem[];
-}
-
-// Dummy data mới cho hợp đồng
-const contractListInit = [
-  {
-    id: 1,
-    code: "HD001",
-    source: "Walk-in",
-    customer: "Nguyễn Văn A",
-    car: "Vision 110 (33R4-00005)",
-    startDate: "01/10/2025",
-    endDate: "03/10/2025",
-    branchRent: "CN1",
-    branchReturn: "CN1",
-    total: 400000,
-    paid: 400000,
-    remain: 0,
-    status: "done",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 2,
-    code: "HD002",
-    source: "Facebook",
-    customer: "Lê Thị B",
-    car: "Sirius (30Z3-22221); Wave RS (30H2-11110)",
-    startDate: "02/10/2025",
-    endDate: "04/10/2025",
-    branchRent: "CN1",
-    branchReturn: "CN2",
-    total: 750000,
-    paid: 500000,
-    remain: 250000,
-    status: "return",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 3,
-    code: "HD003",
-    source: "Hotline",
-    customer: "Phạm Minh C",
-    car: "Air Blade (29B1-88888)",
-    startDate: "03/10/2025",
-    endDate: "05/10/2025",
-    branchRent: "CN3",
-    branchReturn: "CN3",
-    total: 500000,
-    paid: 0,
-    remain: 500000,
-    status: "done",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 4,
-    code: "HD004",
-    source: "Hotline",
-    customer: "Trần Quốc D",
-    car: "SH Mode (59B2-23456)",
-    startDate: "04/10/2025",
-    endDate: "05/10/2025",
-    branchRent: "CN2",
-    branchReturn: "CN2",
-    total: 400000,
-    paid: 400000,
-    remain: 0,
-    status: "done",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 5,
-    code: "HD005",
-    source: "Walk-in",
-    customer: "Vũ Anh E",
-    car: "Wave Alpha (36A1-12345)",
-    startDate: "04/10/2025",
-    endDate: "05/10/2025",
-    branchRent: "CN3",
-    branchReturn: "CN3",
-    total: 200000,
-    paid: 0,
-    remain: 200000,
-    status: "renting",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 6,
-    code: "HD006",
-    source: "Facebook",
-    customer: "Nguyễn Thu F",
-    car: "Vision 110 (33R4-00006)",
-    startDate: "05/10/2025",
-    endDate: "07/10/2025",
-    branchRent: "CN1",
-    branchReturn: "CN1",
-    total: 400000,
-    paid: 200000,
-    remain: 200000,
-    status: "return",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 7,
-    code: "HD007",
-    source: "Hotline",
-    customer: "Lâm Hải G",
-    car: "Exciter 150 (59C2-77777)",
-    startDate: "05/10/2025",
-    endDate: "07/10/2025",
-    branchRent: "CN2",
-    branchReturn: "CN2",
-    total: 700000,
-    paid: 700000,
-    remain: 0,
-    status: "done",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 8,
-    code: "HD008",
-    source: "Zalo",
-    customer: "Đặng Thị H",
-    car: "Air Blade (29B1-88889)",
-    startDate: "06/10/2025",
-    endDate: "07/10/2025",
-    branchRent: "CN1",
-    branchReturn: "CN1",
-    total: 250000,
-    paid: 0,
-    remain: 250000,
-    status: "renting",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 9,
-    code: "HD009",
-    source: "Hotline",
-    customer: "Nguyễn Đức I",
-    car: "Lead 125 (30E1-09090); Vision (33R4-00009)",
-    startDate: "06/10/2025",
-    endDate: "07/10/2025",
-    branchRent: "CN3",
-    branchReturn: "CN3",
-    total: 700000,
-    paid: 700000,
-    remain: 0,
-    status: "done",
-    extraFee: 0,
-    invoice: [],
-  },
-  {
-    id: 10,
-    code: "HD010",
-    source: "Walk-in",
-    customer: "Phan Mỹ K",
-    car: "Wave Alpha (36B1-45678)",
-    startDate: "07/10/2025",
-    endDate: "08/10/2025",
-    branchRent: "CN3",
-    branchReturn: "CN3",
-    total: 200000,
-    paid: 0,
-    remain: 200000,
-    status: "cancelled",
-    extraFee: 0,
-    invoice: [],
-  },
-];
-
 const statusMap: Record<string, string> = {
-  done: "Hoàn thành",
-  return: "Đã trả xe",
-  renting: "Đã nhận xe",
-  cancelled: "Đã huỷ",
+  DRAFT: "Nháp",
+  CONFIRMED: "Đã xác nhận",
+  DELIVERED: "Đã giao xe",
+  RETURNED: "Đã trả xe",
+  COMPLETED: "Hoàn thành",
+  CANCELLED: "Đã huỷ",
 };
 
 const ContractComponent = () => {
@@ -254,35 +52,41 @@ const ContractComponent = () => {
   const navigate = useNavigate();
 
   // State filter
-  const [filter, setFilter] = useState({
-    search: "",
-    dateType: "startDate",
-    date: null as string | null,
-    branchRent: "",
-    branchReturn: "",
+  const [filter, setFilter] = useState<ContractSearchDTO>({
+    keyword: "",
+    pickupBranchId: "",
+    returnBranchId: "",
     status: "",
+    page: 1,
+    size: 10,
   });
-  // State contract list
-  const [contractList, setContractList] =
-    useState<Contract[]>(contractListInit);
+  const [loading, setLoading] = useState(false);
+  const [contracts, setContracts] = useState<ContractDTO[]>([]);
+  const [total, setTotal] = useState(0);
 
-  // Filter contracts
-  const filteredContracts = contractList.filter((c) => {
-    return (
-      (!filter.customer ||
-        c.customer ===
-          customers.find((cu) => cu.value === filter.customer)?.label) &&
-      (!filter.car ||
-        c.car === cars.find((ca) => ca.value === filter.car)?.label) &&
-      (!filter.status || c.status === filter.status)
-    );
-  });
+  // Fetch contract list
+  const fetchContracts = async (params: ContractSearchDTO) => {
+    setLoading(true);
+    try {
+      const res = await searchContracts(params);
+      setContracts(res.data.data);
+      setTotal(res.data.totalElements);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Đổi trạng thái hợp đồng
-  const handleChangeStatus = (id: number, newStatus: string) => {
-    setContractList((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-    );
+  useEffect(() => {
+    fetchContracts(filter);
+  }, [filter]);
+
+  // Table pagination
+  const handleTableChange = (page: number, pageSize: number) => {
+    setFilter((prev) => ({
+      ...prev,
+      page,
+      size: pageSize,
+    }));
   };
 
   return (
@@ -290,7 +94,7 @@ const ContractComponent = () => {
       <div id="content" className="grid_content">
         <BreadcrumbBase title={pageTitle} items={breadcrumbItems} />
 
-        {/* Bộ lọc hợp đồng - layout theo ảnh mới */}
+        {/* Bộ lọc hợp đồng */}
         <ContainerBase>
           <div className="box_section" style={{ paddingBottom: 0 }}>
             <div
@@ -302,56 +106,45 @@ const ContractComponent = () => {
               }}
             >
               <InputBase
-                modelValue={filter.search}
+                modelValue={filter.keyword}
                 placeholder="Tìm theo tên khách, SDT, số hợp đồng, biển số xe"
                 prefixIcon="search"
                 style={{ minWidth: 320, flex: 1 }}
                 onChange={(val) =>
-                  setFilter({ ...filter, search: val as string })
+                  setFilter((prev) => ({
+                    ...prev,
+                    keyword: val as string,
+                    page: 1,
+                  }))
                 }
               />
               <SelectboxBase
-                value={filter.dateType}
-                options={dateTypeList}
-                style={{ minWidth: 120 }}
-                onChange={(val) =>
-                  setFilter({
-                    ...filter,
-                    dateType: typeof val === "string" ? val : val[0] || "",
-                  })
-                }
-              />
-              <DatePickerBase
-                value={filter.date}
-                placeholder="Chọn ngày"
-                style={{ minWidth: 140 }}
-                onChange={(val) =>
-                  setFilter({ ...filter, date: val as string })
-                }
-              />
-              <SelectboxBase
-                value={filter.branchRent}
+                value={filter.pickupBranchId}
                 options={[
                   { value: "", label: "Chi nhánh thuê" },
                   ...branchList,
                 ]}
                 style={{ minWidth: 140 }}
                 onChange={(val) =>
-                  setFilter({
-                    ...filter,
-                    branchRent: typeof val === "string" ? val : val[0] || "",
-                  })
+                  setFilter((prev) => ({
+                    ...prev,
+                    pickupBranchId:
+                      typeof val === "string" ? val : val[0] || "",
+                    page: 1,
+                  }))
                 }
               />
               <SelectboxBase
-                value={filter.branchReturn}
+                value={filter.returnBranchId}
                 options={[{ value: "", label: "Chi nhánh trả" }, ...branchList]}
                 style={{ minWidth: 140 }}
                 onChange={(val) =>
-                  setFilter({
-                    ...filter,
-                    branchReturn: typeof val === "string" ? val : val[0] || "",
-                  })
+                  setFilter((prev) => ({
+                    ...prev,
+                    returnBranchId:
+                      typeof val === "string" ? val : val[0] || "",
+                    page: 1,
+                  }))
                 }
               />
               <SelectboxBase
@@ -359,10 +152,11 @@ const ContractComponent = () => {
                 options={[{ value: "", label: "Trạng thái" }, ...statusList]}
                 style={{ minWidth: 120 }}
                 onChange={(val) =>
-                  setFilter({
-                    ...filter,
+                  setFilter((prev) => ({
+                    ...prev,
                     status: typeof val === "string" ? val : val[0] || "",
-                  })
+                    page: 1,
+                  }))
                 }
               />
               <ButtonBase
@@ -376,7 +170,7 @@ const ContractComponent = () => {
           </div>
         </ContainerBase>
 
-        {/* Danh sách hợp đồng - chuẩn Template */}
+        {/* Danh sách hợp đồng */}
         <ContainerBase>
           <div className="box_section">
             <div
@@ -394,12 +188,13 @@ const ContractComponent = () => {
               />
             </div>
             <TableBase
-              data={filteredContracts}
+              data={contracts}
+              loading={loading}
               columns={[
                 {
                   title: "Mã hợp đồng",
-                  dataIndex: "code",
-                  key: "code",
+                  dataIndex: "contractCode",
+                  key: "contractCode",
                   width: "7%",
                 },
                 {
@@ -410,60 +205,76 @@ const ContractComponent = () => {
                 },
                 {
                   title: "Khách hàng",
-                  dataIndex: "customer",
-                  key: "customer",
+                  dataIndex: "customerName",
+                  key: "customerName",
+                  width: "10%",
+                },
+                {
+                  title: "Số điện thoại",
+                  dataIndex: "phoneNumber",
+                  key: "phoneNumber",
                   width: "10%",
                 },
                 {
                   title: "Xe thuê",
-                  dataIndex: "car",
-                  key: "car",
+                  dataIndex: "cars",
+                  key: "cars",
                   width: "13%",
+                  render: (cars: any) =>
+                    Array.isArray(cars)
+                      ? cars
+                          .map((c: any) => `${c.carModel} (${c.licensePlate})`)
+                          .join("; ")
+                      : "",
                 },
                 {
                   title: "Ngày thuê",
                   dataIndex: "startDate",
                   key: "startDate",
                   width: "8%",
+                  render: (val: string) =>
+                    val ? new Date(val).toLocaleDateString() : "",
                 },
                 {
                   title: "Ngày trả",
                   dataIndex: "endDate",
                   key: "endDate",
                   width: "8%",
+                  render: (val: string) =>
+                    val ? new Date(val).toLocaleDateString() : "",
                 },
                 {
                   title: "Chi nhánh thuê",
-                  dataIndex: "branchRent",
-                  key: "branchRent",
+                  dataIndex: "pickupBranchName",
+                  key: "pickupBranchName",
                   width: "7%",
                 },
                 {
                   title: "Chi nhánh trả",
-                  dataIndex: "branchReturn",
-                  key: "branchReturn",
+                  dataIndex: "returnBranchName",
+                  key: "returnBranchName",
                   width: "7%",
                 },
                 {
                   title: "Tổng tiền",
-                  dataIndex: "total",
-                  key: "total",
+                  dataIndex: "finalAmount",
+                  key: "finalAmount",
                   width: "8%",
-                  render: (val: number) => val.toLocaleString(),
+                  render: (val: number) => val?.toLocaleString(),
                 },
                 {
                   title: "Đã trả",
-                  dataIndex: "paid",
-                  key: "paid",
+                  dataIndex: "paidAmount",
+                  key: "paidAmount",
                   width: "8%",
-                  render: (val: number) => val.toLocaleString(),
+                  render: (val: number) => val?.toLocaleString(),
                 },
                 {
                   title: "Còn lại",
-                  dataIndex: "remain",
-                  key: "remain",
+                  dataIndex: "remainingAmount",
+                  key: "remainingAmount",
                   width: "8%",
-                  render: (val: number) => val.toLocaleString(),
+                  render: (val: number) => val?.toLocaleString(),
                 },
                 {
                   title: "Trạng thái",
@@ -480,13 +291,12 @@ const ContractComponent = () => {
                   title: "Thao tác",
                   key: "actions",
                   width: "12%",
-                  render: (_: any, record: any) => (
+                  render: (_: any, record: ContractDTO) => (
                     <div className="dp_flex btn_group">
                       <ButtonBase
                         label="Xem"
                         className="btn_gray mg_r10"
                         onClick={() => {
-                          // Điều hướng sang trang chi tiết hợp đồng
                           navigate(`/contract/detail/${record.id}`);
                         }}
                       />
@@ -497,7 +307,7 @@ const ContractComponent = () => {
                           /* handle print */
                         }}
                       />
-                      {record.status !== "cancelled" && (
+                      {record.status !== "CANCELLED" && (
                         <>
                           <ButtonBase
                             label="Chỉnh sửa"
@@ -526,7 +336,10 @@ const ContractComponent = () => {
                   ),
                 },
               ]}
-              pageSize={10}
+              pageSize={filter.size || 10}
+              currentPage={filter.page || 1}
+              total={total}
+              onPageChange={handleTableChange}
             />
           </div>
         </ContainerBase>
