@@ -7,7 +7,13 @@ import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import InputBase from "@/component/common/input/InputBase";
-import { searchContracts } from "@/service/business/contractMng/contractMng.service";
+import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+import {
+  searchContracts,
+  deleteContract,
+  downloadContractPDF,
+  exportContractsToExcel,
+} from "@/service/business/contractMng/contractMng.service";
 import {
   ContractSearchDTO,
   ContractDTO,
@@ -89,12 +95,60 @@ const ContractComponent = () => {
     }));
   };
 
+  // Xuất Excel
+  const handleExportExcel = async () => {
+    setLoading(true);
+    try {
+      const blob = await exportContractsToExcel(filter);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Danh_Sach_Hop_Dong.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Xóa hợp đồng
+  const handleDeleteContract = async (id: string) => {
+    if (window.confirm("Bạn có chắc chắn muốn hủy hợp đồng này?")) {
+      setLoading(true);
+      try {
+        await deleteContract(id);
+        fetchContracts(filter);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Tải PDF hợp đồng
+  const handleDownloadPDF = async (id: string) => {
+    setLoading(true);
+    try {
+      const blob = await downloadContractPDF(id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hop-dong-thue-xe-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="content_wrap">
       <div id="content" className="grid_content">
+        {loading && <LoadingIndicator />}
         <BreadcrumbBase title={pageTitle} items={breadcrumbItems} />
-
-        {/* Bộ lọc hợp đồng */}
         <ContainerBase>
           <div className="box_section" style={{ paddingBottom: 0 }}>
             <div
@@ -164,13 +218,12 @@ const ContractComponent = () => {
                 className="btn_yellow"
                 icon={<CarOutlined />}
                 style={{ marginLeft: 8, minWidth: 120 }}
-                onClick={() => {}}
+                onClick={handleExportExcel}
+                loading={loading}
               />
             </div>
           </div>
         </ContainerBase>
-
-        {/* Danh sách hợp đồng */}
         <ContainerBase>
           <div className="box_section">
             <div
@@ -303,9 +356,7 @@ const ContractComponent = () => {
                       <ButtonBase
                         label="In"
                         className="btn_gray mg_r10"
-                        onClick={() => {
-                          /* handle print */
-                        }}
+                        onClick={() => handleDownloadPDF(record.id)}
                       />
                       {record.status !== "CANCELLED" && (
                         <>
@@ -313,21 +364,19 @@ const ContractComponent = () => {
                             label="Chỉnh sửa"
                             className="btn_gray mg_r10"
                             onClick={() => {
-                              /* handle edit if needed */
+                              navigate(`/contract/edit/${record.id}`);
                             }}
                           />
                           <ButtonBase
                             label="Hủy"
                             className="btn_gray mg_r10"
-                            onClick={() => {
-                              /* handle cancel */
-                            }}
+                            onClick={() => handleDeleteContract(record.id)}
                           />
                           <ButtonBase
                             label="Thanh toán"
                             className="btn_gray"
                             onClick={() => {
-                              /* handle payment */
+                              navigate(`/contract/payment/${record.id}`);
                             }}
                           />
                         </>
