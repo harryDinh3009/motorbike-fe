@@ -1,4 +1,4 @@
-import Logo from "@/assets/images/common/images_vite_react.jpg";
+import Logo from "@/assets/images/motorbike_logo.png";
 import { gnbOneDepth, headerStyle, mobileGnb } from "@/assets/js/common";
 import { SCREEN } from "@/router/screen";
 import { useEffect, useState } from "react";
@@ -15,7 +15,7 @@ const THeaderHorizontal = () => {
     userName: string;
     lastLoginDate: string | null;
   }>({
-    userName: "Nguyễn Công Thắng",
+    userName: "Nguyễn Văn Hòa",
     lastLoginDate: null,
   });
   const [currentDate, setCurrentDate] = useState<string>("");
@@ -36,7 +36,7 @@ const THeaderHorizontal = () => {
       subMenus: [],
     },
     {
-      name: "Quản lý xe pháo",
+      name: "Quản lý xe",
       path: SCREEN.motorbike?.path || "#",
       subMenus: [],
     },
@@ -45,11 +45,11 @@ const THeaderHorizontal = () => {
       path: SCREEN.contractMng.path,
       subMenus: [],
     },
-    {
-      name: "Quản lý phụ thu",
-      path: SCREEN.surcharge?.path || "#",
-      subMenus: [],
-    },
+    // {
+    //   name: "Quản lý phụ thu",
+    //   path: SCREEN.surcharge?.path || "#",
+    //   subMenus: [],
+    // },
     {
       name: "Chi nhánh",
       path: SCREEN.branch?.path || "#",

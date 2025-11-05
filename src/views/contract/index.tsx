@@ -8,45 +8,19 @@ import TableBase from "@/component/common/table/TableBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import InputBase from "@/component/common/input/InputBase";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 import {
   searchContracts,
   deleteContract,
   downloadContractPDF,
   exportContractsToExcel,
+  getContractStatuses,
 } from "@/service/business/contractMng/contractMng.service";
+import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
 import {
   ContractSearchDTO,
   ContractDTO,
 } from "@/service/business/contractMng/contractMng.type";
-
-const statusList = [
-  { value: "DRAFT", label: "Nháp" },
-  { value: "CONFIRMED", label: "Đã xác nhận" },
-  { value: "DELIVERED", label: "Đã giao xe" },
-  { value: "RETURNED", label: "Đã trả xe" },
-  { value: "COMPLETED", label: "Hoàn thành" },
-  { value: "CANCELLED", label: "Đã hủy" },
-];
-
-const branchList = [
-  { value: "CN1", label: "Chi nhánh 1" },
-  { value: "CN2", label: "Chi nhánh 2" },
-  { value: "CN3", label: "Chi nhánh 3" },
-];
-
-const dateTypeList = [
-  { value: "startDate", label: "Ngày thuê" },
-  { value: "endDate", label: "Ngày trả" },
-];
-
-const statusMap: Record<string, string> = {
-  DRAFT: "Nháp",
-  CONFIRMED: "Đã xác nhận",
-  DELIVERED: "Đã giao xe",
-  RETURNED: "Đã trả xe",
-  COMPLETED: "Hoàn thành",
-  CANCELLED: "Đã huỷ",
-};
 
 const ContractComponent = () => {
   const pageTitle = "Quản lý hợp đồng";
@@ -58,25 +32,53 @@ const ContractComponent = () => {
   const navigate = useNavigate();
 
   // State filter
-  const [filter, setFilter] = useState<ContractSearchDTO>({
+  const defaultFilter: ContractSearchDTO = {
     keyword: "",
     pickupBranchId: "",
     returnBranchId: "",
     status: "",
     page: 1,
     size: 10,
-  });
+  };
+  const [filter, setFilter] = useState<ContractSearchDTO>(defaultFilter);
   const [loading, setLoading] = useState(false);
   const [contracts, setContracts] = useState<ContractDTO[]>([]);
   const [total, setTotal] = useState(0);
+
+  // Filter options state
+  const [pickupBranchOptions, setPickupBranchOptions] = useState([
+    { value: "", label: "Chi nhánh thuê" },
+  ]);
+  const [returnBranchOptions, setReturnBranchOptions] = useState([
+    { value: "", label: "Chi nhánh trả" },
+  ]);
+  const [statusOptions, setStatusOptions] = useState([
+    { value: "", label: "Trạng thái" },
+  ]);
+
+  // Thêm state cho ngày thuê
+  const [startDateFrom, setStartDateFrom] = useState<string | null>(null);
+  const [startDateTo, setStartDateTo] = useState<string | null>(null);
 
   // Fetch contract list
   const fetchContracts = async (params: ContractSearchDTO) => {
     setLoading(true);
     try {
-      const res = await searchContracts(params);
+      // Chuyển "" thành null cho các filter
+      const cleanParams: ContractSearchDTO = {
+        ...params,
+        pickupBranchId:
+          params.pickupBranchId === "" ? null : params.pickupBranchId,
+        returnBranchId:
+          params.returnBranchId === "" ? null : params.returnBranchId,
+        status: params.status === "" ? null : params.status,
+        startDateFrom: params.startDateFrom ?? null,
+        startDateTo: params.startDateTo ?? null,
+      };
+      const res = await searchContracts(cleanParams);
+      // Lấy phân trang từ API
       setContracts(res.data.data);
-      setTotal(res.data.totalElements);
+      setTotal(res.data.totalPages);
     } finally {
       setLoading(false);
     }
@@ -85,6 +87,37 @@ const ContractComponent = () => {
   useEffect(() => {
     fetchContracts(filter);
   }, [filter]);
+
+  // Fetch branches and statuses for filters
+  useEffect(() => {
+    getAllActiveBranches().then((res) => {
+      const branchList = (res.data || []).map((b: any) => ({
+        value: b.id,
+        label: b.name,
+      }));
+      setPickupBranchOptions([{ value: "", label: "Chi nhánh thuê" }, ...branchList]);
+      setReturnBranchOptions([{ value: "", label: "Chi nhánh trả" }, ...branchList]);
+    });
+    getContractStatuses().then((res) => {
+      setStatusOptions([
+        { value: "", label: "Trạng thái" },
+        ...(res.data || []).map((s: any) => ({
+          value: s.code,
+          label: s.name,
+        })),
+      ]);
+    });
+  }, []);
+
+  useEffect(() => {
+    setFilter((prev) => ({
+      ...prev,
+      startDateFrom: startDateFrom || null,
+      startDateTo: startDateTo || null,
+      page: 1,
+    }));
+    // eslint-disable-next-line
+  }, [startDateFrom, startDateTo]);
 
   // Table pagination
   const handleTableChange = (page: number, pageSize: number) => {
@@ -99,7 +132,20 @@ const ContractComponent = () => {
   const handleExportExcel = async () => {
     setLoading(true);
     try {
-      const blob = await exportContractsToExcel(filter);
+      // Chuyển các filter rỗng/undefined về null
+      const exportParams = {
+        ...filter,
+        keyword: filter.keyword ? filter.keyword : null,
+        status: filter.status ? filter.status : null,
+        source: filter.source ? filter.source : null,
+        startDateFrom: filter.startDateFrom ? filter.startDateFrom : null,
+        startDateTo: filter.startDateTo ? filter.startDateTo : null,
+        pickupBranchId: filter.pickupBranchId ? filter.pickupBranchId : null,
+        returnBranchId: filter.returnBranchId ? filter.returnBranchId : null,
+        page: filter.page || 1,
+        size: filter.size || 10,
+      };
+      const blob = await exportContractsToExcel(exportParams);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -144,6 +190,13 @@ const ContractComponent = () => {
     }
   };
 
+  // Reset all filters
+  const handleResetFilter = () => {
+    setFilter(defaultFilter);
+    setStartDateFrom(null);
+    setStartDateTo(null);
+  };
+
   return (
     <div className="content_wrap">
       <div id="content" className="grid_content">
@@ -172,12 +225,25 @@ const ContractComponent = () => {
                   }))
                 }
               />
+              {/* Chọn ngày thuê từ */}
+              <DatePickerBase
+                label="Chọn ngày thuê"
+                value={startDateFrom}
+                placeholder="Chọn ngày thuê"
+                style={{ minWidth: 140 }}
+                onChange={(val) => setStartDateFrom(val)}
+              />
+              {/* Chọn ngày thuê đến */}
+              <DatePickerBase
+                label="Chọn ngày trả"
+                value={startDateTo}
+                placeholder="Chọn ngày trả"
+                style={{ minWidth: 140 }}
+                onChange={(val) => setStartDateTo(val)}
+              />
               <SelectboxBase
                 value={filter.pickupBranchId}
-                options={[
-                  { value: "", label: "Chi nhánh thuê" },
-                  ...branchList,
-                ]}
+                options={pickupBranchOptions}
                 style={{ minWidth: 140 }}
                 onChange={(val) =>
                   setFilter((prev) => ({
@@ -190,7 +256,7 @@ const ContractComponent = () => {
               />
               <SelectboxBase
                 value={filter.returnBranchId}
-                options={[{ value: "", label: "Chi nhánh trả" }, ...branchList]}
+                options={returnBranchOptions}
                 style={{ minWidth: 140 }}
                 onChange={(val) =>
                   setFilter((prev) => ({
@@ -203,7 +269,7 @@ const ContractComponent = () => {
               />
               <SelectboxBase
                 value={filter.status}
-                options={[{ value: "", label: "Trạng thái" }, ...statusList]}
+                options={statusOptions}
                 style={{ minWidth: 120 }}
                 onChange={(val) =>
                   setFilter((prev) => ({
@@ -220,6 +286,13 @@ const ContractComponent = () => {
                 style={{ marginLeft: 8, minWidth: 120 }}
                 onClick={handleExportExcel}
                 loading={loading}
+              />
+              <ButtonBase
+                label="Đặt lại bộ lọc"
+                className="btn_gray"
+                style={{ minWidth: 120 }}
+                onClick={handleResetFilter}
+                disabled={loading}
               />
             </div>
           </div>
@@ -240,156 +313,161 @@ const ContractComponent = () => {
                 style={{ marginLeft: "auto" }}
               />
             </div>
-            <TableBase
-              data={contracts}
-              loading={loading}
-              columns={[
-                {
-                  title: "Mã hợp đồng",
-                  dataIndex: "contractCode",
-                  key: "contractCode",
-                  width: "7%",
-                },
-                {
-                  title: "Nguồn",
-                  dataIndex: "source",
-                  key: "source",
-                  width: "7%",
-                },
-                {
-                  title: "Khách hàng",
-                  dataIndex: "customerName",
-                  key: "customerName",
-                  width: "10%",
-                },
-                {
-                  title: "Số điện thoại",
-                  dataIndex: "phoneNumber",
-                  key: "phoneNumber",
-                  width: "10%",
-                },
-                {
-                  title: "Xe thuê",
-                  dataIndex: "cars",
-                  key: "cars",
-                  width: "13%",
-                  render: (cars: any) =>
-                    Array.isArray(cars)
-                      ? cars
-                          .map((c: any) => `${c.carModel} (${c.licensePlate})`)
-                          .join("; ")
-                      : "",
-                },
-                {
-                  title: "Ngày thuê",
-                  dataIndex: "startDate",
-                  key: "startDate",
-                  width: "8%",
-                  render: (val: string) =>
-                    val ? new Date(val).toLocaleDateString() : "",
-                },
-                {
-                  title: "Ngày trả",
-                  dataIndex: "endDate",
-                  key: "endDate",
-                  width: "8%",
-                  render: (val: string) =>
-                    val ? new Date(val).toLocaleDateString() : "",
-                },
-                {
-                  title: "Chi nhánh thuê",
-                  dataIndex: "pickupBranchName",
-                  key: "pickupBranchName",
-                  width: "7%",
-                },
-                {
-                  title: "Chi nhánh trả",
-                  dataIndex: "returnBranchName",
-                  key: "returnBranchName",
-                  width: "7%",
-                },
-                {
-                  title: "Tổng tiền",
-                  dataIndex: "finalAmount",
-                  key: "finalAmount",
-                  width: "8%",
-                  render: (val: number) => val?.toLocaleString(),
-                },
-                {
-                  title: "Đã trả",
-                  dataIndex: "paidAmount",
-                  key: "paidAmount",
-                  width: "8%",
-                  render: (val: number) => val?.toLocaleString(),
-                },
-                {
-                  title: "Còn lại",
-                  dataIndex: "remainingAmount",
-                  key: "remainingAmount",
-                  width: "8%",
-                  render: (val: number) => val?.toLocaleString(),
-                },
-                {
-                  title: "Trạng thái",
-                  dataIndex: "status",
-                  key: "status",
-                  width: "8%",
-                  render: (val: string) => (
-                    <span className={`contract-status ${val}`}>
-                      {statusMap[val] || val}
-                    </span>
-                  ),
-                },
-                {
-                  title: "Thao tác",
-                  key: "actions",
-                  width: "12%",
-                  render: (_: any, record: ContractDTO) => (
-                    <div className="dp_flex btn_group">
-                      <ButtonBase
-                        label="Xem"
-                        className="btn_gray mg_r10"
-                        onClick={() => {
-                          navigate(`/contract/detail/${record.id}`);
-                        }}
-                      />
-                      <ButtonBase
-                        label="In"
-                        className="btn_gray mg_r10"
-                        onClick={() => handleDownloadPDF(record.id)}
-                      />
-                      {record.status !== "CANCELLED" && (
-                        <>
-                          <ButtonBase
-                            label="Chỉnh sửa"
-                            className="btn_gray mg_r10"
-                            onClick={() => {
-                              navigate(`/contract/edit/${record.id}`);
-                            }}
-                          />
-                          <ButtonBase
-                            label="Hủy"
-                            className="btn_gray mg_r10"
-                            onClick={() => handleDeleteContract(record.id)}
-                          />
-                          <ButtonBase
-                            label="Thanh toán"
-                            className="btn_gray"
-                            onClick={() => {
-                              navigate(`/contract/payment/${record.id}`);
-                            }}
-                          />
-                        </>
-                      )}
-                    </div>
-                  ),
-                },
-              ]}
-              pageSize={filter.size || 10}
-              currentPage={filter.page || 1}
-              total={total}
-              onPageChange={handleTableChange}
-            />
+            {/* Thêm scroll ngang cho table */}
+            <div style={{ overflowX: "auto" }}>
+              <TableBase
+                data={contracts}
+                loading={loading}
+                columns={[
+                  {
+                    title: "Mã hợp đồng",
+                    dataIndex: "contractCode",
+                    key: "contractCode",
+                    width: "7%",
+                  },
+                  {
+                    title: "Nguồn",
+                    dataIndex: "source",
+                    key: "source",
+                    width: "7%",
+                  },
+                  {
+                    title: "Khách hàng",
+                    dataIndex: "customerName",
+                    key: "customerName",
+                    width: "10%",
+                  },
+                  {
+                    title: "Số điện thoại",
+                    dataIndex: "phoneNumber",
+                    key: "phoneNumber",
+                    width: "10%",
+                  },
+                  {
+                    title: "Xe thuê",
+                    dataIndex: "cars",
+                    key: "cars",
+                    width: "13%",
+                    render: (cars: any) =>
+                      Array.isArray(cars)
+                        ? cars
+                            .map(
+                              (c: any) => `${c.carModel} (${c.licensePlate})`
+                            )
+                            .join("; ")
+                        : "",
+                  },
+                  {
+                    title: "Ngày thuê",
+                    dataIndex: "startDate",
+                    key: "startDate",
+                    width: "8%",
+                    render: (val: string) =>
+                      val ? new Date(val).toLocaleDateString() : "",
+                  },
+                  {
+                    title: "Ngày trả",
+                    dataIndex: "endDate",
+                    key: "endDate",
+                    width: "8%",
+                    render: (val: string) =>
+                      val ? new Date(val).toLocaleDateString() : "",
+                  },
+                  {
+                    title: "Chi nhánh thuê",
+                    dataIndex: "pickupBranchName",
+                    key: "pickupBranchName",
+                    width: "7%",
+                  },
+                  {
+                    title: "Chi nhánh trả",
+                    dataIndex: "returnBranchName",
+                    key: "returnBranchName",
+                    width: "7%",
+                  },
+                  {
+                    title: "Tổng tiền",
+                    dataIndex: "finalAmount",
+                    key: "finalAmount",
+                    width: "8%",
+                    render: (val: number) => val?.toLocaleString(),
+                  },
+                  {
+                    title: "Đã trả",
+                    dataIndex: "paidAmount",
+                    key: "paidAmount",
+                    width: "8%",
+                    render: (val: number) => val?.toLocaleString(),
+                  },
+                  {
+                    title: "Còn lại",
+                    dataIndex: "remainingAmount",
+                    key: "remainingAmount",
+                    width: "8%",
+                    render: (val: number) => val?.toLocaleString(),
+                  },
+                  {
+                    title: "Trạng thái",
+                    dataIndex: "statusNm",
+                    key: "statusNm",
+                    width: "8%",
+                    render: (val: string) => (
+                      <span className={`contract-status ${val}`}>{val}</span>
+                    ),
+                  },
+                  {
+                    title: "Thao tác",
+                    key: "actions",
+                    width: "12%",
+                    render: (_: any, record: ContractDTO) => (
+                      <div className="dp_flex btn_group">
+                        <ButtonBase
+                          label="Xem"
+                          className="btn_gray mg_r10"
+                          onClick={() => {
+                            navigate(`/contract/detail/${record.id}`);
+                          }}
+                        />
+                        <ButtonBase
+                          label="In"
+                          className="btn_gray mg_r10"
+                          onClick={() => handleDownloadPDF(record.id)}
+                        />
+                        {record.status !== "CANCELLED" && (
+                          <>
+                            <ButtonBase
+                              label="Chỉnh sửa"
+                              className="btn_gray mg_r10"
+                              onClick={() => {
+                                navigate(`/contract/edit/${record.id}`);
+                              }}
+                            />
+                            <ButtonBase
+                              label="Hủy"
+                              className="btn_gray mg_r10"
+                              onClick={() => handleDeleteContract(record.id)}
+                            />
+                            <ButtonBase
+                              label="Thanh toán"
+                              className="btn_gray"
+                              onClick={() => {
+                                navigate(`/contract/payment/${record.id}`);
+                              }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    ),
+                  },
+                ]}
+                pageSize={filter.size || 10}
+                currentPage={filter.page || 1}
+                totalPages={total} // Số trang, không phải tổng số bản ghi
+                paginationType="BE"
+                onPageChange={handleTableChange}
+                style={{ minWidth: 1400 }}
+              />
+            </div>
           </div>
         </ContainerBase>
       </div>

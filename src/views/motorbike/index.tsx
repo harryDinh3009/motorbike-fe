@@ -117,10 +117,10 @@ const MotorbikeList = () => {
       const cleanParams: CarSearchDTO = {
         ...params,
         keyword: params.keyword?.trim() ? params.keyword : undefined,
-        branchId: params.branchId || undefined,
-        carType: params.carType || undefined,
-        condition: params.condition || undefined,
-        status: params.status || undefined,
+        branchId: params.branchId === "" ? undefined : params.branchId,
+        carType: params.carType === "" ? undefined : params.carType,
+        condition: params.condition === "" ? undefined : params.condition,
+        status: params.status === "" ? undefined : params.status,
       };
       const res = await searchCars(cleanParams);
       setMotorbikes(res.data.data);

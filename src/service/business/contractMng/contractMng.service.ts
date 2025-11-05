@@ -248,3 +248,15 @@ export const exportContractsToExcel = async (
   });
   return res.data;
 };
+
+/**
+ * Lấy danh sách trạng thái hợp đồng
+ */
+export const getContractStatuses = async (): Promise<
+  ApiResponse<{ code: string; name: string }[]>
+> => {
+  const res = await http.get<ApiResponse<{ code: string; name: string }[]>>(
+    "/a/contract-mng/contract-statuses"
+  );
+  return res.data;
+};
