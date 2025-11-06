@@ -157,6 +157,7 @@ export interface ContractDTO {
   returnUserName?: string;
   returnTime?: string;
   completedDate?: string;
+  createdDate?: string; // Thêm dòng này nếu chưa có
 
   // Relationships
   cars?: ContractCarDTO[];

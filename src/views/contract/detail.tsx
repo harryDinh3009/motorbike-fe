@@ -273,8 +273,6 @@ const ContractDetailComponent = () => {
     setShowModalPickup(true);
   };
 
-  // ...existing code...
-
   // Chuẩn hóa dữ liệu cho các modal
   // TODO: Replace with real staff list if available
   const staffOptions: { value: string; label: string }[] =
@@ -519,8 +517,9 @@ const ContractDetailComponent = () => {
                       <tr>
                         <td style={{ color: "#888" }}>Ngày đặt</td>
                         <td>
-                          {contract.completedDate
-                            ? new Date(contract.completedDate).toLocaleString()
+                          {/* Sử dụng createdDate nếu có, nếu không thì để trống */}
+                          {contract.createdDate
+                            ? new Date(contract.createdDate).toLocaleString()
                             : ""}
                         </td>
                       </tr>
