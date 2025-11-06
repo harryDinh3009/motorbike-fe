@@ -21,6 +21,12 @@ import {
   ContractSearchDTO,
   ContractDTO,
 } from "@/service/business/contractMng/contractMng.type";
+import {
+  EyeOutlined,
+  EditOutlined,
+  PrinterOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 
 const ContractComponent = () => {
   const pageTitle = "Quản lý hợp đồng";
@@ -420,49 +426,42 @@ const ContractComponent = () => {
                     key: "actions",
                     width: "12%",
                     render: (_: any, record: ContractDTO) => (
-                      <div className="dp_flex btn_group">
+                      <div className="dp_flex btn_group" style={{ gap: 8 }}>
                         <ButtonBase
-                          label="Xem"
-                          className="btn_gray mg_r10"
+                          icon={<EyeOutlined />}
+                          className="btn_gray"
+                          title="Xem"
                           onClick={() => {
                             navigate(`/contract/detail/${record.id}`);
                           }}
                         />
                         <ButtonBase
-                          label="In"
-                          className="btn_gray mg_r10"
+                          icon={<EditOutlined />}
+                          className="btn_gray"
+                          title="Sửa"
+                          onClick={() => {
+                            navigate(`/contract/create?id=${record.id}`);
+                          }}
+                        />
+                        <ButtonBase
+                          icon={<PrinterOutlined />}
+                          className="btn_gray"
+                          title="In hợp đồng"
                           onClick={() => handleDownloadPDF(record.id)}
                         />
-                        {record.status !== "CANCELLED" && (
-                          <>
-                            <ButtonBase
-                              label="Chỉnh sửa"
-                              className="btn_gray mg_r10"
-                              onClick={() => {
-                                navigate(`/contract/edit/${record.id}`);
-                              }}
-                            />
-                            <ButtonBase
-                              label="Hủy"
-                              className="btn_gray mg_r10"
-                              onClick={() => handleDeleteContract(record.id)}
-                            />
-                            <ButtonBase
-                              label="Thanh toán"
-                              className="btn_gray"
-                              onClick={() => {
-                                navigate(`/contract/payment/${record.id}`);
-                              }}
-                            />
-                          </>
-                        )}
+                        <ButtonBase
+                          icon={<DeleteOutlined />}
+                          className="btn_gray"
+                          title="Xóa"
+                          onClick={() => handleDeleteContract(record.id)}
+                        />
                       </div>
                     ),
                   },
                 ]}
                 pageSize={filter.size || 10}
                 currentPage={filter.page || 1}
-                totalPages={total} // Số trang, không phải tổng số bản ghi
+                totalPages={total}
                 paginationType="BE"
                 onPageChange={handleTableChange}
                 style={{ minWidth: 1400 }}

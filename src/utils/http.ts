@@ -3,7 +3,7 @@ import { removeUserInfo, getUserInfo } from "@/utils/storage";
 import { decode } from "html-entities";
 import { createBrowserHistory } from "history";
 import { SCREEN } from "@/router/screen";
-import { getToken } from "./token";
+import { getToken, isTokenExpired } from "./token";
 
 const history = createBrowserHistory();
 
@@ -21,13 +21,18 @@ class Http {
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${getToken()}`,
       },
       withCredentials: true,
     });
 
     this.instance.interceptors.request.use(
       (config) => {
+        const token = getToken();
+
+        if (token && !isTokenExpired(token)) {
+          config.headers["Authorization"] = `Bearer ${token}`;
+        }
+
         return config;
       },
       (error) => Promise.reject(error)

@@ -64,6 +64,15 @@ const ContractDetailComponent = () => {
   const [showModalDelivery, setShowModalDelivery] = useState(false);
   const [showModalPayment, setShowModalPayment] = useState(false);
   const [showModalClose, setShowModalClose] = useState(false);
+  // Parse user info from localStorage or use as object
+  let currentUser: any = getUserInfo();
+  if (typeof currentUser === "string") {
+    try {
+      currentUser = JSON.parse(currentUser);
+    } catch {
+      currentUser = {};
+    }
+  }
 
   // Lưu lại danh sách thanh toán hiện tại để truyền vào modal
   const [currentPayments, setCurrentPayments] = useState<any[]>([]);
@@ -72,6 +81,16 @@ const ContractDetailComponent = () => {
   const [carStatusOptions, setCarStatusOptions] = useState<
     { value: string; label: string }[]
   >([]);
+
+  // State để lưu defaultStaff, defaultTime cho modal giao/nhận xe
+  const [deliveryDefault, setDeliveryDefault] = useState<{
+    staff: string;
+    time: string;
+  }>({ staff: "", time: "" });
+  const [pickupDefault, setPickupDefault] = useState<{
+    staff: string;
+    time: string;
+  }>({ staff: "", time: "" });
 
   // Hàm reload lại dữ liệu hợp đồng
   const reloadData = async () => {
@@ -157,6 +176,11 @@ const ContractDetailComponent = () => {
       contractId: contract.id,
       cars,
       deliveryUserId: data.staff,
+      deliveryUserName:
+        currentUser?.userCurrent?.fullName ||
+        currentUser?.userCurrent?.userName ||
+        currentUser?.userCurrent?.username ||
+        "",
       deliveryTime: data.time,
     });
     setShowModalDelivery(false);
@@ -179,6 +203,11 @@ const ContractDetailComponent = () => {
       contractId: contract.id,
       cars,
       returnUserId: data.staff,
+      returnUserName:
+        currentUser?.userCurrent?.fullName ||
+        currentUser?.userCurrent?.userName ||
+        currentUser?.userCurrent?.username ||
+        "",
       returnTime: data.time,
     });
     setShowModalPickup(false);
@@ -228,37 +257,39 @@ const ContractDetailComponent = () => {
 
   // Khi bấm nút "Giao xe"
   const handleShowDeliveryModal = () => {
-    setShowModalDelivery(true);
     setDeliveryDefault({
-      staff: currentUser?.id || "",
-      time: new Date().toISOString(),
+      staff: currentUser?.userCurrent?.id || "",
+      time: contract?.deliveryTime || new Date().toISOString(),
     });
+    setShowModalDelivery(true);
   };
 
   // Khi bấm nút "Trả xe"
   const handleShowPickupModal = () => {
-    setShowModalPickup(true);
     setPickupDefault({
-      staff: currentUser?.id || "",
-      time: new Date().toISOString(),
+      staff: currentUser?.userCurrent?.id || "",
+      time: contract?.returnTime || new Date().toISOString(),
     });
+    setShowModalPickup(true);
   };
 
-  // State để lưu defaultStaff, defaultTime cho modal giao/nhận xe
-  const [deliveryDefault, setDeliveryDefault] = useState<{
-    staff: string;
-    time: string;
-  }>({ staff: "", time: "" });
-  const [pickupDefault, setPickupDefault] = useState<{
-    staff: string;
-    time: string;
-  }>({ staff: "", time: "" });
+  // ...existing code...
 
   // Chuẩn hóa dữ liệu cho các modal
-  const staffOptions = [
-    // ...fetch hoặc truyền danh sách nhân viên nếu có...
-    // { value: "staffId", label: "Tên nhân viên" }
-  ];
+  // TODO: Replace with real staff list if available
+  const staffOptions: { value: string; label: string }[] =
+    currentUser?.userCurrent
+      ? [
+          {
+            value: currentUser.userCurrent.id,
+            label:
+              currentUser.userCurrent.fullName ||
+              currentUser.userCurrent.userName ||
+              currentUser.userCurrent.username ||
+              "Nhân viên",
+          },
+        ]
+      : [];
 
   // In hợp đồng
   const handlePrintContract = async () => {

@@ -72,6 +72,8 @@ const ModalAddMotor = ({
       .map((m) => {
         const info = carList.find((car) => car.id === m.id);
         return {
+          id: info?.id || m.id,
+          carId: info?.id || m.id,
           type: info?.carType || "",
           name: info?.model || "",
           plate: info?.licensePlate || "",

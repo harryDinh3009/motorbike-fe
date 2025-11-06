@@ -60,7 +60,11 @@ const ModalUpdateInfoDelivery = ({
           }}
         >
           <ButtonBase label="Hủy" className="btn_lightgray" onClick={onClose} />
-          <ButtonBase label="Tiếp tục" className="btn_primary" onClick={handleSave} />
+          <ButtonBase
+            label="Tiếp tục"
+            className="btn_primary"
+            onClick={handleSave}
+          />
         </div>
       }
     >
@@ -140,16 +144,20 @@ const ModalUpdateInfoDelivery = ({
           <div style={{ fontWeight: 500, marginBottom: 6 }}>
             Nhân viên giao xe <span style={{ color: "red" }}>*</span>
           </div>
-          <SelectboxBase
-            value={staff}
-            options={[
-              { value: "", label: "Chọn nhân viên" },
-              ...(staffOptions || []),
-            ]}
-            onChange={(val) =>
-              setStaff(typeof val === "string" ? val : val[0] || "")
+          <input
+            type="text"
+            value={
+              staffOptions.find((s) => s.value === staff)?.label || staff || ""
             }
-            style={{ width: "100%" }}
+            disabled
+            style={{
+              width: "100%",
+              background: "#f5f5f5",
+              color: "#888",
+              border: "1px solid #eee",
+              borderRadius: 6,
+              padding: "4px 8px",
+            }}
           />
         </div>
         <div style={{ flex: 1 }}>
@@ -157,10 +165,16 @@ const ModalUpdateInfoDelivery = ({
             Thời gian giao xe
           </div>
           <DatePickerBase
-            value={time}
+            value={time ? new Date(time) : undefined}
             placeholder="mm/dd/yyyy --:--"
             showTime
-            onChange={(val) => setTime(val)}
+            onChange={(val: any) => {
+              if (!val) return setTime("");
+              if (typeof val === "string") return setTime(val);
+              if (val instanceof Date && !isNaN(val.getTime())) {
+                return setTime(val.toISOString());
+              }
+            }}
             style={{ width: "100%" }}
           />
         </div>

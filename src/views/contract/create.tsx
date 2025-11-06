@@ -7,7 +7,10 @@ import { HomeOutlined } from "@ant-design/icons";
 import ModalAddMotor from "./modal/ModalAddMotor";
 import ModalSaveSurcharge from "./modal/ModalSaveSurcharge";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { getContractDetail, saveContract } from "@/service/business/contractMng/contractMng.service";
+import {
+  getContractDetail,
+  saveContract,
+} from "@/service/business/contractMng/contractMng.service";
 import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
 import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/surchargeTypeMng.service";
 import { getAllCustomers } from "@/service/business/customerMng/customerMng.service";
@@ -35,11 +38,16 @@ const paymentMethods = [
   { value: "bank", label: "Chuyển khoản ngân hàng" },
 ];
 
-const pageTitle = "Tạo hợp đồng thuê xe";
-const breadcrumbItems = [
+// Dynamic page title and breadcrumb
+const getPageTitle = (isEdit: boolean) =>
+  isEdit ? "Cập nhật hợp đồng thuê xe" : "Tạo hợp đồng thuê xe";
+const getBreadcrumbItems = (isEdit: boolean) => [
   { label: "Dashboard", path: "/", icon: <HomeOutlined /> },
   { label: "Quản lý hợp đồng", path: "/contract" },
-  { label: "Tạo hợp đồng", path: "/contract/create" },
+  {
+    label: isEdit ? "Cập nhật hợp đồng" : "Tạo hợp đồng",
+    path: "/contract/create",
+  },
 ];
 
 const initialForm = {
@@ -54,6 +62,8 @@ const initialForm = {
   deliveryAddress: "",
   receiveAddress: "",
   note: "",
+  discountType: "", // "AMOUNT" | "PERCENTAGE"
+  discountValue: 0,
 };
 
 interface CarItem {
@@ -81,7 +91,6 @@ const ContractCreateComponent = () => {
   const [feeList, setFeeList] = useState<any[]>(initialFeeList);
   const [payment, setPayment] = useState({
     deposit: 0,
-    method: "",
     total: 0,
     paid: 0,
     remain: 0,
@@ -157,6 +166,8 @@ const ContractCreateComponent = () => {
           deliveryAddress: c.pickupAddress || "",
           receiveAddress: c.returnAddress || "",
           note: c.notes || "",
+          discountType: c.discountType || "",
+          discountValue: c.discountValue || 0,
         });
         setCarList(
           (c.cars || []).map((car) => ({
@@ -248,8 +259,15 @@ const ContractCreateComponent = () => {
   const totalCar = carList.reduce((sum, c) => sum + (c.total || 0), 0);
   // Tính tổng phụ phí
   const totalFee = feeList.reduce((sum, f) => sum + (f.amount || 0), 0);
+  // Tính giảm giá
+  let discountAmount = 0;
+  if (form.discountType === "AMOUNT") {
+    discountAmount = Number(form.discountValue) || 0;
+  } else if (form.discountType === "PERCENTAGE") {
+    discountAmount = ((Number(form.discountValue) || 0) / 100) * (totalCar + totalFee);
+  }
   // Tổng cộng
-  const totalAll = totalCar + totalFee;
+  const totalAll = totalCar + totalFee - discountAmount;
 
   // Lưu hợp đồng
   const handleSave = async () => {
@@ -283,8 +301,10 @@ const ContractCreateComponent = () => {
       needPickupDelivery: form.needDelivery,
       needReturnDelivery: form.needReceive,
       notes: form.note,
+      discountType: form.discountType as any,
+      discountValue: Number(form.discountValue) || 0,
       cars: carList.map((car) => ({
-        carId: car.id || "",
+        carId: car.carId || car.id || "",
         dailyPrice: car.priceDay,
         hourlyPrice: car.priceHour,
         totalAmount: car.total,
@@ -310,6 +330,9 @@ const ContractCreateComponent = () => {
       alert("Lưu hợp đồng thất bại!");
     }
   };
+
+  const pageTitle = getPageTitle(isEditMode);
+  const breadcrumbItems = getBreadcrumbItems(isEditMode);
 
   return (
     <div className="content_wrap">
@@ -831,34 +854,63 @@ const ContractCreateComponent = () => {
           <div className="box_section">
             <p className="box_title_sm">Thông tin thanh toán</p>
             <div className="dp_flex" style={{ gap: 16, marginBottom: 12 }}>
-              <input
-                type="number"
-                placeholder="Tiền đặt cọc"
-                value={payment.deposit}
-                onChange={(e) =>
-                  setPayment({ ...payment, deposit: Number(e.target.value) })
-                }
-                style={{
-                  minWidth: 140,
-                  borderRadius: 6,
-                  border: "1px solid #eee",
-                  padding: "6px 10px",
-                }}
-              />
-              <SelectboxBase
-                value={payment.method}
-                options={[
-                  { value: "", label: "Phương thức thanh toán" },
-                  ...paymentMethods,
-                ]}
-                onChange={(val: string | string[]) =>
-                  setPayment({
-                    ...payment,
-                    method: typeof val === "string" ? val : val[0] || "",
-                  })
-                }
-                style={{ minWidth: 180 }}
-              />
+              <div style={{ minWidth: 180 }}>
+                <label className="form_label">Loại giảm giá</label>
+                <SelectboxBase
+                  value={form.discountType}
+                  options={[
+                    { value: "", label: "Chọn loại giảm giá" },
+                    { value: "AMOUNT", label: "Theo giá trị" },
+                    { value: "PERCENTAGE", label: "Theo phần trăm" },
+                  ]}
+                  onChange={(val: string | string[]) =>
+                    setForm({
+                      ...form,
+                      discountType: typeof val === "string" ? val : val[0] || "",
+                      discountValue: 0,
+                    })
+                  }
+                  style={{ width: "100%" }}
+                />
+              </div>
+              {form.discountType && (
+                <div style={{ minWidth: 140 }}>
+                  <label className="form_label">
+                    {form.discountType === "AMOUNT" ? "Giá trị giảm giá" : "Phần trăm giảm giá"}
+                  </label>
+                  <input
+                    type="number"
+                    placeholder={form.discountType === "AMOUNT" ? "Giá trị" : "%"}
+                    value={form.discountValue}
+                    onChange={(e) =>
+                      setForm({ ...form, discountValue: Number(e.target.value) })
+                    }
+                    style={{
+                      width: "100%",
+                      borderRadius: 6,
+                      border: "1px solid #eee",
+                      padding: "6px 10px",
+                    }}
+                  />
+                </div>
+              )}
+              <div style={{ minWidth: 140 }}>
+                <label className="form_label">Tiền đặt cọc</label>
+                <input
+                  type="number"
+                  placeholder="Tiền đặt cọc"
+                  value={payment.deposit}
+                  onChange={(e) =>
+                    setPayment({ ...payment, deposit: Number(e.target.value) })
+                  }
+                  style={{
+                    width: "100%",
+                    borderRadius: 6,
+                    border: "1px solid #eee",
+                    padding: "6px 10px",
+                  }}
+                />
+              </div>
             </div>
             <div style={{ marginTop: 12 }}>
               <table style={{ width: "100%" }}>
@@ -873,6 +925,12 @@ const ContractCreateComponent = () => {
                     <td>Tổng phụ phí:</td>
                     <td style={{ textAlign: "right" }}>
                       {totalFee.toLocaleString()} đ
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Giảm giá:</td>
+                    <td style={{ textAlign: "right" }}>
+                      {discountAmount ? `- ${discountAmount.toLocaleString()} đ` : "0 đ"}
                     </td>
                   </tr>
                   <tr>

@@ -7,6 +7,8 @@ import Logo from "@/assets/images/motorbike_logo.png";
 import { loginBasicAdmin } from "@/service/common/auth/AuthService";
 import { setUserInfo } from "@/utils/storage";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
+import { SCREEN } from "@/router/screen";
 
 const LoginView = () => {
   const [form, setForm] = useState({
@@ -14,6 +16,7 @@ const LoginView = () => {
     password: "12345678",
   });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (key: string) => (val: string) => {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -40,7 +43,7 @@ const LoginView = () => {
         userCurrent,
       });
       setLoading(false);
-      alert("Đăng nhập thành công!");
+      navigate(SCREEN.dashboard.path);
       // TODO: Redirect to dashboard or home
     } catch (e) {
       setLoading(false);
