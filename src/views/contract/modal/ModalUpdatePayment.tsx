@@ -5,8 +5,14 @@ import SelectboxBase from "@/component/common/input/SelectboxBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 import InputBase from "@/component/common/input/InputBase";
 import { DeleteOutlined } from "@ant-design/icons";
+import {
+  addPayment,
+  deletePayment,
+} from "@/service/business/contractMng/contractMng.service";
 
 interface PaymentItem {
+  id?: string; // thêm id để nhận biết payment đã có
+  contractId?: string; // thêm contractId để truyền contractId nếu có
   method: string;
   amount: number | string;
   date: string;
@@ -18,6 +24,7 @@ interface Props {
   onClose: () => void;
   onSave: (payments: PaymentItem[]) => void;
   payments?: PaymentItem[];
+  contractId?: string; // thêm prop contractId
 }
 
 const paymentMethodOptions = [
@@ -39,10 +46,12 @@ const ModalUpdatePayment = ({
   onClose,
   onSave,
   payments = defaultPayments,
+  contractId,
 }: Props) => {
   const [list, setList] = useState<PaymentItem[]>(
     payments.length ? payments : defaultPayments
   );
+  const [loading, setLoading] = useState(false);
 
   // Reset state when open
   React.useEffect(() => {
@@ -63,12 +72,56 @@ const ModalUpdatePayment = ({
     ]);
   };
 
-  const handleRemove = (idx: number) => {
-    setList((prev) => prev.filter((_, i) => i !== idx));
+  // Xóa payment: nếu có id thì gọi API xóa, nếu chưa có thì chỉ xóa local
+  const handleRemove = async (idx: number) => {
+    const item = list[idx];
+    if (item.id) {
+      if (!window.confirm("Bạn có chắc chắn muốn xóa thanh toán này?")) return;
+      setLoading(true);
+      try {
+        const res = await deletePayment(item.id);
+        if (res?.status === "SUCCESS" || res?.data === true) {
+          setList((prev) => prev.filter((_, i) => i !== idx));
+        }
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setList((prev) => prev.filter((_, i) => i !== idx));
+    }
   };
 
-  const handleSave = () => {
-    onSave(list);
+  // Lưu: chỉ gửi các payment chưa có id (add mới), for từng payment gọi addPayment
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const newPayments = list.filter((item) => !item.id);
+      let cid =
+        contractId ||
+        newPayments[0]?.contractId ||
+        payments.find((p) => p.contractId)?.contractId ||
+        payments[0]?.contractId ||
+        "";
+      if (!cid) {
+        alert("Không xác định được hợp đồng để thêm thanh toán!");
+        setLoading(false);
+        return;
+      }
+      for (const p of newPayments) {
+        await addPayment({
+          contractId: cid,
+          paymentMethod: p.method,
+          amount: Number(p.amount),
+          paymentDate: p.date,
+          notes: p.note,
+        });
+      }
+      // Gọi lại onSave để parent refresh detail, sau đó đóng modal
+      await onSave([]);
+      onClose();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -92,11 +145,13 @@ const ModalUpdatePayment = ({
             label="Hủy bỏ"
             className="btn_lightgray"
             onClick={onClose}
+            disabled={loading}
           />
           <ButtonBase
             label="Lưu"
             className="btn_primary"
             onClick={handleSave}
+            loading={loading}
           />
         </div>
       }
@@ -105,97 +160,109 @@ const ModalUpdatePayment = ({
         Danh sách thanh toán
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {list.map((item, idx) => (
-          <div
-            key={idx}
-            style={{
-              border: "1px solid #eee",
-              borderRadius: 12,
-              padding: 18,
-              marginBottom: 0,
-              background: "#fafbfc",
-              position: "relative",
-            }}
-          >
+        {list.map((item, idx) => {
+          const isReadonly = !!item.id;
+          return (
             <div
+              key={idx}
               style={{
-                display: "grid",
-                gridTemplateColumns: "1.2fr 1fr 1fr 1fr 40px",
-                gap: 16,
-                alignItems: "center",
+                border: "1px solid #eee",
+                borderRadius: 12,
+                padding: 18,
+                marginBottom: 0,
+                background: "#fafbfc",
+                position: "relative",
+                opacity: loading ? 0.6 : 1,
               }}
             >
-              <div>
-                <div style={{ fontWeight: 500, marginBottom: 4 }}>
-                  Phương thức
-                </div>
-                <SelectboxBase
-                  value={item.method}
-                  options={[
-                    { value: "", label: "Chọn phương thức" },
-                    ...paymentMethodOptions,
-                  ]}
-                  onChange={(val) =>
-                    handleChange(
-                      idx,
-                      "method",
-                      typeof val === "string" ? val : val[0] || ""
-                    )
-                  }
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div>
-                <div style={{ fontWeight: 500, marginBottom: 4 }}>Số tiền</div>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <InputBase
-                    modelValue={item.amount}
-                    placeholder="0"
-                    onChange={(val) => handleChange(idx, "amount", val)}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1.2fr 1fr 1fr 1fr 40px",
+                  gap: 16,
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                    Phương thức
+                  </div>
+                  <SelectboxBase
+                    value={item.method}
+                    options={[
+                      { value: "", label: "Chọn phương thức" },
+                      ...paymentMethodOptions,
+                    ]}
+                    onChange={(val) =>
+                      handleChange(
+                        idx,
+                        "method",
+                        typeof val === "string" ? val : val[0] || ""
+                      )
+                    }
                     style={{ width: "100%" }}
+                    disabled={isReadonly}
                   />
-                  <span style={{ marginLeft: 8, color: "#888" }}>VND</span>
                 </div>
-              </div>
-              <div>
-                <div style={{ fontWeight: 500, marginBottom: 4 }}>
-                  Ngày thanh toán
+                <div>
+                  <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                    Số tiền
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <InputBase
+                      modelValue={item.amount}
+                      placeholder="0"
+                      onChange={(val) => handleChange(idx, "amount", val)}
+                      style={{ width: "100%" }}
+                      disabled={isReadonly}
+                    />
+                    <span style={{ marginLeft: 8, color: "#888" }}>VND</span>
+                  </div>
                 </div>
-                <DatePickerBase
-                  value={item.date}
-                  placeholder="Chọn ngày"
-                  showTime
-                  onChange={(val) => handleChange(idx, "date", val)}
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div>
-                <div style={{ fontWeight: 500, marginBottom: 4 }}>Ghi chú</div>
-                <InputBase
-                  modelValue={item.note}
-                  placeholder="Ghi chú"
-                  onChange={(val) => handleChange(idx, "note", val)}
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div style={{ textAlign: "center", marginTop: 22 }}>
-                <ButtonBase
-                  icon={<DeleteOutlined />}
-                  className="btn_gray"
-                  style={{
-                    borderRadius: 8,
-                    minWidth: 36,
-                    height: 36,
-                    padding: 0,
-                  }}
-                  onClick={() => handleRemove(idx)}
-                  title="Xóa"
-                  disabled={list.length === 1}
-                />
+                <div>
+                  <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                    Ngày thanh toán
+                  </div>
+                  <DatePickerBase
+                    value={item.date}
+                    placeholder="Chọn ngày"
+                    showTime
+                    onChange={(val) => handleChange(idx, "date", val)}
+                    style={{ width: "100%" }}
+                    disabled={isReadonly}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                    Ghi chú
+                  </div>
+                  <InputBase
+                    modelValue={item.note}
+                    placeholder="Ghi chú"
+                    onChange={(val) => handleChange(idx, "note", val)}
+                    style={{ width: "100%" }}
+                    disabled={isReadonly}
+                  />
+                </div>
+                <div style={{ textAlign: "center", marginTop: 22 }}>
+                  <ButtonBase
+                    icon={<DeleteOutlined />}
+                    className="btn_gray"
+                    style={{
+                      borderRadius: 8,
+                      minWidth: 36,
+                      height: 36,
+                      padding: 0,
+                    }}
+                    onClick={() => handleRemove(idx)}
+                    title="Xóa"
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div style={{ textAlign: "center", marginTop: 0 }}>
           <ButtonBase
             label="+ Thêm thanh toán"
@@ -210,6 +277,7 @@ const ModalUpdatePayment = ({
               background: "#fafbfc",
             }}
             onClick={handleAdd}
+            disabled={loading}
           />
         </div>
       </div>

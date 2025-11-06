@@ -245,7 +245,10 @@ const ContractDetailComponent = () => {
 
   // Khi bấm nút "Thanh toán", truyền danh sách thanh toán hiện tại vào modal
   const handleShowPaymentModal = () => {
+    if (!contract) return;
     const mapped = (paymentHistory || []).map((p) => ({
+      id: p.id,
+      contractId: contract.id, // truyền contractId vào từng item
       method: p.paymentMethod || "",
       amount: p.amount || "",
       date: p.paymentDate || "",
@@ -974,7 +977,22 @@ const ContractDetailComponent = () => {
           open={showModalPayment}
           onClose={() => setShowModalPayment(false)}
           onSave={handlePaymentSave}
-          payments={currentPayments}
+          payments={
+            currentPayments.length
+              ? currentPayments
+              : contract
+              ? [
+                  {
+                    contractId: contract.id, // truyền contractId cho payment mới
+                    method: "",
+                    amount: "",
+                    date: "",
+                    note: "",
+                  },
+                ]
+              : []
+          }
+          contractId={contract.id} // truyền contractId vào props
         />
         <ModalCloseContract
           open={showModalClose}
