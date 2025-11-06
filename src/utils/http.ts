@@ -1,8 +1,9 @@
 import axios, { AxiosInstance } from "axios";
-import { removeUserInfo } from "@/utils/storage";
+import { removeUserInfo, getUserInfo } from "@/utils/storage";
 import { decode } from "html-entities";
 import { createBrowserHistory } from "history";
 import { SCREEN } from "@/router/screen";
+import { getToken } from "./token";
 
 const history = createBrowserHistory();
 
@@ -20,6 +21,7 @@ class Http {
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/json",
         Accept: "application/json",
+        Authorization: `Bearer ${getToken()}`,
       },
       withCredentials: true,
     });

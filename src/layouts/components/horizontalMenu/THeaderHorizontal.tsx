@@ -3,6 +3,7 @@ import { gnbOneDepth, headerStyle, mobileGnb } from "@/assets/js/common";
 import { SCREEN } from "@/router/screen";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getUserInfo, removeUserInfo } from "@/utils/storage";
 
 type MenuItem = {
   name: string;
@@ -15,7 +16,7 @@ const THeaderHorizontal = () => {
     userName: string;
     lastLoginDate: string | null;
   }>({
-    userName: "Nguyễn Văn Hòa",
+    userName: "",
     lastLoginDate: null,
   });
   const [currentDate, setCurrentDate] = useState<string>("");
@@ -27,6 +28,27 @@ const THeaderHorizontal = () => {
     headerStyle();
     mobileGnb();
     gnbOneDepth();
+
+    // Lấy user info từ localStorage
+    try {
+      const raw = getUserInfo();
+      if (raw) {
+        const info = JSON.parse(raw);
+        setUserInfo({
+          userName:
+            info.userCurrent?.fullName ||
+            info.userCurrent?.username ||
+            info.username ||
+            "",
+          lastLoginDate: info.userCurrent?.lastLoginDate || null,
+        });
+      }
+    } catch {
+      setUserInfo({
+        userName: "",
+        lastLoginDate: null,
+      });
+    }
   }, []);
 
   const subMenus: MenuItem[] = [
@@ -91,6 +113,7 @@ const THeaderHorizontal = () => {
               type="button"
               className="btn_logout"
               onClick={() => {
+                removeUserInfo();
                 navigate(SCREEN.login.path);
               }}
             >

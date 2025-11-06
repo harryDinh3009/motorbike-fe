@@ -6,7 +6,8 @@ import SelectboxBase from "@/component/common/input/SelectboxBase";
 import { HomeOutlined } from "@ant-design/icons";
 import ModalAddMotor from "./modal/ModalAddMotor";
 import ModalSaveSurcharge from "./modal/ModalSaveSurcharge";
-import { saveContract } from "@/service/business/contractMng/contractMng.service";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { getContractDetail, saveContract } from "@/service/business/contractMng/contractMng.service";
 import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
 import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/surchargeTypeMng.service";
 import { getAllCustomers } from "@/service/business/customerMng/customerMng.service";
@@ -88,6 +89,10 @@ const ContractCreateComponent = () => {
   const [showAddMotor, setShowAddMotor] = useState(false);
   const [showAddSurcharge, setShowAddSurcharge] = useState(false);
   const [editingFee, setEditingFee] = useState<any>(null);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const contractId = searchParams.get("id");
+  const isEditMode = !!contractId;
 
   // State cho options
   const [customerOptions, setCustomerOptions] = useState([
@@ -134,6 +139,54 @@ const ContractCreateComponent = () => {
       );
     });
   }, []);
+
+  // Khi ở mode sửa, load dữ liệu hợp đồng
+  useEffect(() => {
+    if (isEditMode && contractId) {
+      getContractDetail(contractId).then((res) => {
+        const c = res.data;
+        setForm({
+          customer: c.customerId,
+          source: c.source || "",
+          branchRent: c.pickupBranchId || "",
+          branchReturn: c.returnBranchId || "",
+          startDate: c.startDate || "",
+          endDate: c.endDate || "",
+          needDelivery: !!c.needPickupDelivery,
+          needReceive: !!c.needReturnDelivery,
+          deliveryAddress: c.pickupAddress || "",
+          receiveAddress: c.returnAddress || "",
+          note: c.notes || "",
+        });
+        setCarList(
+          (c.cars || []).map((car) => ({
+            id: car.carId,
+            type: car.carType,
+            name: car.carModel,
+            plate: car.licensePlate,
+            priceDay: car.dailyPrice || 0,
+            priceHour: car.hourlyPrice || 0,
+            total: car.totalAmount || 0,
+          }))
+        );
+        setFeeList(
+          (c.surcharges || []).map((fee) => ({
+            desc: fee.description || "",
+            amount: fee.amount || 0,
+            note: fee.notes || "",
+          }))
+        );
+        setPayment({
+          deposit: c.depositAmount || 0,
+          method: "",
+          total: c.finalAmount || 0,
+          paid: c.paidAmount || 0,
+          remain: c.remainingAmount || 0,
+        });
+      });
+    }
+    // eslint-disable-next-line
+  }, [contractId]);
 
   // Thêm xe thuê từ modal
   const handleAddCarFromModal = (cars: any[]) => {
@@ -218,6 +271,7 @@ const ContractCreateComponent = () => {
       return;
     }
     const contractPayload: ContractSaveDTO = {
+      ...(isEditMode ? { id: contractId } : {}),
       customerId: form.customer,
       source: form.source,
       startDate: form.startDate,
@@ -250,8 +304,8 @@ const ContractCreateComponent = () => {
     };
     try {
       await saveContract(contractPayload);
-      alert("Đã lưu hợp đồng!");
-      // TODO: chuyển trang hoặc reset form nếu cần
+      alert(isEditMode ? "Đã cập nhật hợp đồng!" : "Đã lưu hợp đồng!");
+      navigate("/contract");
     } catch (err) {
       alert("Lưu hợp đồng thất bại!");
     }
@@ -846,7 +900,7 @@ const ContractCreateComponent = () => {
           style={{ justifyContent: "flex-end", margin: "24px 0" }}
         >
           <ButtonBase
-            label="Lưu hợp đồng"
+            label={isEditMode ? "Cập nhật hợp đồng" : "Lưu hợp đồng"}
             className="contract-action-btn"
             style={{
               minWidth: 160,

@@ -3,21 +3,49 @@ import ContainerBase from "@/component/common/block/container/ContainerBase";
 import InputBase from "@/component/common/input/InputBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import Logo from "@/assets/images/motorbike_logo.png";
+import { loginBasicAdmin } from "@/service/common/auth/AuthService";
+import { setUserInfo } from "@/utils/storage";
+import { jwtDecode } from "jwt-decode";
 
 const LoginView = () => {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({
+    username: "john.doe@example.com",
+    password: "12345678",
+  });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (key: string) => (val: string) => {
     setForm((prev) => ({ ...prev, [key]: val }));
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await loginBasicAdmin({
+        username: form.username,
+        password: form.password,
+      });
+      // Lấy info user từ accessToken
+      let userCurrent = {};
+      try {
+        userCurrent = jwtDecode(res.data.accessToken);
+      } catch {}
+      // Lưu thông tin user và token vào localStorage
+      setUserInfo({
+        username: res.data.username,
+        accessToken: res.data.accessToken,
+        tokenType: res.data.tokenType,
+        expiresIn: res.data.expiresIn,
+        userCurrent,
+      });
       setLoading(false);
       alert("Đăng nhập thành công!");
-    }, 1000);
+      // TODO: Redirect to dashboard or home
+    } catch (e) {
+      setLoading(false);
+      alert("Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.");
+    }
   };
 
   return (
@@ -52,7 +80,7 @@ const LoginView = () => {
       >
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <img
-            src="/logo-bookbike.png"
+            src={Logo}
             alt="BookBike"
             style={{
               height: 68,
@@ -85,7 +113,7 @@ const LoginView = () => {
               marginTop: 2,
             }}
           >
-            Thuê xe máy em Hòa auto
+            Thuê xe máy
           </div>
         </div>
         <div style={{ width: "100%" }}>
@@ -205,33 +233,8 @@ const LoginView = () => {
             onClick={handleLogin}
             disabled={loading || !form.username || !form.password}
           />
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: 28,
-              color: "#888",
-              fontSize: 15,
-              fontWeight: 500,
-            }}
-          >
-            <span>Chưa có tài khoản? </span>
-            <a
-              href="#"
-              style={{
-                color: "#1677ff",
-                fontWeight: 700,
-                textDecoration: "underline",
-                transition: "color 0.2s",
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.color = "#0d47a1")}
-              onMouseOut={(e) => (e.currentTarget.style.color = "#1677ff")}
-            >
-              Đăng ký ngay
-            </a>
-          </div>
         </div>
       </div>
-      {/* Xe máy background */}
       <img
         src="/login-bike.png"
         alt="Xe máy"
