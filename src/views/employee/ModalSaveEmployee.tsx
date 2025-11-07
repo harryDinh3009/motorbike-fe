@@ -146,8 +146,13 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
       message.error("Vui lòng nhập số điện thoại!");
       return;
     }
+    // Email is required when creating new user (backend requirement)
+    if (!form.id && (!form.email || !form.email.trim())) {
+      message.error("Vui lòng nhập email!");
+      return;
+    }
     if (form.email && form.email.trim()) {
-      // Email validation (only if provided)
+      // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(form.email)) {
         message.error("Email không hợp lệ!");
@@ -160,6 +165,11 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
     }
     if (!form.id && form.password && form.password.length < 6) {
       message.error("Mật khẩu phải có ít nhất 6 ký tự!");
+      return;
+    }
+    // Role is required when creating new user (backend requirement)
+    if (!form.id && !form.role) {
+      message.error("Vui lòng chọn vai trò!");
       return;
     }
 

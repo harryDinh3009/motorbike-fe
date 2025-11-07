@@ -146,16 +146,6 @@ const EmployeeList = () => {
   };
 
   const handleSave = async (employee: any) => {
-    // Validation
-    if (!employee.username || !employee.name || !employee.phone || !employee.email) {
-      message.error("Vui lòng điền đầy đủ thông tin bắt buộc!");
-      return;
-    }
-    if (!employee.id && !employee.password) {
-      message.error("Vui lòng nhập mật khẩu cho tài khoản mới!");
-      return;
-    }
-
     setLoading(true);
     setError(null);
     try {
