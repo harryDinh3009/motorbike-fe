@@ -50,7 +50,7 @@ Props) => {
   );
   const [carStatusOptions, setCarStatusOptions] = useState<
     { value: string; label: string }[]
-  >([{ value: "", label: "Chọn tình trạng" }]);
+  >([{ value: "", label: "Chọn trạng thái" }]);
 
   useEffect(() => {
     setStaff(defaultStaff);
@@ -64,7 +64,7 @@ Props) => {
     );
     getCarStatuses().then((res) => {
       setCarStatusOptions([
-        { value: "", label: "Chọn tình trạng" },
+        { value: "", label: "Chọn trạng thái" },
         ...(res.data || []).map((s: any) => ({
           value: s.code,
           label: s.name,
@@ -139,7 +139,7 @@ Props) => {
               <th style={{ width: 140 }}>Mẫu xe</th>
               <th style={{ width: 120 }}>Biển số xe</th>
               <th style={{ width: 120 }}>Cập nhật Odometer</th>
-              <th style={{ width: 160 }}>Tình trạng</th>
+              <th style={{ width: 160 }}>Trạng thái</th>
             </tr>
           </thead>
           <tbody>
