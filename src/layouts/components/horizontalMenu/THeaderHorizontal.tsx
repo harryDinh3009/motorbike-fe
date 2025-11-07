@@ -15,9 +15,11 @@ const THeaderHorizontal = () => {
   const [userInfo, setUserInfo] = useState<{
     userName: string;
     lastLoginDate: string | null;
+    avatar?: string;
   }>({
     userName: "",
     lastLoginDate: null,
+    avatar: "",
   });
   const [currentDate, setCurrentDate] = useState<string>("");
 
@@ -41,12 +43,14 @@ const THeaderHorizontal = () => {
             info.username ||
             "",
           lastLoginDate: info.userCurrent?.lastLoginDate || null,
+          avatar: info.userCurrent?.avatar || info.avatar || "",
         });
       }
     } catch {
       setUserInfo({
         userName: "",
         lastLoginDate: null,
+        avatar: "",
       });
     }
   }, []);
@@ -105,6 +109,20 @@ const THeaderHorizontal = () => {
           </h1>
           <div className="header_function">
             <p className="login_info">
+              {userInfo.avatar && (
+                <img
+                  src={userInfo.avatar}
+                  alt="avatar"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    marginRight: 8,
+                    verticalAlign: "middle",
+                  }}
+                />
+              )}
               {userInfo.userName}{" "}
               {userInfo.lastLoginDate && `[${userInfo.lastLoginDate}]`} [
               {currentDate}]

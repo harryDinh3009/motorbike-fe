@@ -67,11 +67,11 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
     country: "",
     address: "",
     cccd: "",
-    cccdImg: "",
+    cccdImg: "/img-placeholder.svg",
     license: "",
-    licenseImg: "",
+    licenseImg: "/img-placeholder.svg",
     passport: "",
-    passportImg: "",
+    passportImg: "/img-placeholder.svg",
     note: "",
     avatar: "",
   });
@@ -83,16 +83,18 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         name: customer.fullName || "",
         phone: customer.phoneNumber || "",
         email: customer.email || "",
-        birthday: customer.dateOfBirth ? dayjs(customer.dateOfBirth).format("YYYY-MM-DD") : "",
+        birthday: customer.dateOfBirth
+          ? dayjs(customer.dateOfBirth).format("YYYY-MM-DD")
+          : "",
         gender: customer.gender || "",
         country: customer.country || "",
         address: customer.address || "",
         cccd: customer.citizenId || "",
-        cccdImg: customer.citizenIdImageUrl || "",
+        cccdImg: customer.citizenIdImageUrl || "/img-placeholder.svg",
         license: customer.driverLicense || "",
-        licenseImg: customer.driverLicenseImageUrl || "",
+        licenseImg: customer.driverLicenseImageUrl || "/img-placeholder.svg",
         passport: customer.passport || "",
-        passportImg: customer.passportImageUrl || "",
+        passportImg: customer.passportImageUrl || "/img-placeholder.svg",
         note: customer.note || "",
         avatar: "",
       });
@@ -107,11 +109,11 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         country: "",
         address: "",
         cccd: "",
-        cccdImg: "",
+        cccdImg: "/img-placeholder.svg",
         license: "",
-        licenseImg: "",
+        licenseImg: "/img-placeholder.svg",
         passport: "",
-        passportImg: "",
+        passportImg: "/img-placeholder.svg",
         note: "",
         avatar: "",
       });
@@ -120,7 +122,8 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
   }, [customer, open]);
 
   // Upload handlers
-  const handleUpload = (key: string, uploadFn: (customerId: string, file: File) => Promise<any>) => 
+  const handleUpload =
+    (key: string, uploadFn: (customerId: string, file: File) => Promise<any>) =>
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
@@ -167,21 +170,35 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
       onCancel={onClose}
       width={900}
       footer={
-        <div className="dp_flex" style={{ justifyContent: "flex-end", gap: 12 }}>
+        <div
+          className="dp_flex"
+          style={{ justifyContent: "flex-end", gap: 16, padding: "16px 0 0 0" }}
+        >
           <ButtonBase label="Hủy" className="btn_lightgray" onClick={onClose} />
-          <ButtonBase label="Lưu thay đổi" className="btn_yellow" onClick={handleSubmit} />
+          <ButtonBase
+            label="Lưu thay đổi"
+            className="btn_yellow"
+            onClick={handleSubmit}
+          />
         </div>
       }
       centered={true}
     >
       <div className="box_section" style={{ padding: 0 }}>
         {/* Thông tin cá nhân */}
-        <div className="box_section" style={{ marginBottom: 0, background: "#fafbfc" }}>
-          <p className="box_title_sm" style={{ marginBottom: 12 }}>Thông tin cá nhân</p>
-          <div className="dp_flex" style={{ gap: 24, marginBottom: 0 }}>
+        <div
+          className="box_section"
+          style={{ marginBottom: 0, background: "#fafbfc", padding: "24px 24px 16px 24px", borderRadius: 12 }}
+        >
+          <p className="box_title_sm" style={{ marginBottom: 20, fontSize: 18, fontWeight: 600 }}>
+            Thông tin cá nhân
+          </p>
+          <div className="dp_flex" style={{ gap: 32, marginBottom: 18 }}>
             <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+                Họ tên *
+              </label>
               <InputBase
-                label="Họ tên *"
                 placeholder="Nhập họ tên"
                 modelValue={form.name}
                 onChange={(val) => handleChange("name", val)}
@@ -190,8 +207,10 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+                Số điện thoại
+              </label>
               <InputBase
-                label="Số điện thoại"
                 placeholder="Nhập số điện thoại"
                 modelValue={form.phone}
                 onChange={(val) => handleChange("phone", val)}
@@ -200,10 +219,12 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
           </div>
-          <div className="dp_flex" style={{ gap: 24, marginBottom: 0 }}>
+          <div className="dp_flex" style={{ gap: 32, marginBottom: 18 }}>
             <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+                Email
+              </label>
               <InputBase
-                label="Email"
                 placeholder="Nhập email"
                 modelValue={form.email}
                 onChange={(val) => handleChange("email", val)}
@@ -211,7 +232,7 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
                 Ngày sinh
               </label>
               <DatePickerBase
@@ -222,10 +243,12 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
           </div>
-          <div className="dp_flex" style={{ gap: 24, marginBottom: 0 }}>
+          <div className="dp_flex" style={{ gap: 32, marginBottom: 18 }}>
             <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+                Giới tính
+              </label>
               <SelectboxBase
-                label="Giới tính"
                 placeholder="Chọn giới tính"
                 value={form.gender}
                 options={genderOptions}
@@ -234,8 +257,10 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+                Quốc gia
+              </label>
               <SelectboxBase
-                label="Quốc gia"
                 placeholder="Chọn quốc gia"
                 value={form.country}
                 options={countryOptions}
@@ -244,9 +269,11 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
           </div>
-          <div>
+          <div style={{ marginBottom: 0 }}>
+            <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+              Địa chỉ
+            </label>
             <InputBase
-              label="Địa chỉ"
               placeholder="Nhập địa chỉ"
               modelValue={form.address}
               onChange={(val) => handleChange("address", val)}
@@ -255,20 +282,47 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
           </div>
         </div>
         {/* Giấy tờ tùy thân */}
-        <div className="box_section" style={{ marginBottom: 0, background: "#fafbfc" }}>
-          <p className="box_title_sm" style={{ marginBottom: 12 }}>Giấy tờ tùy thân</p>
-          <div className="dp_flex" style={{ gap: 24, marginBottom: 0 }}>
-            <div style={{ flex: 1 }}>
+        <div
+          className="box_section"
+          style={{
+            marginBottom: 0,
+            background: "#fafbfc",
+            padding: "24px 24px 16px 24px",
+            borderRadius: 12,
+            marginTop: 18,
+          }}
+        >
+          <p
+            className="box_title_sm"
+            style={{
+              marginBottom: 20,
+              fontSize: 18,
+              fontWeight: 600,
+            }}
+          >
+            Giấy tờ tùy thân
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: 32,
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              marginBottom: 0,
+            }}
+          >
+            {/* CCCD/CMND */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <label style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}>
+                CCCD/CMND
+              </label>
               <InputBase
-                label="CCCD/CMND"
                 placeholder="Nhập số CCCD/CMND"
                 modelValue={form.cccd}
                 onChange={(val) => handleChange("cccd", val)}
-                style={{ width: "100%" }}
+                style={{ width: "100%", marginBottom: 10, maxWidth: 180 }}
               />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              <label style={{ fontWeight: 500, marginBottom: 6, alignSelf: "flex-start" }}>
                 Upload CCCD
               </label>
               <input
@@ -282,51 +336,63 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   borderRadius: 6,
                   padding: 6,
                   width: "100%",
-                  background: "#fff"
+                  background: "#fff",
+                  maxWidth: 180,
                 }}
               />
               <div
                 style={{
-                  marginTop: 0,
-                  width: 140,
-                  height: 110,
-                  background: "#f4f4f4",
-                  border: "1px dashed #bbb",
-                  borderRadius: 8,
+                  width: 110,
+                  height: 82,
+                  background: "#fff",
+                  border: "1.5px dashed #bbb",
+                  borderRadius: 10,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: "hidden"
-                }}
-              >
-                <div style={{
-                  background: "#eee",
-                  borderRadius: 8,
                   overflow: "hidden",
-                  maxWidth: "100%",
-                  maxHeight: "100%"
-                }}>
-                  <ImageBase
-                    src={form.cccdImg || "/img-placeholder.svg"}
-                    width={120}
-                    height={90}
-                  />
-                </div>
+                  boxShadow: "0 1px 4px #0001",
+                  margin: "0 auto",
+                  transition: "border-color 0.2s",
+                  position: "relative",
+                }}
+                onMouseOver={e => (e.currentTarget.style.borderColor = "#ffb300")}
+                onMouseOut={e => (e.currentTarget.style.borderColor = "#bbb")}
+              >
+                <img
+                  src={form.cccdImg && form.cccdImg !== "/img-placeholder.svg" ? form.cccdImg : "/img-placeholder.svg"}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: form.cccdImg && form.cccdImg !== "/img-placeholder.svg" ? "cover" : "contain",
+                    background: "#fafbfc",
+                    borderRadius: 8,
+                    border: "none",
+                    transition: "box-shadow 0.2s",
+                    display: "block",
+                  }}
+                  onError={e => {
+                    if (e.currentTarget.src !== window.location.origin + "/img-placeholder.svg") {
+                      e.currentTarget.src = "/img-placeholder.svg";
+                    }
+                  }}
+                  draggable={false}
+                />
               </div>
             </div>
-          </div>
-          <div className="dp_flex" style={{ gap: 24, marginBottom: 0 }}>
-            <div style={{ flex: 1 }}>
+            {/* Bằng lái xe */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <label style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}>
+                Bằng lái xe
+              </label>
               <InputBase
-                label="Bằng lái xe"
                 placeholder="Nhập số bằng lái xe"
                 modelValue={form.license}
                 onChange={(val) => handleChange("license", val)}
-                style={{ width: "100%" }}
+                style={{ width: "100%", marginBottom: 10, maxWidth: 180 }}
               />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              <label style={{ fontWeight: 500, marginBottom: 6, alignSelf: "flex-start" }}>
                 Upload Bằng lái xe
               </label>
               <input
@@ -340,51 +406,63 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   borderRadius: 6,
                   padding: 6,
                   width: "100%",
-                  background: "#fff"
+                  background: "#fff",
+                  maxWidth: 180,
                 }}
               />
               <div
                 style={{
-                  marginTop: 0,
-                  width: 140,
-                  height: 110,
-                  background: "#f4f4f4",
-                  border: "1px dashed #bbb",
-                  borderRadius: 8,
+                  width: 110,
+                  height: 82,
+                  background: "#fff",
+                  border: "1.5px dashed #bbb",
+                  borderRadius: 10,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: "hidden"
-                }}
-              >
-                <div style={{
-                  background: "#eee",
-                  borderRadius: 8,
                   overflow: "hidden",
-                  maxWidth: "100%",
-                  maxHeight: "100%"
-                }}>
-                  <ImageBase
-                    src={form.licenseImg || "/img-placeholder.svg"}
-                    width={120}
-                    height={90}
-                  />
-                </div>
+                  boxShadow: "0 1px 4px #0001",
+                  margin: "0 auto",
+                  transition: "border-color 0.2s",
+                  position: "relative",
+                }}
+                onMouseOver={e => (e.currentTarget.style.borderColor = "#ffb300")}
+                onMouseOut={e => (e.currentTarget.style.borderColor = "#bbb")}
+              >
+                <img
+                  src={form.licenseImg && form.licenseImg !== "/img-placeholder.svg" ? form.licenseImg : "/img-placeholder.svg"}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: form.licenseImg && form.licenseImg !== "/img-placeholder.svg" ? "cover" : "contain",
+                    background: "#fafbfc",
+                    borderRadius: 8,
+                    border: "none",
+                    transition: "box-shadow 0.2s",
+                    display: "block",
+                  }}
+                  onError={e => {
+                    if (e.currentTarget.src !== window.location.origin + "/img-placeholder.svg") {
+                      e.currentTarget.src = "/img-placeholder.svg";
+                    }
+                  }}
+                  draggable={false}
+                />
               </div>
             </div>
-          </div>
-          <div className="dp_flex" style={{ gap: 24 }}>
-            <div style={{ flex: 1 }}>
+            {/* Hộ chiếu */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <label style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}>
+                Hộ chiếu
+              </label>
               <InputBase
-                label="Hộ chiếu"
                 placeholder="Nhập số hộ chiếu"
                 modelValue={form.passport}
                 onChange={(val) => handleChange("passport", val)}
-                style={{ width: "100%" }}
+                style={{ width: "100%", marginBottom: 10, maxWidth: 180 }}
               />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              <label style={{ fontWeight: 500, marginBottom: 6, alignSelf: "flex-start" }}>
                 Upload Hộ chiếu
               </label>
               <input
@@ -398,49 +476,68 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   borderRadius: 6,
                   padding: 6,
                   width: "100%",
-                  background: "#fff"
+                  background: "#fff",
+                  maxWidth: 180,
                 }}
               />
               <div
                 style={{
-                  marginTop: 0,
-                  width: 140,
-                  height: 110,
-                  background: "#f4f4f4",
-                  border: "1px dashed #bbb",
-                  borderRadius: 8,
+                  width: 110,
+                  height: 82,
+                  background: "#fff",
+                  border: "1.5px dashed #bbb",
+                  borderRadius: 10,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: "hidden"
-                }}
-              >
-                <div style={{
-                  background: "#eee",
-                  borderRadius: 8,
                   overflow: "hidden",
-                  maxWidth: "100%",
-                  maxHeight: "100%"
-                }}>
-                  <ImageBase
-                    src={form.passportImg || "/img-placeholder.svg"}
-                    width={120}
-                    height={90}
-                  />
-                </div>
+                  boxShadow: "0 1px 4px #0001",
+                  margin: "0 auto",
+                  transition: "border-color 0.2s",
+                  position: "relative",
+                }}
+                onMouseOver={e => (e.currentTarget.style.borderColor = "#ffb300")}
+                onMouseOut={e => (e.currentTarget.style.borderColor = "#bbb")}
+              >
+                <img
+                  src={form.passportImg && form.passportImg !== "/img-placeholder.svg" ? form.passportImg : "/img-placeholder.svg"}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: form.passportImg && form.passportImg !== "/img-placeholder.svg" ? "cover" : "contain",
+                    background: "#fafbfc",
+                    borderRadius: 8,
+                    border: "none",
+                    transition: "box-shadow 0.2s",
+                    display: "block",
+                  }}
+                  onError={e => {
+                    if (e.currentTarget.src !== window.location.origin + "/img-placeholder.svg") {
+                      e.currentTarget.src = "/img-placeholder.svg";
+                    }
+                  }}
+                  draggable={false}
+                />
               </div>
             </div>
           </div>
         </div>
         {/* Ghi chú */}
-        <div className="box_section" style={{ marginBottom: 0, background: "#fafbfc" }}>
+        <div
+          className="box_section"
+          style={{ marginBottom: 0, background: "#fafbfc", padding: "24px 24px 16px 24px", borderRadius: 12, marginTop: 18 }}
+        >
+          <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+            Ghi chú
+          </label>
           <TextAreaBase
             id="customer-note"
-            label="Ghi chú"
             placeholder="Nhập ghi chú về khách hàng..."
             defaultValue={form.note}
             onChange={(val) => handleChange("note", val)}
             rows={3}
+            style={{ width: "100%" }}
           />
         </div>
       </div>
