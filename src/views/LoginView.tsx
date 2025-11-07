@@ -12,8 +12,8 @@ import { SCREEN } from "@/router/screen";
 
 const LoginView = () => {
   const [form, setForm] = useState({
-    username: "john.doe@example.com",
-    password: "12345678",
+    username: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
