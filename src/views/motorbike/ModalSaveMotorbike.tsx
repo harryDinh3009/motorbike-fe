@@ -243,94 +243,116 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   style={{ width: "100%" }}
                 />
               </div>
-              <SelectboxBase
-                label="Chi nhánh sở hữu"
-                required
-                value={form.branch}
-                options={branchOptions}
-                placeholder="Chọn chi nhánh"
-                onChange={(val) => handleChange("branch", val)}
-                style={{ width: "100%" }}
-              />
-              <SelectboxBase
-                label="Tình trạng xe"
-                value={form.condition}
-                options={conditionOptions}
-                placeholder="Chọn tình trạng"
-                onChange={(val) => handleChange("condition", val)}
-                style={{ width: "100%" }}
-              />
-              <SelectboxBase
-                label="Loại xe"
-                value={form.carType}
-                options={typeOptions}
-                placeholder="Chọn loại xe"
-                onChange={(val) => handleChange("carType", val)}
-                style={{ width: "100%" }}
-              />
-              <InputBase
-                label="Giá ngày (Đ)"
-                modelValue={form.dailyPrice}
-                placeholder="Nhập giá ngày"
-                onChange={(val) => handleChange("dailyPrice", val)}
-                style={{ width: "100%" }}
-              />
-              <InputBase
-                label="Giá giờ (Đ)"
-                modelValue={form.hourlyPrice}
-                placeholder="Nhập giá giờ"
-                onChange={(val) => handleChange("hourlyPrice", val)}
-                style={{ width: "100%" }}
-              />
-              <SelectboxBase
-                label="Trạng thái"
-                value={form.status}
-                options={statusOptions}
-                placeholder="Chọn trạng thái"
-                onChange={(val) => handleChange("status", val)}
-                style={{ width: "100%" }}
-              />
-              <InputBase
-                label="Biển số xe"
-                required
-                modelValue={form.license}
-                placeholder="Ví dụ: 34E-06869"
-                onChange={(val) => handleChange("license", val)}
-                style={{ width: "100%" }}
-              />
-              <InputBase
-                label={
-                  <>
-                    Odometer hiện tại{" "}
-                    <span
-                      title="Số km trên đồng hồ"
-                      style={{
-                        color: "#999",
-                        fontSize: 14,
-                        marginLeft: 4,
-                        cursor: "help",
-                      }}
-                    >
-                      <i className="fa fa-info-circle" />
-                    </span>
-                  </>
-                }
-                modelValue={form.odometer}
-                placeholder="Nhập số km trên đồng hồ"
-                onChange={(val) => handleChange("odometer", val)}
-                style={{ width: "100%" }}
-              />
-            </div>
-            {/* Ghi chú chiếm toàn bộ chiều ngang, margin trên rõ ràng */}
-            <div style={{ marginTop: 28 }}>
-              <TextAreaBase
-                label="Ghi chú"
-                placeholder="Nhập ghi chú"
-                defaultValue={form.note}
-                onChange={(val) => handleChange("note", val)}
-                rows={2}
-                style={{ width: "100%" }}
-              />
+              <div>
+                <SelectboxBase
+                  label="Chi nhánh sở hữu"
+                  required
+                  value={form.branch}
+                  options={branchOptions}
+                  placeholder="Chọn chi nhánh"
+                  onChange={(val) => handleChange("branch", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <SelectboxBase
+                  label="Tình trạng xe"
+                  value={form.condition}
+                  options={conditionOptions}
+                  placeholder="Chọn tình trạng"
+                  onChange={(val) => handleChange("condition", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <SelectboxBase
+                  label="Loại xe"
+                  value={form.carType}
+                  options={typeOptions}
+                  placeholder="Chọn loại xe"
+                  onChange={(val) => handleChange("carType", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <label>Giá / ngày</label>
+                <InputBase
+                  label="Giá ngày (Đ)"
+                  modelValue={form.dailyPrice}
+                  placeholder="Nhập giá ngày"
+                  onChange={(val) => handleChange("dailyPrice", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                {" "}
+                <label>Giá / giờ</label>
+                <InputBase
+                  label="Giá giờ (Đ)"
+                  modelValue={form.hourlyPrice}
+                  placeholder="Nhập giá giờ"
+                  onChange={(val) => handleChange("hourlyPrice", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <SelectboxBase
+                  label="Trạng thái"
+                  value={form.status}
+                  options={statusOptions}
+                  placeholder="Chọn trạng thái"
+                  onChange={(val) => handleChange("status", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                {" "}
+                <label>Biển số xe</label>
+                <InputBase
+                  label="Biển số xe"
+                  required
+                  modelValue={form.license}
+                  placeholder="Ví dụ: 34E-06869"
+                  onChange={(val) => handleChange("license", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                {" "}
+                <label>Odometer hiện tại</label>
+                <InputBase
+                  label={
+                    <>
+                      Odometer hiện tại{" "}
+                      <span
+                        title="Số km trên đồng hồ"
+                        style={{
+                          color: "#999",
+                          fontSize: 14,
+                          marginLeft: 4,
+                          cursor: "help",
+                        }}
+                      >
+                        <i className="fa fa-info-circle" />
+                      </span>
+                    </>
+                  }
+                  modelValue={form.odometer}
+                  placeholder="Nhập số km trên đồng hồ"
+                  onChange={(val) => handleChange("odometer", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div style={{ gridColumn: "span 2" }}>
+                <TextAreaBase
+                  label="Ghi chú"
+                  placeholder="Nhập ghi chú"
+                  defaultValue={form.note}
+                  onChange={(val) => handleChange("note", val)}
+                  rows={2}
+                  style={{ width: "100%" }}
+                />
+              </div>
             </div>
           </div>
           {/* Ảnh bên phải */}
