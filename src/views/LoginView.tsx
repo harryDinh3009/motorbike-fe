@@ -252,23 +252,6 @@ const LoginView = () => {
           filter: "drop-shadow(0 2px 12px #1677ff33)",
         }}
       />
-      {/* Footer */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 24,
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          color: "#888",
-          fontSize: 14,
-          zIndex: 2,
-          letterSpacing: 0.2,
-          textShadow: "0 1px 4px #fff",
-        }}
-      >
-        © {new Date().getFullYear()} BookBike Hà Giang. All rights reserved.
-      </div>
     </div>
   );
 };

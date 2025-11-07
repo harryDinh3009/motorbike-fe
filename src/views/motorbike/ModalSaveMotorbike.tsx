@@ -506,11 +506,11 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
             </div>
             <div style={{ flex: 1 }}>
               <SelectboxBase
-                label="Màu sắc"
                 value={form.color}
                 options={colorOptions}
                 placeholder="Màu sắc"
                 onChange={(val) => handleChange("color", val)}
+                width="274px"
               />
             </div>
           </div>
