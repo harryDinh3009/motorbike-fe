@@ -531,7 +531,7 @@ const ContractDetailComponent = () => {
                         <td style={{ color: "#888" }}>Ngày thuê</td>
                         <td>
                           {contract.startDate
-                            ? new Date(contract.startDate).toLocaleString()
+                            ? contract.startDate.replace("T", " ").substring(0, 16)
                             : ""}
                         </td>
                       </tr>
@@ -587,7 +587,7 @@ const ContractDetailComponent = () => {
                         <td>
                           {/* Sử dụng createdDate nếu có, nếu không thì để trống */}
                           {contract.createdDate
-                            ? new Date(contract.createdDate).toLocaleString()
+                            ? contract.createdDate.replace("T", " ").substring(0, 16)
                             : ""}
                         </td>
                       </tr>
@@ -595,7 +595,7 @@ const ContractDetailComponent = () => {
                         <td style={{ color: "#888" }}>Ngày trả</td>
                         <td>
                           {contract.endDate
-                            ? new Date(contract.endDate).toLocaleString()
+                            ? contract.endDate.replace("T", " ").substring(0, 16)
                             : ""}
                         </td>
                       </tr>
