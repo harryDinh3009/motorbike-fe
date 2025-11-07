@@ -12,6 +12,7 @@ interface CarReceiveItem {
   licensePlate: string;
   odometer: number | string;
   condition: string;
+  status?: string; // Thêm field status
 }
 
 interface Props {
@@ -46,6 +47,7 @@ Props) => {
       ...c,
       odometer: c.odometer || "",
       condition: c.condition || "",
+      status: c.status || "", // Thêm status vào state
     }))
   );
   const [carStatusOptions, setCarStatusOptions] = useState<
@@ -60,6 +62,7 @@ Props) => {
         ...c,
         odometer: c.odometer || "",
         condition: c.condition || "",
+        status: c.status || "", // Thêm status vào state
       }))
     );
     getCarStatuses().then((res) => {
@@ -168,12 +171,12 @@ Props) => {
                 </td>
                 <td>
                   <SelectboxBase
-                    value={car.condition}
+                    value={car.status}
                     options={carStatusOptions}
                     onChange={(val) =>
                       handleCarChange(
                         idx,
-                        "condition",
+                        "status",
                         typeof val === "string" ? val : val[0] || ""
                       )
                     }

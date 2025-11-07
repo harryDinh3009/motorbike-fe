@@ -77,6 +77,7 @@ export interface ContractCarSaveDTO {
   startOdometer?: number;
   endOdometer?: number;
   notes?: string;
+  status?: string; // Thêm dòng này
 }
 
 export interface SurchargeSaveDTO {

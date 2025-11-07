@@ -261,6 +261,7 @@ const ContractDetailComponent = () => {
         carId: c.carId || c.id,
         endOdometer: c.odometer ? Number(c.odometer) : undefined,
         notes: c.notes,
+        status: c.status, // Truyền status vào API
       })
     );
     await updateReturn({
@@ -1023,6 +1024,7 @@ const ContractDetailComponent = () => {
             licensePlate: c.licensePlate,
             odometer: c.endOdometer || "",
             condition: "", // truyền lại nếu có field tình trạng
+            status: c.status || "", // Truyền status sang modal
           }))}
           staffOptions={staffOptions}
           defaultStaff={pickupDefault.staff}
