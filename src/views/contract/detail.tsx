@@ -196,7 +196,10 @@ const ContractDetailComponent = () => {
   });
 
   // Tính tổng tiền thuê xe theo công thức mới
-  const totalCar = carRentalList.reduce((sum, c) => sum + (c.rentalTotal || 0), 0);
+  const totalCar = carRentalList.reduce(
+    (sum, c) => sum + (c.rentalTotal || 0),
+    0
+  );
 
   // Tính tổng phụ thu
   const totalSurcharge = (surchargeList || []).reduce(
@@ -479,8 +482,7 @@ const ContractDetailComponent = () => {
           {/* Thông tin hợp đồng */}
           <ContainerBase
             style={{
-              flex: 2,
-              minWidth: 420,
+              flex: 1,
               display: "flex",
               flexDirection: "column",
             }}
@@ -491,6 +493,7 @@ const ContractDetailComponent = () => {
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
+                minWidth: 750,
               }}
             >
               <p
@@ -531,7 +534,9 @@ const ContractDetailComponent = () => {
                         <td style={{ color: "#888" }}>Ngày thuê</td>
                         <td>
                           {contract.startDate
-                            ? contract.startDate.replace("T", " ").substring(0, 16)
+                            ? contract.startDate
+                                .replace("T", " ")
+                                .substring(0, 16)
                             : ""}
                         </td>
                       </tr>
@@ -587,7 +592,9 @@ const ContractDetailComponent = () => {
                         <td>
                           {/* Sử dụng createdDate nếu có, nếu không thì để trống */}
                           {contract.createdDate
-                            ? contract.createdDate.replace("T", " ").substring(0, 16)
+                            ? contract.createdDate
+                                .replace("T", " ")
+                                .substring(0, 16)
                             : ""}
                         </td>
                       </tr>
@@ -595,7 +602,9 @@ const ContractDetailComponent = () => {
                         <td style={{ color: "#888" }}>Ngày trả</td>
                         <td>
                           {contract.endDate
-                            ? contract.endDate.replace("T", " ").substring(0, 16)
+                            ? contract.endDate
+                                .replace("T", " ")
+                                .substring(0, 16)
                             : ""}
                         </td>
                       </tr>
@@ -618,7 +627,6 @@ const ContractDetailComponent = () => {
             </div>
           </ContainerBase>
 
-          {/* Thông tin khách hàng */}
           <ContainerBase>
             <div
               className="box_section"
@@ -626,7 +634,7 @@ const ContractDetailComponent = () => {
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                minWidth: 380,
+                minWidth: 350,
               }}
             >
               <p

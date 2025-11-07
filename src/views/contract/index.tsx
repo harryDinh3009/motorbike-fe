@@ -323,7 +323,6 @@ const ContractComponent = () => {
             <div style={{ overflowX: "auto" }}>
               <TableBase
                 data={contracts}
-                loading={loading}
                 columns={[
                   {
                     title: "Mã hợp đồng",

@@ -10,10 +10,10 @@ const getLayout = (path: string) => {
   return React.lazy(() => import(`../layouts/${path}`));
 };
 
-type RouteType = {
+export type RouteType = {
   path: string;
   name?: string;
-  component: React.FC;
+  component?: React.FC;
   meta?: {
     title?: string;
     middleware?: Array<(context: any) => void>;
@@ -30,7 +30,7 @@ export const routes: RouteType[] = [
     },
     children: [
       {
-        path: SCREEN.dashboard.path,
+        path: "",
         name: SCREEN.dashboard.name,
         component: getView("dashboard/index"),
       },

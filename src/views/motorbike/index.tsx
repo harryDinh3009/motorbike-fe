@@ -330,7 +330,6 @@ const MotorbikeList = () => {
                 icon={<FileExcelOutlined />}
                 style={{ minWidth: 140 }}
                 onClick={handleExportExcel}
-                loading={loading}
               />
               <label style={{ minWidth: 140 }}>
                 <input
@@ -354,7 +353,6 @@ const MotorbikeList = () => {
                 className="btn_gray"
                 style={{ minWidth: 140 }}
                 onClick={handleDownloadTemplate}
-                loading={loading}
               />
               <ButtonBase
                 label="Thêm xe"
@@ -373,7 +371,6 @@ const MotorbikeList = () => {
           <div className="box_section">
             <TableBase
               data={motorbikes}
-              loading={loading}
               columns={[
                 {
                   title: "STT",
