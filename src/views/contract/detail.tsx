@@ -49,6 +49,53 @@ const breadcrumbItems = [
   { label: "Chi tiết hợp đồng", path: "/contract/detail" },
 ];
 
+// Hàm tính số ngày, số giờ phát sinh và tổng tiền thuê cho từng xe
+function calcRentalInfo(
+  start: string,
+  end: string,
+  dailyPrice: number,
+  hourlyPrice: number
+) {
+  if (!start || !end || !dailyPrice)
+    return { days: 0, extraHours: 0, total: 0, durationText: "" };
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (ms <= 0) return { days: 0, extraHours: 0, total: 0, durationText: "" };
+  let totalHours = Math.ceil(ms / (1000 * 60 * 60));
+  let days = Math.floor(totalHours / 24);
+  let extraHours = totalHours % 24;
+
+  // Nếu chỉ thuê vài tiếng trong ngày đầu tiên, vẫn tính là 1 ngày
+  if (days === 0) {
+    days = 1;
+    extraHours = 0;
+  } else {
+    // Nếu giờ phát sinh > 8h thì làm tròn thành 1 ngày
+    if (extraHours > 8) {
+      days += 1;
+      extraHours = 0;
+    }
+  }
+
+  // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
+  const msMod = ms % (1000 * 60 * 60);
+  if (days > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
+    extraHours -= 1;
+    if (extraHours < 0) extraHours = 0;
+  }
+
+  const total = dailyPrice * days + hourlyPrice * extraHours;
+  // Chuỗi mô tả thời gian thuê
+  let durationText = "";
+  if (days > 0 && extraHours > 0) {
+    durationText = `${days} ngày ${extraHours} giờ`;
+  } else if (days > 0) {
+    durationText = `${days} ngày`;
+  } else {
+    durationText = `${extraHours} giờ`;
+  }
+  return { days, extraHours, total, durationText };
+}
+
 const ContractDetailComponent = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -129,11 +176,28 @@ const ContractDetailComponent = () => {
     return <LoadingIndicator />;
   }
 
-  // Tính tổng tiền thuê xe
-  const totalCar = (contract.cars || []).reduce(
-    (sum, c) => sum + (c.totalAmount || 0),
-    0
-  );
+  // Tính toán thời gian thuê và tiền thuê từng xe
+  const rentalStart = contract.startDate;
+  const rentalEnd = contract.endDate;
+  const carRentalList = (contract.cars || []).map((c) => {
+    const { days, extraHours, total, durationText } = calcRentalInfo(
+      rentalStart,
+      rentalEnd,
+      c.dailyPrice || 0,
+      c.hourlyPrice || 0
+    );
+    return {
+      ...c,
+      rentalDays: days,
+      rentalExtraHours: extraHours,
+      rentalDurationText: durationText,
+      rentalTotal: total,
+    };
+  });
+
+  // Tính tổng tiền thuê xe theo công thức mới
+  const totalCar = carRentalList.reduce((sum, c) => sum + (c.rentalTotal || 0), 0);
+
   // Tính tổng phụ thu
   const totalSurcharge = (surchargeList || []).reduce(
     (sum, s) => sum + (s.amount || 0),
@@ -646,6 +710,10 @@ const ContractDetailComponent = () => {
                 Danh sách xe
               </p>
               {/* Thời gian thuê có thể tính toán nếu cần */}
+              <span style={{ color: "#1677ff", fontWeight: 500, fontSize: 15 }}>
+                Thời gian tính thuê:{" "}
+                {carRentalList[0]?.rentalDurationText || ""}
+              </span>
             </div>
             <Table
               columns={[
@@ -688,13 +756,13 @@ const ContractDetailComponent = () => {
                 },
                 {
                   title: "Tiền thuê",
-                  dataIndex: "totalAmount",
-                  key: "totalAmount",
+                  dataIndex: "rentalTotal",
+                  key: "rentalTotal",
                   align: "right" as const,
                   render: (val: number) => <b>{val?.toLocaleString()}</b>,
                 },
               ]}
-              dataSource={contract.cars || []}
+              dataSource={carRentalList}
               pagination={false}
               rowKey={(r, idx) => idx.toString()}
               style={{ marginTop: 8 }}
