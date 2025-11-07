@@ -3,6 +3,7 @@ import TModal from "@/component/common/modal/TModal";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
+import { getCarStatuses } from "@/service/business/carMng/carMng.service";
 
 interface CarReceiveItem {
   id: string;
@@ -23,7 +24,7 @@ interface Props {
   defaultTime?: string;
   totalCar?: number;
   totalSurcharge?: number;
-  carStatusOptions?: { value: string; label: string }[];
+  // carStatusOptions?: { value: string; label: string }[];
 }
 
 const ModalUpdateInfoPickup = ({
@@ -36,8 +37,8 @@ const ModalUpdateInfoPickup = ({
   defaultTime = "",
   totalCar = 0,
   totalSurcharge = 0,
-  carStatusOptions = [],
-}: Props) => {
+}: // carStatusOptions = [],
+Props) => {
   const [staff, setStaff] = useState(defaultStaff);
   const [time, setTime] = useState(defaultTime);
   const [carStates, setCarStates] = useState<CarReceiveItem[]>(
@@ -47,6 +48,9 @@ const ModalUpdateInfoPickup = ({
       condition: c.condition || "",
     }))
   );
+  const [carStatusOptions, setCarStatusOptions] = useState<
+    { value: string; label: string }[]
+  >([{ value: "", label: "Chọn tình trạng" }]);
 
   useEffect(() => {
     setStaff(defaultStaff);
@@ -58,6 +62,15 @@ const ModalUpdateInfoPickup = ({
         condition: c.condition || "",
       }))
     );
+    getCarStatuses().then((res) => {
+      setCarStatusOptions([
+        { value: "", label: "Chọn tình trạng" },
+        ...(res.data || []).map((s: any) => ({
+          value: s.code,
+          label: s.name,
+        })),
+      ]);
+    });
   }, [open, cars, defaultStaff, defaultTime]);
 
   const totalAll = (totalCar || 0) + (totalSurcharge || 0);
@@ -156,10 +169,7 @@ const ModalUpdateInfoPickup = ({
                 <td>
                   <SelectboxBase
                     value={car.condition}
-                    options={[
-                      { value: "", label: "Chọn tình trạng" },
-                      ...(carStatusOptions || []),
-                    ]}
+                    options={carStatusOptions}
                     onChange={(val) =>
                       handleCarChange(
                         idx,
