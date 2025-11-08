@@ -240,7 +240,7 @@ const EmployeeList = () => {
                 }}
               />
               <ButtonBase
-                label="+ Thêm người dùng"
+                label="Thêm người dùng"
                 className="btn_yellow"
                 icon={<PlusOutlined />}
                 style={{ minWidth: 180, marginLeft: "auto" }}
