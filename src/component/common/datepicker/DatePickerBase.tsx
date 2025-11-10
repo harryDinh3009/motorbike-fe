@@ -14,6 +14,7 @@ interface DatePickerBaseProps extends DatePickerProps {
   required?: boolean;
   value?: string;
   onChange?: (date: string | null, dateString: string) => void;
+  dateOnly?: boolean; // Thêm prop này
 }
 
 const DatePickerBase: React.FC<DatePickerBaseProps> = ({
@@ -21,6 +22,7 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
   required = false,
   value,
   onChange,
+  dateOnly = false, // default: false
   ...props
 }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -46,13 +48,17 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
   }, [value, dispatch, id]);
 
 
-  // Parse value as ISO string for full date-time
+  // Nếu dateOnly thì chỉ lấy ngày, còn lại giữ nguyên logic cũ
   const dayjsValue: Dayjs | null = value ? dayjs(value) : null;
 
   const handleChange = (date: Dayjs | null) => {
-    // Output ISO string for full date-time
-    const isoString = date ? date.toISOString() : null;
-    onChange?.(isoString, isoString || "");
+    if (dateOnly) {
+      const dateString = date ? date.format("YYYY-MM-DD") : "";
+      onChange?.(dateString, dateString);
+    } else {
+      const isoString = date ? date.toISOString() : null;
+      onChange?.(isoString, isoString || "");
+    }
   };
 
   return (
@@ -61,8 +67,10 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
         {...props}
         value={dayjsValue}
         onChange={handleChange}
-        showTime={{ format: "HH:mm:ss" }}
-        format="YYYY-MM-DD HH:mm:ss"
+        // Nếu dateOnly thì không showTime, format ngày thôi
+        showTime={dateOnly ? false : { format: "HH:mm:ss" }}
+        format={dateOnly ? "YYYY-MM-DD" : "YYYY-MM-DD HH:mm:ss"}
+        picker={dateOnly ? "date" : undefined}
         className={isError ? "error-validate" : ""}
         style={isError ? { borderColor: "red" } : {}}
       />

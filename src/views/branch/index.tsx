@@ -172,7 +172,7 @@ const BranchList = () => {
               />
               <ButtonBase
                 label="Thêm chi nhánh"
-                className="btn_yellow"
+                className="btn_primary"
                 icon={<PlusOutlined />}
                 style={{ minWidth: 160, marginLeft: "auto" }}
                 onClick={() => {

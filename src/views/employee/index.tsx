@@ -5,7 +5,12 @@ import InputBase from "@/component/common/input/InputBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
-import { HomeOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { message } from "antd";
 import ModalSaveEmployee from "./ModalSaveEmployee";
 import {
@@ -35,17 +40,18 @@ const statusOptions = [
   { value: "INACTIVE", label: "Nghỉ" },
 ];
 
-const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-  ACTIVE: { label: "Đang làm", color: "#27ae60", bg: "#eafbe7" },
-  INACTIVE: { label: "Nghỉ", color: "#ff4d4f", bg: "#fff1f0" },
-};
+const statusMap: Record<string, { label: string; color: string; bg: string }> =
+  {
+    ACTIVE: { label: "Đang làm", color: "#27ae60", bg: "#eafbe7" },
+    INACTIVE: { label: "Nghỉ", color: "#ff4d4f", bg: "#fff1f0" },
+  };
 
 const EmployeeList = () => {
-  const [filter, setFilter] = useState({ 
-    search: "", 
-    branch: "", 
-    role: "", 
-    status: "" 
+  const [filter, setFilter] = useState({
+    search: "",
+    branch: "",
+    role: "",
+    status: "",
   });
   const [employees, setEmployees] = useState<UserMngListDTO[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,9 +61,9 @@ const EmployeeList = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  const [branchOptions, setBranchOptions] = useState<{ value: string; label: string }[]>([
-    { value: "", label: "Chi nhánh" },
-  ]);
+  const [branchOptions, setBranchOptions] = useState<
+    { value: string; label: string }[]
+  >([{ value: "", label: "Chi nhánh" }]);
 
   // Load branches
   useEffect(() => {
@@ -97,7 +103,8 @@ const EmployeeList = () => {
       setEmployees(apiData.data || []);
       setTotal(apiData.totalPages || 0);
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || "Không thể tải danh sách nhân viên";
+      const errorMsg =
+        err?.response?.data?.message || "Không thể tải danh sách nhân viên";
       setError(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -118,7 +125,8 @@ const EmployeeList = () => {
       setEditEmployee(res.data as any);
       setShowModal(true);
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || "Không thể lấy thông tin nhân viên";
+      const errorMsg =
+        err?.response?.data?.message || "Không thể lấy thông tin nhân viên";
       setError(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -169,7 +177,11 @@ const EmployeeList = () => {
       setEditEmployee(null);
       fetchEmployees();
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || (employee.id ? "Cập nhật nhân viên thất bại" : "Tạo mới nhân viên thất bại");
+      const errorMsg =
+        err?.response?.data?.message ||
+        (employee.id
+          ? "Cập nhật nhân viên thất bại"
+          : "Tạo mới nhân viên thất bại");
       setError(errorMsg);
       message.error(errorMsg);
     } finally {
@@ -195,7 +207,9 @@ const EmployeeList = () => {
                 placeholder="Tìm theo tên, SĐT, email..."
                 prefixIcon="search"
                 style={{ minWidth: 320, flex: 1 }}
-                onChange={(val) => setFilter({ ...filter, search: val as string })}
+                onChange={(val) =>
+                  setFilter({ ...filter, search: val as string })
+                }
               />
               <SelectboxBase
                 value={filter.branch}
@@ -240,8 +254,8 @@ const EmployeeList = () => {
                 }}
               />
               <ButtonBase
-                label="Thêm người dùng"
-                className="btn_yellow"
+                label="Thêm nhân viên"
+                className="btn_primary"
                 icon={<PlusOutlined />}
                 style={{ minWidth: 180, marginLeft: "auto" }}
                 onClick={() => {

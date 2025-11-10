@@ -16,7 +16,18 @@ const LoginView = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [remember, setRemember] = useState(
+    localStorage.getItem("remember_username") ? true : false
+  );
   const navigate = useNavigate();
+
+  // Khi mở trang, nếu có remember thì tự điền username
+  React.useEffect(() => {
+    const remembered = localStorage.getItem("remember_username");
+    if (remembered) {
+      setForm((prev) => ({ ...prev, username: remembered }));
+    }
+  }, []);
 
   const handleChange = (key: string) => (val: string) => {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -43,6 +54,12 @@ const LoginView = () => {
         userCurrent,
       });
       setToken(res.data.accessToken);
+      // Ghi nhớ đăng nhập nếu được chọn
+      if (remember) {
+        localStorage.setItem("remember_username", form.username);
+      } else {
+        localStorage.removeItem("remember_username");
+      }
       setLoading(false);
       navigate(SCREEN.dashboard.path);
       // TODO: Redirect to dashboard or home
@@ -201,24 +218,11 @@ const LoginView = () => {
                   borderRadius: 4,
                   border: "1.5px solid #e0e7ef",
                 }}
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
               />
               Ghi nhớ đăng nhập
             </label>
-            <a
-              href="#"
-              style={{
-                color: "#1677ff",
-                fontSize: 15,
-                fontWeight: 600,
-                textDecoration: "none",
-                transition: "color 0.2s",
-              }}
-              onClick={(e) => e.preventDefault()}
-              onMouseOver={(e) => (e.currentTarget.style.color = "#0d47a1")}
-              onMouseOut={(e) => (e.currentTarget.style.color = "#1677ff")}
-            >
-              Quên mật khẩu?
-            </a>
           </div>
           <ButtonBase
             label={loading ? "Đang đăng nhập..." : "Đăng nhập"}

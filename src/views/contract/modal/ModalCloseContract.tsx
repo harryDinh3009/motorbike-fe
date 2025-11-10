@@ -87,7 +87,7 @@ const ModalCloseContract = ({
             <span>{paid.toLocaleString()} đ</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
-            <span>Phải thu khách:</span>
+            <span>{remain >= 0 ? "Phải thu khách:" : "Phải trả khách:"}</span>
             <span>{remain.toLocaleString()} đ</span>
           </div>
         </div>

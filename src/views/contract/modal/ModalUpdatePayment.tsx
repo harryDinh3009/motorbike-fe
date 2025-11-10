@@ -91,14 +91,13 @@ const ModalUpdatePayment = ({
     }
   };
 
-  // Lưu: chỉ gửi các payment chưa có id (add mới), for từng payment gọi addPayment
+  // Lưu: gửi các payment chưa có id (add mới), các payment có id thì gọi API cập nhật
   const handleSave = async () => {
     setLoading(true);
     try {
-      const newPayments = list.filter((item) => !item.id);
       let cid =
         contractId ||
-        newPayments[0]?.contractId ||
+        list[0]?.contractId ||
         payments.find((p) => p.contractId)?.contractId ||
         payments[0]?.contractId ||
         "";
@@ -107,7 +106,8 @@ const ModalUpdatePayment = ({
         setLoading(false);
         return;
       }
-      for (const p of newPayments) {
+      // Thêm mới các payment chưa có id
+      for (const p of list.filter((item) => !item.id)) {
         await addPayment({
           contractId: cid,
           paymentMethod: p.method,
@@ -116,7 +116,17 @@ const ModalUpdatePayment = ({
           notes: p.note,
         });
       }
-      // Gọi lại onSave để parent refresh detail, sau đó đóng modal
+      // Cập nhật các payment đã có id (nếu muốn cho phép chỉnh sửa)
+      for (const p of list.filter((item) => item.id)) {
+        await addPayment({
+          id: p.id,
+          contractId: cid,
+          paymentMethod: p.method,
+          amount: Number(p.amount),
+          paymentDate: p.date,
+          notes: p.note,
+        });
+      }
       await onSave([]);
       onClose();
     } finally {
@@ -161,7 +171,8 @@ const ModalUpdatePayment = ({
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         {list.map((item, idx) => {
-          const isReadonly = !!item.id;
+          // Cho phép chỉnh sửa tất cả các payment (kể cả có id)
+          const isReadonly = false;
           return (
             <div
               key={idx}

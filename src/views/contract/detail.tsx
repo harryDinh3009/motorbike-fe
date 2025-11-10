@@ -436,18 +436,53 @@ const ContractDetailComponent = () => {
               }
             }}
           />
-          <ButtonBase
-            label="Giao xe"
-            className="btn_primary"
-            icon={<CarOutlined />}
-            onClick={handleShowDeliveryModal}
-          />
-          <ButtonBase
-            label="Trả xe"
-            className="btn_primary"
-            icon={<RollbackOutlined />}
-            onClick={handleShowPickupModal}
-          />
+          {/* Hiển thị button Giao xe/Trả xe theo trạng thái */}
+          {(() => {
+            // Ẩn cả hai nút nếu là Đã trả xe, Hoàn thành, Đã hủy
+            const hideAll = ["RETURNED", "COMPLETED", "CANCELLED"];
+            if (hideAll.includes(contract?.status || "")) {
+              return null;
+            }
+            // Chỉ hiện Giao xe nếu là Đã xác nhận
+            if (contract.status === "CONFIRMED") {
+              return (
+                <ButtonBase
+                  label="Giao xe"
+                  className="btn_primary"
+                  icon={<CarOutlined />}
+                  onClick={handleShowDeliveryModal}
+                />
+              );
+            }
+            // Chỉ hiện Trả xe nếu là Đã giao xe
+            if (contract.status === "DELIVERED") {
+              return (
+                <ButtonBase
+                  label="Trả xe"
+                  className="btn_primary"
+                  icon={<RollbackOutlined />}
+                  onClick={handleShowPickupModal}
+                />
+              );
+            }
+            // Các trạng thái khác (nháp, chờ duyệt, ...) có thể hiện cả 2 nút nếu muốn
+            return (
+              <>
+                <ButtonBase
+                  label="Giao xe"
+                  className="btn_primary"
+                  icon={<CarOutlined />}
+                  onClick={handleShowDeliveryModal}
+                />
+                <ButtonBase
+                  label="Trả xe"
+                  className="btn_primary"
+                  icon={<RollbackOutlined />}
+                  onClick={handleShowPickupModal}
+                />
+              </>
+            );
+          })()}
           <ButtonBase
             label="Thanh toán"
             className="btn_primary"
@@ -942,7 +977,7 @@ const ContractDetailComponent = () => {
                   }}
                 >
                   <span style={{ color: "#1677ff", fontWeight: 500 }}>
-                    Phải thu khách:
+                    {remain >= 0 ? "Phải thu khách:" : "Phải trả khách:"}
                   </span>
                   <span style={{ color: "#1677ff", fontWeight: 600 }}>
                     {remain.toLocaleString()} đ

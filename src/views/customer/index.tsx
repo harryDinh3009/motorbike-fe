@@ -4,7 +4,12 @@ import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import InputBase from "@/component/common/input/InputBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
-import { HomeOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import ModalSaveInfoCustomer from "./ModalSaveInfoCustomer";
 import {
   searchCustomers,
@@ -99,7 +104,8 @@ const CustomerList = () => {
         citizenId: customer.cccd || customer.citizenId,
         citizenIdImageUrl: customer.cccdImg || customer.citizenIdImageUrl,
         driverLicense: customer.license || customer.driverLicense,
-        driverLicenseImageUrl: customer.licenseImg || customer.driverLicenseImageUrl,
+        driverLicenseImageUrl:
+          customer.licenseImg || customer.driverLicenseImageUrl,
         passport: customer.passport,
         passportImageUrl: customer.passportImg || customer.passportImageUrl,
         note: customer.note,
@@ -136,8 +142,8 @@ const CustomerList = () => {
                 onChange={(val) => setFilter(val as string)}
               />
               <ButtonBase
-                label="+ Thêm khách hàng"
-                className="btn_yellow"
+                label="Thêm khách hàng"
+                className="btn_primary"
                 icon={<PlusOutlined />}
                 style={{ minWidth: 180, marginLeft: "auto" }}
                 onClick={() => {
@@ -159,8 +165,10 @@ const CustomerList = () => {
                 ...c,
                 name: c.fullName,
                 phone: c.phoneNumber,
-                birthday: c.dateOfBirth ? dayjs(c.dateOfBirth).format("DD/MM/YYYY") : "",
-                total: c.totalSpent || 0,
+                // Chỉ lấy ngày, bỏ giờ/phút/giây
+                birthday: c.dateOfBirth
+                  ? dayjs(c.dateOfBirth).format("DD/MM/YYYY")
+                  : "",
                 idx,
               }))}
               columns={[
@@ -197,13 +205,6 @@ const CustomerList = () => {
                   title: "Quốc gia",
                   dataIndex: "country",
                   key: "country",
-                },
-                {
-                  title: "Tổng tiền",
-                  dataIndex: "total",
-                  key: "total",
-                  render: (val: number) =>
-                    val ? val.toLocaleString("vi-VN") : "0",
                 },
                 {
                   title: "Hành động",

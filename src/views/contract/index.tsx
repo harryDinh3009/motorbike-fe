@@ -434,26 +434,7 @@ const ContractComponent = () => {
                             navigate(`/contract/detail/${record.id}`);
                           }}
                         />
-                        <ButtonBase
-                          icon={<EditOutlined />}
-                          className="btn_gray"
-                          title="Sửa"
-                          onClick={() => {
-                            navigate(`/contract/create?id=${record.id}`);
-                          }}
-                        />
-                        <ButtonBase
-                          icon={<PrinterOutlined />}
-                          className="btn_gray"
-                          title="In hợp đồng"
-                          onClick={() => handleDownloadPDF(record.id)}
-                        />
-                        <ButtonBase
-                          icon={<DeleteOutlined />}
-                          className="btn_gray"
-                          title="Xóa"
-                          onClick={() => handleDeleteContract(record.id)}
-                        />
+                        {/* Đã xóa các nút Sửa, In hợp đồng, Xóa */}
                       </div>
                     ),
                   },

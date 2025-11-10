@@ -56,6 +56,8 @@ interface FormState {
   [key: string]: any;
 }
 
+const DEFAULT_IMG = "/img-default-doc.png"; // Đảm bảo có file này trong public
+
 const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
   const [form, setForm] = useState<FormState>({
     id: undefined,
@@ -67,11 +69,11 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
     country: "",
     address: "",
     cccd: "",
-    cccdImg: "/img-placeholder.svg",
+    cccdImg: DEFAULT_IMG,
     license: "",
-    licenseImg: "/img-placeholder.svg",
+    licenseImg: DEFAULT_IMG,
     passport: "",
-    passportImg: "/img-placeholder.svg",
+    passportImg: DEFAULT_IMG,
     note: "",
     avatar: "",
   });
@@ -90,11 +92,11 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         country: customer.country || "",
         address: customer.address || "",
         cccd: customer.citizenId || "",
-        cccdImg: customer.citizenIdImageUrl || "/img-placeholder.svg",
+        cccdImg: customer.citizenIdImageUrl || DEFAULT_IMG,
         license: customer.driverLicense || "",
-        licenseImg: customer.driverLicenseImageUrl || "/img-placeholder.svg",
+        licenseImg: customer.driverLicenseImageUrl || DEFAULT_IMG,
         passport: customer.passport || "",
-        passportImg: customer.passportImageUrl || "/img-placeholder.svg",
+        passportImg: customer.passportImageUrl || DEFAULT_IMG,
         note: customer.note || "",
         avatar: "",
       });
@@ -109,11 +111,11 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         country: "",
         address: "",
         cccd: "",
-        cccdImg: "/img-placeholder.svg",
+        cccdImg: DEFAULT_IMG,
         license: "",
-        licenseImg: "/img-placeholder.svg",
+        licenseImg: DEFAULT_IMG,
         passport: "",
-        passportImg: "/img-placeholder.svg",
+        passportImg: DEFAULT_IMG,
         note: "",
         avatar: "",
       });
@@ -184,19 +186,52 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
       }
       centered={true}
     >
+      <style>
+        {`
+        .custom-upload-label {
+          display: inline-block;
+          padding: 7px 18px;
+          background: #fffbe6;
+          color: #b8860b;
+          border: 1.5px solid #ffe58f;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 500;
+          margin-bottom: 8px;
+          transition: background 0.2s, border 0.2s;
+        }
+        .custom-upload-label:hover {
+          background: #fff3bf;
+          border-color: #ffd666;
+        }
+        .custom-upload-input {
+          display: none;
+        }
+        `}
+      </style>
       <div className="box_section" style={{ padding: 0 }}>
         {/* Thông tin cá nhân */}
         <div
           className="box_section"
-          style={{ marginBottom: 0, background: "#fafbfc", padding: "24px 24px 16px 24px", borderRadius: 12 }}
+          style={{
+            marginBottom: 0,
+            background: "#fafbfc",
+            padding: "24px 24px 16px 24px",
+            borderRadius: 12,
+          }}
         >
-          <p className="box_title_sm" style={{ marginBottom: 20, fontSize: 18, fontWeight: 600 }}>
+          <p
+            className="box_title_sm"
+            style={{ marginBottom: 20, fontSize: 18, fontWeight: 600 }}
+          >
             Thông tin cá nhân
           </p>
           <div className="dp_flex" style={{ gap: 32, marginBottom: 18 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
-                Họ tên *
+              <label
+                style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+              >
+                Họ tên <span style={{ color: "red" }}>*</span>
               </label>
               <InputBase
                 placeholder="Nhập họ tên"
@@ -207,8 +242,10 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
-                Số điện thoại
+              <label
+                style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+              >
+                Số điện thoại <span style={{ color: "red" }}>*</span>
               </label>
               <InputBase
                 placeholder="Nhập số điện thoại"
@@ -221,7 +258,9 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
           </div>
           <div className="dp_flex" style={{ gap: 32, marginBottom: 18 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <label
+                style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+              >
                 Email
               </label>
               <InputBase
@@ -232,20 +271,30 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <label
+                style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+              >
                 Ngày sinh
               </label>
               <DatePickerBase
                 placeholder="dd/mm/yyyy"
                 value={form.birthday}
-                onChange={(val) => handleChange("birthday", val || "")}
+                dateOnly={true}
+                onChange={(val) =>
+                  handleChange(
+                    "birthday",
+                    val ? dayjs(val).format("YYYY-MM-DD") : ""
+                  )
+                }
                 style={{ width: "100%" }}
               />
             </div>
           </div>
           <div className="dp_flex" style={{ gap: 32, marginBottom: 18 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <label
+                style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+              >
                 Giới tính
               </label>
               <SelectboxBase
@@ -257,7 +306,9 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+              <label
+                style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+              >
                 Quốc gia
               </label>
               <SelectboxBase
@@ -270,7 +321,9 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
             </div>
           </div>
           <div style={{ marginBottom: 0 }}>
-            <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
+            <label
+              style={{ display: "block", marginBottom: 6, fontWeight: 500 }}
+            >
               Địa chỉ
             </label>
             <InputBase
@@ -312,8 +365,17 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
             }}
           >
             {/* CCCD/CMND */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <label style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}
+              >
                 CCCD/CMND
               </label>
               <InputBase
@@ -322,24 +384,24 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                 onChange={(val) => handleChange("cccd", val)}
                 style={{ width: "100%", marginBottom: 10, maxWidth: 180 }}
               />
-              <label style={{ fontWeight: 500, marginBottom: 6, alignSelf: "flex-start" }}>
+              <label
+                style={{
+                  fontWeight: 500,
+                  marginBottom: 6,
+                  alignSelf: "flex-start",
+                }}
+              >
                 Upload CCCD
               </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleUpload("cccdImg", uploadCitizenIdImage)}
-                style={{
-                  display: "block",
-                  marginBottom: 8,
-                  border: "1px solid #eee",
-                  borderRadius: 6,
-                  padding: 6,
-                  width: "100%",
-                  background: "#fff",
-                  maxWidth: 180,
-                }}
-              />
+              <label className="custom-upload-label">
+                Chọn ảnh
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="custom-upload-input"
+                  onChange={handleUpload("cccdImg", uploadCitizenIdImage)}
+                />
+              </label>
               <div
                 style={{
                   width: 110,
@@ -356,25 +418,37 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   transition: "border-color 0.2s",
                   position: "relative",
                 }}
-                onMouseOver={e => (e.currentTarget.style.borderColor = "#ffb300")}
-                onMouseOut={e => (e.currentTarget.style.borderColor = "#bbb")}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.borderColor = "#ffb300")
+                }
+                onMouseOut={(e) => (e.currentTarget.style.borderColor = "#bbb")}
               >
                 <img
-                  src={form.cccdImg && form.cccdImg !== "/img-placeholder.svg" ? form.cccdImg : "/img-placeholder.svg"}
+                  src={
+                    form.cccdImg && form.cccdImg !== DEFAULT_IMG
+                      ? form.cccdImg
+                      : DEFAULT_IMG
+                  }
                   alt=""
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: form.cccdImg && form.cccdImg !== "/img-placeholder.svg" ? "cover" : "contain",
+                    objectFit:
+                      form.cccdImg && form.cccdImg !== DEFAULT_IMG
+                        ? "cover"
+                        : "contain",
                     background: "#fafbfc",
                     borderRadius: 8,
                     border: "none",
                     transition: "box-shadow 0.2s",
                     display: "block",
                   }}
-                  onError={e => {
-                    if (e.currentTarget.src !== window.location.origin + "/img-placeholder.svg") {
-                      e.currentTarget.src = "/img-placeholder.svg";
+                  onError={(e) => {
+                    if (
+                      e.currentTarget.src !==
+                      window.location.origin + DEFAULT_IMG
+                    ) {
+                      e.currentTarget.src = DEFAULT_IMG;
                     }
                   }}
                   draggable={false}
@@ -382,8 +456,17 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               </div>
             </div>
             {/* Bằng lái xe */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <label style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}
+              >
                 Bằng lái xe
               </label>
               <InputBase
@@ -392,24 +475,27 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                 onChange={(val) => handleChange("license", val)}
                 style={{ width: "100%", marginBottom: 10, maxWidth: 180 }}
               />
-              <label style={{ fontWeight: 500, marginBottom: 6, alignSelf: "flex-start" }}>
+              <label
+                style={{
+                  fontWeight: 500,
+                  marginBottom: 6,
+                  alignSelf: "flex-start",
+                }}
+              >
                 Upload Bằng lái xe
               </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleUpload("licenseImg", uploadDriverLicenseImage)}
-                style={{
-                  display: "block",
-                  marginBottom: 8,
-                  border: "1px solid #eee",
-                  borderRadius: 6,
-                  padding: 6,
-                  width: "100%",
-                  background: "#fff",
-                  maxWidth: 180,
-                }}
-              />
+              <label className="custom-upload-label">
+                Chọn ảnh
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="custom-upload-input"
+                  onChange={handleUpload(
+                    "licenseImg",
+                    uploadDriverLicenseImage
+                  )}
+                />
+              </label>
               <div
                 style={{
                   width: 110,
@@ -426,25 +512,37 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   transition: "border-color 0.2s",
                   position: "relative",
                 }}
-                onMouseOver={e => (e.currentTarget.style.borderColor = "#ffb300")}
-                onMouseOut={e => (e.currentTarget.style.borderColor = "#bbb")}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.borderColor = "#ffb300")
+                }
+                onMouseOut={(e) => (e.currentTarget.style.borderColor = "#bbb")}
               >
                 <img
-                  src={form.licenseImg && form.licenseImg !== "/img-placeholder.svg" ? form.licenseImg : "/img-placeholder.svg"}
+                  src={
+                    form.licenseImg && form.licenseImg !== DEFAULT_IMG
+                      ? form.licenseImg
+                      : DEFAULT_IMG
+                  }
                   alt=""
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: form.licenseImg && form.licenseImg !== "/img-placeholder.svg" ? "cover" : "contain",
+                    objectFit:
+                      form.licenseImg && form.licenseImg !== DEFAULT_IMG
+                        ? "cover"
+                        : "contain",
                     background: "#fafbfc",
                     borderRadius: 8,
                     border: "none",
                     transition: "box-shadow 0.2s",
                     display: "block",
                   }}
-                  onError={e => {
-                    if (e.currentTarget.src !== window.location.origin + "/img-placeholder.svg") {
-                      e.currentTarget.src = "/img-placeholder.svg";
+                  onError={(e) => {
+                    if (
+                      e.currentTarget.src !==
+                      window.location.origin + DEFAULT_IMG
+                    ) {
+                      e.currentTarget.src = DEFAULT_IMG;
                     }
                   }}
                   draggable={false}
@@ -452,8 +550,17 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               </div>
             </div>
             {/* Hộ chiếu */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <label style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}
+              >
                 Hộ chiếu
               </label>
               <InputBase
@@ -462,24 +569,24 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                 onChange={(val) => handleChange("passport", val)}
                 style={{ width: "100%", marginBottom: 10, maxWidth: 180 }}
               />
-              <label style={{ fontWeight: 500, marginBottom: 6, alignSelf: "flex-start" }}>
+              <label
+                style={{
+                  fontWeight: 500,
+                  marginBottom: 6,
+                  alignSelf: "flex-start",
+                }}
+              >
                 Upload Hộ chiếu
               </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleUpload("passportImg", uploadPassportImage)}
-                style={{
-                  display: "block",
-                  marginBottom: 8,
-                  border: "1px solid #eee",
-                  borderRadius: 6,
-                  padding: 6,
-                  width: "100%",
-                  background: "#fff",
-                  maxWidth: 180,
-                }}
-              />
+              <label className="custom-upload-label">
+                Chọn ảnh
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="custom-upload-input"
+                  onChange={handleUpload("passportImg", uploadPassportImage)}
+                />
+              </label>
               <div
                 style={{
                   width: 110,
@@ -496,25 +603,37 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   transition: "border-color 0.2s",
                   position: "relative",
                 }}
-                onMouseOver={e => (e.currentTarget.style.borderColor = "#ffb300")}
-                onMouseOut={e => (e.currentTarget.style.borderColor = "#bbb")}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.borderColor = "#ffb300")
+                }
+                onMouseOut={(e) => (e.currentTarget.style.borderColor = "#bbb")}
               >
                 <img
-                  src={form.passportImg && form.passportImg !== "/img-placeholder.svg" ? form.passportImg : "/img-placeholder.svg"}
+                  src={
+                    form.passportImg && form.passportImg !== DEFAULT_IMG
+                      ? form.passportImg
+                      : DEFAULT_IMG
+                  }
                   alt=""
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: form.passportImg && form.passportImg !== "/img-placeholder.svg" ? "cover" : "contain",
+                    objectFit:
+                      form.passportImg && form.passportImg !== DEFAULT_IMG
+                        ? "cover"
+                        : "contain",
                     background: "#fafbfc",
                     borderRadius: 8,
                     border: "none",
                     transition: "box-shadow 0.2s",
                     display: "block",
                   }}
-                  onError={e => {
-                    if (e.currentTarget.src !== window.location.origin + "/img-placeholder.svg") {
-                      e.currentTarget.src = "/img-placeholder.svg";
+                  onError={(e) => {
+                    if (
+                      e.currentTarget.src !==
+                      window.location.origin + DEFAULT_IMG
+                    ) {
+                      e.currentTarget.src = DEFAULT_IMG;
                     }
                   }}
                   draggable={false}
@@ -526,7 +645,13 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         {/* Ghi chú */}
         <div
           className="box_section"
-          style={{ marginBottom: 0, background: "#fafbfc", padding: "24px 24px 16px 24px", borderRadius: 12, marginTop: 18 }}
+          style={{
+            marginBottom: 0,
+            background: "#fafbfc",
+            padding: "24px 24px 16px 24px",
+            borderRadius: 12,
+            marginTop: 18,
+          }}
         >
           <label style={{ display: "block", marginBottom: 6, fontWeight: 500 }}>
             Ghi chú

@@ -191,7 +191,7 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
 
   return (
     <TModal
-      title={form.id ? "Cập nhật nhân viên" : "Thêm mới nhân viên"}
+      title={form.id ? "Cập nhật nhân viên" : "Thêm nhân viên"}
       visible={open}
       onCancel={onClose}
       width={600}
@@ -206,8 +206,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
       <div className="box_section" style={{ padding: 0 }}>
         <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Tên đăng nhập <span style={{ color: "red" }}>*</span>
+            </label>
             <InputBase
-              label="Tên đăng nhập"
               placeholder="Nhập tên đăng nhập"
               modelValue={form.username}
               onChange={(val) => handleChange("username", val)}
@@ -215,8 +217,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
             />
           </div>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Họ và tên <span style={{ color: "red" }}>*</span>
+            </label>
             <InputBase
-              label="Họ và tên"
               placeholder="Nhập họ và tên"
               modelValue={form.name}
               onChange={(val) => handleChange("name", val)}
@@ -226,8 +230,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
         </div>
         <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Số điện thoại <span style={{ color: "red" }}>*</span>
+            </label>
             <InputBase
-              label="Số điện thoại"
               placeholder="Nhập số điện thoại"
               modelValue={form.phone}
               onChange={(val) => handleChange("phone", val)}
@@ -235,8 +241,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
             />
           </div>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Email <span style={{ color: "red" }}>*</span>
+            </label>
             <InputBase
-              label="Email"
               placeholder="Nhập email"
               modelValue={form.email}
               onChange={(val) => handleChange("email", val)}
@@ -266,13 +274,16 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
             <DatePickerBase
               placeholder="dd/mm/yyyy"
               value={form.birthday}
+              dateOnly={true}
               onChange={(val) => handleChange("birthday", val || "")}
               style={{ width: "100%" }}
             />
           </div>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Giới tính
+            </label>
             <SelectboxBase
-              label="Giới tính"
               placeholder="Chọn giới tính"
               value={form.gender}
               options={genderOptions}
@@ -282,8 +293,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+            Địa chỉ
+          </label>
           <InputBase
-            label="Địa chỉ"
             placeholder="Nhập địa chỉ"
             modelValue={form.address}
             onChange={(val) => handleChange("address", val)}
@@ -291,8 +304,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
         </div>
         <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Chi nhánh
+            </label>
             <SelectboxBase
-              label="Chi nhánh"
               placeholder="Chọn chi nhánh"
               value={form.branch}
               options={branchOptions}
@@ -301,8 +316,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
             />
           </div>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Vai trò
+            </label>
             <SelectboxBase
-              label="Vai trò"
               placeholder="Chọn vai trò"
               value={form.role}
               options={roleOptions}
@@ -312,8 +329,10 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+            Trạng thái
+          </label>
           <SelectboxBase
-            label="Trạng thái"
             placeholder="Chọn trạng thái"
             value={form.status}
             options={statusOptions}

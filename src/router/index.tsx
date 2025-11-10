@@ -76,7 +76,7 @@ const RouteWithMiddleware: React.FC<RouteType> = (route) => {
     <Suspense
       fallback={
         <>
-          <LoadingIndicator />
+          {/* <LoadingIndicator /> */}
         </>
       }
     >

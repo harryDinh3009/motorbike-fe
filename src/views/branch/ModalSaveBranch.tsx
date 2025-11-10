@@ -95,8 +95,12 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
       <div className="box_section" style={{ padding: 0 }}>
         <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
+            <label
+              style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+            >
+              Tên chi nhánh <span style={{ color: "red" }}>*</span>
+            </label>
             <InputBase
-              label="Tên chi nhánh"
               modelValue={form.name}
               placeholder="Nhập tên chi nhánh"
               onChange={(val) => handleChange("name", val)}
@@ -104,8 +108,12 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
             />
           </div>
           <div style={{ flex: 1 }}>
+            <label
+              style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+            >
+              Số điện thoại <span style={{ color: "red" }}>*</span>
+            </label>
             <InputBase
-              label="Số điện thoại"
               modelValue={form.phone}
               placeholder="Nhập số điện thoại"
               onChange={(val) => handleChange("phone", val)}
@@ -114,8 +122,10 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
           </div>
         </div>
         <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+            Địa chỉ <span style={{ color: "red" }}>*</span>
+          </label>
           <InputBase
-            label="Địa chỉ"
             modelValue={form.address}
             placeholder="Nhập địa chỉ"
             onChange={(val) => handleChange("address", val)}
@@ -126,7 +136,9 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
           className="dp_flex"
           style={{ alignItems: "center", marginBottom: 24 }}
         >
-          <span style={{ minWidth: 90 }}>Trạng thái</span>
+          <label style={{ minWidth: 90, marginBottom: 0, fontWeight: 500 }}>
+            Trạng thái
+          </label>
           <SelectboxBase
             value={form.status ? 1 : 0}
             options={statusOptions}

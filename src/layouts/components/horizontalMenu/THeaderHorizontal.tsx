@@ -140,10 +140,14 @@ const THeaderHorizontal = () => {
           </div>
         </div>
       </div>
-      <div className="header_bottom">
+      <div className="header_bottom" style={{ background: '#FFD600' }}>
         <div className="grid_content">
-          <nav className="nav_wrap">
-            <ul id="gnbMenu" className="gnb_1depth">
+          <nav className="nav_wrap" style={{ justifyContent: "flex-start" }}>
+            <ul
+              id="gnbMenu"
+              className="gnb_1depth"
+              style={{ justifyContent: "flex-start", textAlign: "left", paddingLeft: 24 }}
+            >
               {subMenus.map((subMenu1, indexMenu1) => (
                 <li key={indexMenu1}>
                   <Link to={subMenu1.path}>{subMenu1.name}</Link>

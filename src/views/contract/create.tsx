@@ -933,12 +933,13 @@ const ContractCreateComponent = () => {
                       {discountAmount ? `- ${discountAmount.toLocaleString()} đ` : "0 đ"}
                     </td>
                   </tr>
-                  <tr>
+                  {/* Đặt cọc chỉ lưu thông tin, KHÔNG hiển thị ở bảng tổng kết */}
+                  {/* <tr>
                     <td>Đặt cọc:</td>
                     <td style={{ textAlign: "right" }}>
                       {payment.deposit.toLocaleString()} đ
                     </td>
-                  </tr>
+                  </tr> */}
                   <tr>
                     <td>
                       <b>Tổng cộng:</b>
