@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect } from "react";
 import { Checkbox, Tooltip } from "antd";
 import { CheckboxChangeEvent } from "antd/es/checkbox";
 import { useDispatch, useSelector } from "react-redux";
@@ -34,24 +34,14 @@ const CheckboxBase: React.FC<CheckboxBaseProps> = ({
   onFocus,
   onBlur,
 }) => {
-  const [isChecked, setIsChecked] = useState<boolean>(checked);
-  const checkboxRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch<AppDispatch>();
   const isError = useSelector((state: RootState) => state.common.check);
 
   const handleChange = (e: CheckboxChangeEvent) => {
-    const isChecked = e.target.checked;
-    setIsChecked(isChecked);
-    onChange?.(isChecked);
+    onChange?.(e.target.checked);
   };
 
-  const validateCheckbox = () => {
-    if (required && !isChecked) {
-      checkboxRef.current?.classList.add("error_validate");
-    } else {
-      checkboxRef.current?.classList.remove("error_validate");
-    }
-  };
+  const isValidateError = required && !checked && isError;
 
   useEffect(() => {
     if (id && required) {
@@ -66,22 +56,17 @@ const CheckboxBase: React.FC<CheckboxBaseProps> = ({
     };
   }, [dispatch, id, required]);
 
-  useEffect(() => {
-    validateCheckbox();
-  }, [isChecked]);
-
   return (
     <Tooltip title={tooltip}>
       <Checkbox
-        ref={checkboxRef}
         id={id}
-        checked={isChecked}
+        checked={checked}
         indeterminate={indeterminate}
         disabled={disabled}
         onChange={handleChange}
         onFocus={onFocus}
         onBlur={onBlur}
-        className={isError ? "error_validate" : ""}
+        className={isValidateError ? "error_validate" : ""}
       >
         {label}
       </Checkbox>

@@ -181,6 +181,10 @@ const ModalAddMotor = ({
         ) : (
           carList.map((motor, idx) => {
             const mState = motors.find((m) => m.id === motor.id)!;
+            const isRented = motor.status === "RENTED";
+            const strikeStyle = isRented
+              ? { textDecoration: "line-through", color: "#ff4d4f" }
+              : {};
             return (
               <div
                 key={motor.id}
@@ -205,10 +209,11 @@ const ModalAddMotor = ({
                       height: 18,
                       accentColor: "#222",
                     }}
+                    disabled={isRented}
                   />
                 </div>
-                <div style={{ flex: 1 }}>{motor.model}</div>
-                <div style={{ width: "20%" }}>{motor.licensePlate}</div>
+                <div style={{ flex: 1, ...strikeStyle }}>{motor.model}</div>
+                <div style={{ width: "20%", ...strikeStyle }}>{motor.licensePlate}</div>
                 <div
                   style={{
                     width: "20%",
@@ -216,6 +221,7 @@ const ModalAddMotor = ({
                     alignItems: "center",
                     gap: 4,
                     justifyContent: "center",
+                    ...strikeStyle,
                   }}
                 >
                   <input
@@ -237,9 +243,12 @@ const ModalAddMotor = ({
                       fontSize: 15,
                       marginRight: 4,
                       background: "#fff",
+                      textDecoration: isRented ? "line-through" : undefined,
+                      color: isRented ? "#ff4d4f" : undefined,
                     }}
+                    disabled={isRented}
                   />
-                  <span style={{ fontSize: 14, color: "#888" }}>/ngày</span>
+                  <span style={{ fontSize: 14, color: isRented ? "#ff4d4f" : "#888" }}>/ngày</span>
                 </div>
                 <div
                   style={{
@@ -248,6 +257,7 @@ const ModalAddMotor = ({
                     alignItems: "center",
                     gap: 4,
                     justifyContent: "center",
+                    ...strikeStyle,
                   }}
                 >
                   <input
@@ -269,9 +279,12 @@ const ModalAddMotor = ({
                       fontSize: 15,
                       marginRight: 4,
                       background: "#fff",
+                      textDecoration: isRented ? "line-through" : undefined,
+                      color: isRented ? "#ff4d4f" : undefined,
                     }}
+                    disabled={isRented}
                   />
-                  <span style={{ fontSize: 14, color: "#888" }}>/giờ</span>
+                  <span style={{ fontSize: 14, color: isRented ? "#ff4d4f" : "#888" }}>/giờ</span>
                 </div>
               </div>
             );

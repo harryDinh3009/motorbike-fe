@@ -15,7 +15,8 @@ export interface CustomerDTO {
   country?: string;
   address?: string;
   citizenId?: string;
-  citizenIdImageUrl?: string;
+  citizenIdFrontImageUrl?: string;
+  citizenIdBackImageUrl?: string;
   driverLicense?: string;
   driverLicenseImageUrl?: string;
   passport?: string;
@@ -34,7 +35,8 @@ export interface CustomerSaveDTO {
   country?: string;
   address?: string;
   citizenId?: string;
-  citizenIdImageUrl?: string;
+  citizenIdFrontImageUrl?: string;
+  citizenIdBackImageUrl?: string;
   driverLicense?: string;
   driverLicenseImageUrl?: string;
   passport?: string;

@@ -66,15 +66,17 @@ export const getAllCustomers = async (): Promise<ApiResponse<CustomerDTO[]>> => 
 };
 
 /**
- * Upload ảnh CCCD/CMND cho khách hàng
+ * Upload ảnh CCCD/CMND cho khách hàng (mặt trước/mặt sau)
  */
 export const uploadCitizenIdImage = async (
   customerId: string,
-  file: File
+  file: File,
+  side: "front" | "back" = "front"
 ): Promise<ApiResponse<string>> => {
   const formData = new FormData();
   formData.append("customerId", customerId);
   formData.append("file", file);
+  formData.append("side", side);
   const res = await http.post<ApiResponse<string>>(
     "/a/customer-mng/upload-citizen-id",
     formData,

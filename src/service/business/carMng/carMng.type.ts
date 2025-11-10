@@ -1,4 +1,4 @@
-export type CarStatus = "ACTIVE" | "INACTIVE" | "NOT_READY" | "LOST" | "BROKEN";
+export type CarStatus = "AVAILABLE" | "NOT_AVAILABLE" | "LOST" | "RENTED" | "MAINTENANCE";
 
 export interface CarSearchDTO {
   keyword?: string;

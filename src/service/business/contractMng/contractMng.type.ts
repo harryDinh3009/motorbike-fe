@@ -61,7 +61,6 @@ export interface ApiResponse<T> {
 }
 
 export type ContractStatus =
-  | "DRAFT"
   | "CONFIRMED"
   | "DELIVERED"
   | "RETURNED"

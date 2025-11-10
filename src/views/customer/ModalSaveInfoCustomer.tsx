@@ -5,8 +5,6 @@ import SelectboxBase from "@/component/common/input/SelectboxBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 import TextAreaBase from "@/component/common/input/TextAreaBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
-import AvatarBase from "@/component/common/image/AvatarBase";
-import ImageBase from "@/component/common/image/ImageBase";
 import {
   uploadCitizenIdImage,
   uploadDriverLicenseImage,
@@ -47,6 +45,8 @@ interface FormState {
   address: string;
   cccd: string;
   cccdImg: string;
+  cccdFrontImg: string;
+  cccdBackImg: string;
   license: string;
   licenseImg: string;
   passport: string;
@@ -55,8 +55,6 @@ interface FormState {
   avatar: string;
   [key: string]: any;
 }
-
-const DEFAULT_IMG = "/img-default-doc.png"; // Đảm bảo có file này trong public
 
 const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
   const [form, setForm] = useState<FormState>({
@@ -69,11 +67,13 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
     country: "",
     address: "",
     cccd: "",
-    cccdImg: DEFAULT_IMG,
+    cccdImg: "",
+    cccdFrontImg: "",
+    cccdBackImg: "",
     license: "",
-    licenseImg: DEFAULT_IMG,
+    licenseImg: "",
     passport: "",
-    passportImg: DEFAULT_IMG,
+    passportImg: "",
     note: "",
     avatar: "",
   });
@@ -92,11 +92,12 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         country: customer.country || "",
         address: customer.address || "",
         cccd: customer.citizenId || "",
-        cccdImg: customer.citizenIdImageUrl || DEFAULT_IMG,
+        cccdFrontImg: customer.citizenIdFrontImageUrl || "",
+        cccdBackImg: customer.citizenIdBackImageUrl || "",
         license: customer.driverLicense || "",
-        licenseImg: customer.driverLicenseImageUrl || DEFAULT_IMG,
+        licenseImg: customer.driverLicenseImageUrl || "",
         passport: customer.passport || "",
-        passportImg: customer.passportImageUrl || DEFAULT_IMG,
+        passportImg: customer.passportImageUrl || "",
         note: customer.note || "",
         avatar: "",
       });
@@ -111,11 +112,12 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         country: "",
         address: "",
         cccd: "",
-        cccdImg: DEFAULT_IMG,
+        cccdFrontImg: "",
+        cccdBackImg: "",
         license: "",
-        licenseImg: DEFAULT_IMG,
+        licenseImg: "",
         passport: "",
-        passportImg: DEFAULT_IMG,
+        passportImg: "",
         note: "",
         avatar: "",
       });
@@ -125,7 +127,11 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
 
   // Upload handlers
   const handleUpload =
-    (key: string, uploadFn: (customerId: string, file: File) => Promise<any>) =>
+    (
+      key: string,
+      uploadFn: (customerId: string, file: File, side?: string) => Promise<any>,
+      side?: string
+    ) =>
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
@@ -139,7 +145,8 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
         // If customer exists, upload immediately
         if (form.id) {
           try {
-            const res = await uploadFn(form.id, file);
+            // Truyền side cho CCCD (front/back), các loại khác không cần
+            const res = await uploadFn(form.id, file, side);
             const imageUrl = res.data;
             setForm((prev) => ({
               ...prev,
@@ -147,7 +154,6 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
             }));
           } catch (err) {
             console.error("Upload failed:", err);
-            // Revert to previous image on error
             setForm((prev) => ({
               ...prev,
               [key]: prev[key],
@@ -164,6 +170,21 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
   const handleSubmit = () => {
     onSave(form);
   };
+
+  // SVG icon cho ảnh rỗng
+  const EmptyImageIcon = (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <rect width="48" height="48" rx="10" fill="#f5f5f5" />
+      <path
+        d="M14 34l8-10 6 8 4-6 6 8"
+        stroke="#bbb"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="18" cy="20" r="2" fill="#bbb" />
+    </svg>
+  );
 
   return (
     <TModal
@@ -357,17 +378,16 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
           </p>
           <div
             style={{
-              display: "flex",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gridTemplateRows: "1fr 1fr",
               gap: 32,
-              justifyContent: "space-between",
-              alignItems: "flex-start",
               marginBottom: 0,
             }}
           >
-            {/* CCCD/CMND */}
+            {/* CCCD/CMND mặt trước */}
             <div
               style={{
-                flex: 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -376,7 +396,7 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               <label
                 style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}
               >
-                CCCD/CMND
+                CCCD/CMND (Mặt trước)
               </label>
               <InputBase
                 placeholder="Nhập số CCCD/CMND"
@@ -391,7 +411,7 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   alignSelf: "flex-start",
                 }}
               >
-                Upload CCCD
+                Upload mặt trước
               </label>
               <label className="custom-upload-label">
                 Chọn ảnh
@@ -399,7 +419,14 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                   type="file"
                   accept="image/*"
                   className="custom-upload-input"
-                  onChange={handleUpload("cccdImg", uploadCitizenIdImage)}
+                  onChange={handleUpload(
+                    "cccdFrontImg",
+                    async (customerId, file) => {
+                      // Gọi API uploadCitizenIdImage với tham số side = "front"
+                      return uploadCitizenIdImage(customerId, file, "front");
+                    },
+                    "front"
+                  )}
                 />
               </label>
               <div
@@ -423,42 +450,123 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                 }
                 onMouseOut={(e) => (e.currentTarget.style.borderColor = "#bbb")}
               >
-                <img
-                  src={
-                    form.cccdImg && form.cccdImg !== DEFAULT_IMG
-                      ? form.cccdImg
-                      : DEFAULT_IMG
-                  }
-                  alt=""
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit:
-                      form.cccdImg && form.cccdImg !== DEFAULT_IMG
-                        ? "cover"
-                        : "contain",
-                    background: "#fafbfc",
-                    borderRadius: 8,
-                    border: "none",
-                    transition: "box-shadow 0.2s",
-                    display: "block",
-                  }}
-                  onError={(e) => {
-                    if (
-                      e.currentTarget.src !==
-                      window.location.origin + DEFAULT_IMG
-                    ) {
-                      e.currentTarget.src = DEFAULT_IMG;
-                    }
-                  }}
-                  draggable={false}
+                {form.cccdFrontImg ? (
+                  <img
+                    src={form.cccdFrontImg}
+                    alt="Ảnh CCCD mặt trước"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      background: "#fafbfc",
+                      borderRadius: 8,
+                      border: "none",
+                      transition: "box-shadow 0.2s",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const parent = e.currentTarget.parentElement;
+                      if (parent)
+                        parent.innerHTML = EmptyImageIcon.props.children;
+                    }}
+                    draggable={false}
+                  />
+                ) : (
+                  EmptyImageIcon
+                )}
+              </div>
+            </div>
+            {/* CCCD/CMND mặt sau */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}
+              >
+                CCCD/CMND (Mặt sau)
+              </label>
+              <div style={{ height: 38, marginBottom: 10 }} />
+              <label
+                style={{
+                  fontWeight: 500,
+                  marginBottom: 6,
+                  alignSelf: "flex-start",
+                }}
+              >
+                Upload mặt sau
+              </label>
+              <label className="custom-upload-label">
+                Chọn ảnh
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="custom-upload-input"
+                  onChange={handleUpload(
+                    "cccdBackImg",
+                    async (customerId, file) => {
+                      // Gọi API uploadCitizenIdImage với tham số side = "back"
+                      return uploadCitizenIdImage(customerId, file, "back");
+                    },
+                    "back"
+                  )}
                 />
+              </label>
+              <div
+                style={{
+                  width: 110,
+                  height: 82,
+                  background: "#fff",
+                  border: "1.5px dashed #bbb",
+                  borderRadius: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  boxShadow: "0 1px 4px #0001",
+                  margin: "0 auto",
+                  transition: "border-color 0.2s",
+                  position: "relative",
+                }}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.borderColor = "#ffb300")
+                }
+                onMouseOut={(e) => (e.currentTarget.style.borderColor = "#bbb")}
+              >
+                {form.cccdBackImg ? (
+                  <img
+                    src={form.cccdBackImg}
+                    alt="Ảnh CCCD mặt sau"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      background: "#fafbfc",
+                      borderRadius: 8,
+                      border: "none",
+                      transition: "box-shadow 0.2s",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const parent = e.currentTarget.parentElement;
+                      if (parent)
+                        parent.innerHTML = EmptyImageIcon.props.children;
+                    }}
+                    draggable={false}
+                  />
+                ) : (
+                  EmptyImageIcon
+                )}
               </div>
             </div>
             {/* Bằng lái xe */}
             <div
               style={{
-                flex: 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -517,42 +625,36 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                 }
                 onMouseOut={(e) => (e.currentTarget.style.borderColor = "#bbb")}
               >
-                <img
-                  src={
-                    form.licenseImg && form.licenseImg !== DEFAULT_IMG
-                      ? form.licenseImg
-                      : DEFAULT_IMG
-                  }
-                  alt=""
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit:
-                      form.licenseImg && form.licenseImg !== DEFAULT_IMG
-                        ? "cover"
-                        : "contain",
-                    background: "#fafbfc",
-                    borderRadius: 8,
-                    border: "none",
-                    transition: "box-shadow 0.2s",
-                    display: "block",
-                  }}
-                  onError={(e) => {
-                    if (
-                      e.currentTarget.src !==
-                      window.location.origin + DEFAULT_IMG
-                    ) {
-                      e.currentTarget.src = DEFAULT_IMG;
-                    }
-                  }}
-                  draggable={false}
-                />
+                {form.licenseImg ? (
+                  <img
+                    src={form.licenseImg}
+                    alt="Ảnh bằng lái xe"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      background: "#fafbfc",
+                      borderRadius: 8,
+                      border: "none",
+                      transition: "box-shadow 0.2s",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const parent = e.currentTarget.parentElement;
+                      if (parent)
+                        parent.innerHTML = EmptyImageIcon.props.children;
+                    }}
+                    draggable={false}
+                  />
+                ) : (
+                  EmptyImageIcon
+                )}
               </div>
             </div>
             {/* Hộ chiếu */}
             <div
               style={{
-                flex: 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -608,36 +710,31 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                 }
                 onMouseOut={(e) => (e.currentTarget.style.borderColor = "#bbb")}
               >
-                <img
-                  src={
-                    form.passportImg && form.passportImg !== DEFAULT_IMG
-                      ? form.passportImg
-                      : DEFAULT_IMG
-                  }
-                  alt=""
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit:
-                      form.passportImg && form.passportImg !== DEFAULT_IMG
-                        ? "cover"
-                        : "contain",
-                    background: "#fafbfc",
-                    borderRadius: 8,
-                    border: "none",
-                    transition: "box-shadow 0.2s",
-                    display: "block",
-                  }}
-                  onError={(e) => {
-                    if (
-                      e.currentTarget.src !==
-                      window.location.origin + DEFAULT_IMG
-                    ) {
-                      e.currentTarget.src = DEFAULT_IMG;
-                    }
-                  }}
-                  draggable={false}
-                />
+                {form.passportImg ? (
+                  <img
+                    src={form.passportImg}
+                    alt="Ảnh hộ chiếu"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      background: "#fafbfc",
+                      borderRadius: 8,
+                      border: "none",
+                      transition: "box-shadow 0.2s",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const parent = e.currentTarget.parentElement;
+                      if (parent)
+                        parent.innerHTML = EmptyImageIcon.props.children;
+                    }}
+                    draggable={false}
+                  />
+                ) : (
+                  EmptyImageIcon
+                )}
               </div>
             </div>
           </div>

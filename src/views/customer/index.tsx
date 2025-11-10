@@ -102,7 +102,8 @@ const CustomerList = () => {
         country: customer.country,
         address: customer.address,
         citizenId: customer.cccd || customer.citizenId,
-        citizenIdImageUrl: customer.cccdImg || customer.citizenIdImageUrl,
+        citizenIdFrontImageUrl: customer.cccdFrontImg || customer.citizenIdFrontImageUrl,
+        citizenIdBackImageUrl: customer.cccdBackImg || customer.citizenIdBackImageUrl,
         driverLicense: customer.license || customer.driverLicense,
         driverLicenseImageUrl:
           customer.licenseImg || customer.driverLicenseImageUrl,
