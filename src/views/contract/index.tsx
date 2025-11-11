@@ -101,8 +101,14 @@ const ContractComponent = () => {
         value: b.id,
         label: b.name,
       }));
-      setPickupBranchOptions([{ value: "", label: "Chi nhánh thuê" }, ...branchList]);
-      setReturnBranchOptions([{ value: "", label: "Chi nhánh trả" }, ...branchList]);
+      setPickupBranchOptions([
+        { value: "", label: "Chi nhánh thuê" },
+        ...branchList,
+      ]);
+      setReturnBranchOptions([
+        { value: "", label: "Chi nhánh trả" },
+        ...branchList,
+      ]);
     });
     getContractStatuses().then((res) => {
       setStatusOptions([
@@ -329,24 +335,28 @@ const ContractComponent = () => {
                     dataIndex: "contractCode",
                     key: "contractCode",
                     width: "7%",
+                    render: (val: string) => val || "-",
                   },
                   {
                     title: "Nguồn",
                     dataIndex: "source",
                     key: "source",
                     width: "7%",
+                    render: (val: string) => val || "-",
                   },
                   {
                     title: "Khách hàng",
                     dataIndex: "customerName",
                     key: "customerName",
                     width: "10%",
+                    render: (val: string) => val || "-",
                   },
                   {
                     title: "Số điện thoại",
                     dataIndex: "phoneNumber",
                     key: "phoneNumber",
                     width: "10%",
+                    render: (val: string) => val || "-",
                   },
                   {
                     title: "Xe thuê",
@@ -357,10 +367,13 @@ const ContractComponent = () => {
                       Array.isArray(cars)
                         ? cars
                             .map(
-                              (c: any) => `${c.carModel} (${c.licensePlate})`
+                              (c: any) =>
+                                `${c.carModel || "-"} (${
+                                  c.licensePlate || "-"
+                                })`
                             )
                             .join("; ")
-                        : "",
+                        : "-",
                   },
                   {
                     title: "Ngày thuê",
@@ -368,7 +381,7 @@ const ContractComponent = () => {
                     key: "startDate",
                     width: "8%",
                     render: (val: string) =>
-                      val ? new Date(val).toLocaleDateString() : "",
+                      val ? new Date(val).toLocaleDateString() : "-",
                   },
                   {
                     title: "Ngày trả",
@@ -376,40 +389,51 @@ const ContractComponent = () => {
                     key: "endDate",
                     width: "8%",
                     render: (val: string) =>
-                      val ? new Date(val).toLocaleDateString() : "",
+                      val ? new Date(val).toLocaleDateString() : "-",
                   },
                   {
                     title: "Chi nhánh thuê",
                     dataIndex: "pickupBranchName",
                     key: "pickupBranchName",
                     width: "7%",
+                    render: (val: string) => val || "-",
                   },
                   {
                     title: "Chi nhánh trả",
                     dataIndex: "returnBranchName",
                     key: "returnBranchName",
                     width: "7%",
+                    render: (val: string) => val || "-",
                   },
                   {
                     title: "Tổng tiền",
                     dataIndex: "finalAmount",
                     key: "finalAmount",
-                    width: "8%",
-                    render: (val: number) => val?.toLocaleString(),
+                    width: "9%",
+                    render: (val: number) =>
+                      val != null && val !== undefined && val !== ""
+                        ? val.toLocaleString() + " đ"
+                        : "-",
                   },
                   {
                     title: "Đã trả",
                     dataIndex: "paidAmount",
                     key: "paidAmount",
-                    width: "8%",
-                    render: (val: number) => val?.toLocaleString(),
+                    width: "9%",
+                    render: (val: number) =>
+                      val != null && val !== undefined && val !== ""
+                        ? val.toLocaleString() + " đ"
+                        : "-",
                   },
                   {
                     title: "Còn lại",
                     dataIndex: "remainingAmount",
                     key: "remainingAmount",
-                    width: "8%",
-                    render: (val: number) => val?.toLocaleString(),
+                    width: "9%",
+                    render: (val: number) =>
+                      val != null && val !== undefined && val !== ""
+                        ? val.toLocaleString() + " đ"
+                        : "-",
                   },
                   {
                     title: "Trạng thái",
@@ -417,7 +441,9 @@ const ContractComponent = () => {
                     key: "statusNm",
                     width: "8%",
                     render: (val: string) => (
-                      <span className={`contract-status ${val}`}>{val}</span>
+                      <span className={`contract-status ${val}`}>
+                        {val || "-"}
+                      </span>
                     ),
                   },
                   {

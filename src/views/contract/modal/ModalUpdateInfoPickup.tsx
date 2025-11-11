@@ -54,6 +54,8 @@ Props) => {
     { value: string; label: string }[]
   >([{ value: "", label: "Chọn trạng thái" }]);
 
+  const [odoError, setOdoError] = useState<string | null>(null);
+
   useEffect(() => {
     setStaff(defaultStaff);
     setTime(defaultTime);
@@ -83,16 +85,32 @@ Props) => {
     key: keyof CarReceiveItem,
     value: any
   ) => {
+    console.log(value);
+    
     setCarStates((prev) =>
       prev.map((item, i) => (i === idx ? { ...item, [key]: value } : item))
     );
   };
 
   const handleSave = () => {
+    const missingOdoIdx = carStates.findIndex(
+      (c) => c.odometer === "" || c.odometer === null || isNaN(Number(c.odometer))
+    );
+    if (missingOdoIdx !== -1) {
+      setOdoError(`Vui lòng nhập Odo cho xe số ${missingOdoIdx + 1}`);
+      return;
+    }
+    setOdoError(null);
+    const carsPayload = carStates.map((c) => ({
+      id: c.id,
+      carId: c.id,
+      endOdometer: Number(c.odometer),
+      status: c.status,
+    }));
     onSave({
       staff,
       time,
-      cars: carStates,
+      cars: carsPayload,
     });
   };
 
@@ -125,6 +143,11 @@ Props) => {
       <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 12 }}>
         Danh sách xe
       </div>
+      {odoError && (
+        <div style={{ color: "#ff4d4f", fontWeight: 600, marginBottom: 8 }}>
+          {odoError}
+        </div>
+      )}
       <div
         style={{
           border: "1px solid #eee",

@@ -63,6 +63,59 @@ interface FeeItem {
 
 const initialFeeList: FeeItem[] = [];
 
+function calcRentalInfo(
+  start: string,
+  end: string,
+  dailyPrice: number,
+  hourlyPrice: number
+) {
+  if (!start || !end || (!dailyPrice && !hourlyPrice))
+    return { days: 0, extraHours: 0, total: 0, durationText: "" };
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (ms <= 0) return { days: 0, extraHours: 0, total: 0, durationText: "" };
+  let totalHours = Math.ceil(ms / (1000 * 60 * 60));
+  let days = 0;
+  let extraHours = 0;
+  let total = 0;
+  let durationText = "";
+
+  if (dailyPrice) {
+    days = Math.floor(totalHours / 24);
+    extraHours = totalHours % 24;
+    // Nếu chỉ thuê vài tiếng trong ngày đầu tiên, vẫn tính là 1 ngày
+    if (days === 0) {
+      days = 1;
+      extraHours = 0;
+    } else {
+      // Nếu giờ phát sinh > 8h thì làm tròn thành 1 ngày
+      if (extraHours > 8) {
+        days += 1;
+        extraHours = 0;
+      }
+    }
+    // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
+    const msMod = ms % (1000 * 60 * 60);
+    if (days > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
+      extraHours -= 1;
+      if (extraHours < 0) extraHours = 0;
+    }
+    total = dailyPrice * days + (hourlyPrice || 0) * extraHours;
+    if (days > 0 && extraHours > 0) {
+      durationText = `${days} ngày ${extraHours} giờ`;
+    } else if (days > 0) {
+      durationText = `${days} ngày`;
+    } else {
+      durationText = `${extraHours} giờ`;
+    }
+  } else if (hourlyPrice) {
+    // Nếu chỉ có giá giờ
+    total = hourlyPrice * totalHours;
+    durationText = `${totalHours} giờ`;
+  }
+
+  return { days, extraHours, total, durationText };
+}
+
 const ContractCreateComponent = () => {
   const [form, setForm] = useState(initialForm);
   const [carList, setCarList] = useState<any[]>(initialCarList);
@@ -233,8 +286,26 @@ const ContractCreateComponent = () => {
     setFeeList(feeList.filter((_, i) => i !== idx));
   };
 
-  // Tính tổng tiền thuê xe
-  const totalCar = carList.reduce((sum, c) => sum + (c.total || 0), 0);
+  const rentalStart = form.startDate;
+  const rentalEnd = form.endDate;
+  const carRentalList = carList.map((c) => {
+    const { days, extraHours, total, durationText } = calcRentalInfo(
+      rentalStart,
+      rentalEnd,
+      c.priceDay || 0,
+      c.priceHour || 0
+    );
+    return {
+      ...c,
+      rentalDays: days,
+      rentalExtraHours: extraHours,
+      rentalDurationText: durationText,
+      rentalTotal: total,
+    };
+  });
+
+  // Tổng tiền thuê xe theo công thức mới
+  const totalCar = carRentalList.reduce((sum, c) => sum + (c.rentalTotal || 0), 0);
   // Tính tổng phụ phí
   const totalFee = feeList.reduce((sum, f) => sum + (f.amount || 0), 0);
   // Tính giảm giá
@@ -288,6 +359,7 @@ const ContractCreateComponent = () => {
         hourlyPrice: car.priceHour,
         totalAmount: car.total,
         notes: "",
+        startOdometer: car.startOdometer ?? null, // Thêm dòng này
       })),
       surcharges: feeList.map((fee) => ({
         description: fee.desc,
@@ -554,6 +626,21 @@ const ContractCreateComponent = () => {
         <ContainerBase>
           <div className="box_section">
             <p className="box_title_sm">Danh sách xe thuê</p>
+            {/* Thời gian tính thuê giống detail */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                marginBottom: 8,
+                width: "100%",
+              }}
+            >
+              <span style={{ color: "#1677ff", fontWeight: 500, fontSize: 15 }}>
+                Thời gian tính thuê:{" "}
+                {carRentalList[0]?.rentalDurationText || ""}
+              </span>
+            </div>
             <table
               className="contract-table contract-table-edit"
               style={{
@@ -578,7 +665,7 @@ const ContractCreateComponent = () => {
                 </tr>
               </thead>
               <tbody>
-                {carList.map((car, idx) => (
+                {carRentalList.map((car, idx) => (
                   <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
                     <td>{car.type}</td>
@@ -591,9 +678,6 @@ const ContractCreateComponent = () => {
                         onChange={(e) => {
                           const newCarList = [...carList];
                           newCarList[idx].priceDay = Number(e.target.value);
-                          newCarList[idx].total =
-                            (Number(e.target.value) || 0) +
-                            (newCarList[idx].priceHour || 0);
                           setCarList(newCarList);
                         }}
                         className="input-edit"
@@ -613,9 +697,6 @@ const ContractCreateComponent = () => {
                         onChange={(e) => {
                           const newCarList = [...carList];
                           newCarList[idx].priceHour = Number(e.target.value);
-                          newCarList[idx].total =
-                            (newCarList[idx].priceDay || 0) +
-                            (Number(e.target.value) || 0);
                           setCarList(newCarList);
                         }}
                         className="input-edit"
@@ -635,7 +716,7 @@ const ContractCreateComponent = () => {
                         textAlign: "right",
                       }}
                     >
-                      {car.total?.toLocaleString()}
+                      {car.rentalTotal?.toLocaleString()}
                     </td>
                     <td style={{ textAlign: "center" }}>
                       <ButtonBase

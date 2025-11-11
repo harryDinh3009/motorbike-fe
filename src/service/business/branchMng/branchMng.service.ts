@@ -64,3 +64,11 @@ export const getAllActiveBranches = async (): Promise<ApiResponse<BranchDTO[]>> 
   const res = await http.get<ApiResponse<BranchDTO[]>>("/a/branch-mng/active-list");
   return res.data;
 };
+
+/**
+ * Lấy chi nhánh của user đang đăng nhập
+ */
+export const getBranchByCurrentUser = async (): Promise<ApiResponse<BranchDTO>> => {
+  const res = await http.get<ApiResponse<BranchDTO>>("/a/branch-mng/current-user");
+  return res.data;
+};

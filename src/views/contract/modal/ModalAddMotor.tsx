@@ -89,6 +89,7 @@ const ModalAddMotor = ({
           priceDay: m.priceDay,
           priceHour: m.priceHour,
           total: (m.priceDay || 0) + (m.priceHour || 0),
+          startOdometer: info?.currentOdometer ?? null, // Thêm dòng này
         };
       });
     onAdd(selected);

@@ -227,15 +227,15 @@ const ContractDetailComponent = () => {
   // Handler cho modal giao xe
   const handleDeliverySave = async (data: any) => {
     if (!contract) return;
-    // Chuẩn hóa danh sách xe cho API
-    const cars: ContractCarSaveDTO[] = (data.cars || contract.cars || []).map(
+    // Chuẩn hóa danh sách xe cho API, truyền startOdometer lấy từ detail
+    const cars: ContractCarSaveDTO[] = (contract.cars || []).map(
       (c: any) => ({
         id: c.id,
         carId: c.carId || c.id,
         dailyPrice: c.dailyPrice,
         hourlyPrice: c.hourlyPrice,
         totalAmount: c.totalAmount,
-        startOdometer: c.odometer ? Number(c.odometer) : undefined,
+        startOdometer: c.startOdometer, // luôn truyền startOdometer từ detail
         notes: c.notes,
       })
     );
@@ -256,17 +256,19 @@ const ContractDetailComponent = () => {
 
   // Handler cho modal trả xe
   const handlePickupSave = async (data: any) => {
+    console.log(data);
+
     if (!contract) return;
-    // Chuẩn hóa danh sách xe cho API
     const cars: ContractCarSaveDTO[] = (data.cars || contract.cars || []).map(
       (c: any) => ({
         id: c.id,
         carId: c.carId || c.id,
-        endOdometer: c.odometer ? Number(c.odometer) : undefined,
+        endOdometer: c.endOdometer,
         notes: c.notes,
-        status: c.status, // Truyền status vào API
+        status: c.status,
       })
     );
+
     await updateReturn({
       contractId: contract.id,
       cars,
@@ -1065,7 +1067,7 @@ const ContractDetailComponent = () => {
             type: c.carType,
             model: c.carModel,
             licensePlate: c.licensePlate,
-            odometer: c.endOdometer || "",
+            odometer: c.endOdometer ?? c.startOdometer ?? "", // Truyền odo hiện tại (ưu tiên endOdometer nếu đã có, nếu chưa thì lấy startOdometer)
             condition: "", // truyền lại nếu có field tình trạng
             status: c.status || "", // Truyền status sang modal
           }))}

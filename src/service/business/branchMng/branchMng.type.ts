@@ -35,3 +35,4 @@ export interface PageableObject<T> {
   page: number;
   size: number;
 }
+

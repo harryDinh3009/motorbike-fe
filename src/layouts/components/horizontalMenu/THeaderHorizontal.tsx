@@ -4,6 +4,7 @@ import { SCREEN } from "@/router/screen";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserInfo, removeUserInfo } from "@/utils/storage";
+import { getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 
 type MenuItem = {
   name: string;
@@ -22,6 +23,7 @@ const THeaderHorizontal = () => {
     avatar: "",
   });
   const [currentDate, setCurrentDate] = useState<string>("");
+  const [branchName, setBranchName] = useState<string>("");
 
   useEffect(() => {
     const today = new Date();
@@ -53,6 +55,13 @@ const THeaderHorizontal = () => {
         avatar: "",
       });
     }
+
+    // Lấy chi nhánh hiện tại của user
+    getBranchByCurrentUser()
+      .then((res) => {
+        setBranchName(res.data?.name || "");
+      })
+      .catch(() => setBranchName(""));
   }, []);
 
   const subMenus: MenuItem[] = [
@@ -108,6 +117,39 @@ const THeaderHorizontal = () => {
             </a>
           </h1>
           <div className="header_function">
+            {/* Chi nhánh đẹp, nhỏ gọn, không ảnh hưởng phần khác */}
+            {branchName && (
+              <div
+                style={{
+                  display: "inline-block",
+                  background: "#fff",
+                  color: "#222",
+                  borderRadius: 8,
+                  padding: "6px 16px",
+                  fontWeight: 500,
+                  fontSize: 12,
+                  border: "1px solid #eee",
+                  marginRight: 12,
+                  boxShadow: "0 1px 4px #0001",
+                  letterSpacing: 0.2,
+                  maxWidth: 220,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  verticalAlign: "middle",
+                }}
+                title={branchName}
+              >
+                {/* Icon chi nhánh */}
+                <span style={{ marginRight: 6, color: "#FFD600", verticalAlign: "middle", display: "inline-flex", alignItems: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="7" width="14" height="9" rx="2" stroke="#FFD600" strokeWidth="1.5" />
+                    <path d="M7 7V5a3 3 0 0 1 6 0v2" stroke="#FFD600" strokeWidth="1.5" />
+                  </svg>
+                </span>
+                {branchName}
+              </div>
+            )}
             <p className="login_info">
               {userInfo.avatar && (
                 <img
@@ -140,13 +182,17 @@ const THeaderHorizontal = () => {
           </div>
         </div>
       </div>
-      <div className="header_bottom" style={{ background: '#FFD600' }}>
+      <div className="header_bottom" style={{ background: "#FFD600" }}>
         <div className="grid_content">
           <nav className="nav_wrap" style={{ justifyContent: "flex-start" }}>
             <ul
               id="gnbMenu"
               className="gnb_1depth"
-              style={{ justifyContent: "flex-start", textAlign: "left", paddingLeft: 24 }}
+              style={{
+                justifyContent: "flex-start",
+                textAlign: "left",
+                paddingLeft: 24,
+              }}
             >
               {subMenus.map((subMenu1, indexMenu1) => (
                 <li key={indexMenu1}>
