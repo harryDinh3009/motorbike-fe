@@ -8,6 +8,8 @@ export interface CarSearchDTO {
   status?: CarStatus;
   page?: number;
   size?: number;
+  startDate?: string; // ISO string (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
+  endDate?: string;   // ISO string
 }
 
 export interface CarDTO {

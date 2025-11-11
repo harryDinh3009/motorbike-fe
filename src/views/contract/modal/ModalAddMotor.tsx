@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TModal from "@/component/common/modal/TModal";
 import { SearchOutlined } from "@ant-design/icons";
-import { searchCars } from "@/service/business/carMng/carMng.service";
+import { searchAvailableCars } from "@/service/business/carMng/carMng.service";
 import { CarDTO } from "@/service/business/carMng/carMng.type";
 
 interface MotorSelect {
@@ -16,24 +16,30 @@ const ModalAddMotor = ({
   open,
   onClose,
   onAdd,
+  startDate,
+  endDate,
 }: {
   open: boolean;
   onClose: () => void;
   onAdd: (motors: any[]) => void;
+  startDate?: string;
+  endDate?: string;
 }) => {
   const [search, setSearch] = useState("");
   const [carList, setCarList] = useState<CarDTO[]>([]);
   const [motors, setMotors] = useState<MotorSelect[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch all cars with filter
+  // Fetch available cars with filter and date
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    searchCars({
+    searchAvailableCars({
       keyword: search,
       page: 1,
       size: 10000,
+      startDate,
+      endDate,
     }).then((res) => {
       const cars = res.data.data || [];
       setCarList(cars);
@@ -47,7 +53,7 @@ const ModalAddMotor = ({
       );
       setLoading(false);
     });
-  }, [open, search]);
+  }, [open, search, startDate, endDate]);
 
   // Chọn xe
   const handleCheck = (id: string, checked: boolean) => {
@@ -94,10 +100,7 @@ const ModalAddMotor = ({
       onCancel={onClose}
       title={
         <div>
-          <div style={{ fontWeight: 600, fontSize: 18 }}>Tìm xe</div>
-          <div style={{ fontSize: 14, color: "#888" }}>
-            Chọn xe để đưa vào hợp đồng
-          </div>
+          <div style={{ fontWeight: 600, fontSize: 18 }}>Chọn xe thuê</div>
         </div>
       }
       width={800}
@@ -119,6 +122,19 @@ const ModalAddMotor = ({
         </div>
       }
     >
+      {/* Cảnh báo xe không sẵn sàng */}
+      {carList.some((motor) => motor.status !== "AVAILABLE") && (
+        <div
+          style={{
+            color: "#ff4d4f",
+            fontWeight: "600",
+            marginBottom: 12,
+            fontSize: 14,
+          }}
+        >
+          Xe bị gạch đỏ là xe không sẵn sàng, không thể thuê được!
+        </div>
+      )}
       <div style={{ marginBottom: 18 }}>
         <div style={{ position: "relative", marginBottom: 0 }}>
           <input
@@ -181,8 +197,8 @@ const ModalAddMotor = ({
         ) : (
           carList.map((motor, idx) => {
             const mState = motors.find((m) => m.id === motor.id)!;
-            const isRented = motor.status === "RENTED";
-            const strikeStyle = isRented
+            const isAvailable = motor.status === "AVAILABLE";
+            const strikeStyle = !isAvailable
               ? { textDecoration: "line-through", color: "#ff4d4f" }
               : {};
             return (
@@ -209,11 +225,13 @@ const ModalAddMotor = ({
                       height: 18,
                       accentColor: "#222",
                     }}
-                    disabled={isRented}
+                    disabled={!isAvailable}
                   />
                 </div>
                 <div style={{ flex: 1, ...strikeStyle }}>{motor.model}</div>
-                <div style={{ width: "20%", ...strikeStyle }}>{motor.licensePlate}</div>
+                <div style={{ width: "20%", ...strikeStyle }}>
+                  {motor.licensePlate}
+                </div>
                 <div
                   style={{
                     width: "20%",
@@ -243,12 +261,19 @@ const ModalAddMotor = ({
                       fontSize: 15,
                       marginRight: 4,
                       background: "#fff",
-                      textDecoration: isRented ? "line-through" : undefined,
-                      color: isRented ? "#ff4d4f" : undefined,
+                      textDecoration: !isAvailable ? "line-through" : undefined,
+                      color: !isAvailable ? "#ff4d4f" : undefined,
                     }}
-                    disabled={isRented}
+                    disabled={!isAvailable}
                   />
-                  <span style={{ fontSize: 14, color: isRented ? "#ff4d4f" : "#888" }}>/ngày</span>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      color: !isAvailable ? "#ff4d4f" : "#888",
+                    }}
+                  >
+                    /ngày
+                  </span>
                 </div>
                 <div
                   style={{
@@ -279,12 +304,19 @@ const ModalAddMotor = ({
                       fontSize: 15,
                       marginRight: 4,
                       background: "#fff",
-                      textDecoration: isRented ? "line-through" : undefined,
-                      color: isRented ? "#ff4d4f" : undefined,
+                      textDecoration: !isAvailable ? "line-through" : undefined,
+                      color: !isAvailable ? "#ff4d4f" : undefined,
                     }}
-                    disabled={isRented}
+                    disabled={!isAvailable}
                   />
-                  <span style={{ fontSize: 14, color: isRented ? "#ff4d4f" : "#888" }}>/giờ</span>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      color: !isAvailable ? "#ff4d4f" : "#888",
+                    }}
+                  >
+                    /giờ
+                  </span>
                 </div>
               </div>
             );

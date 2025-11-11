@@ -22,6 +22,19 @@ export const searchCars = async (
 };
 
 /**
+ * Tìm kiếm xe có sẵn với phân trang (lọc theo ngày thuê/trả)
+ */
+export const searchAvailableCars = async (
+  params: CarSearchDTO
+): Promise<ApiResponse<PageableObject<CarDTO>>> => {
+  const res = await http.post<ApiResponse<PageableObject<CarDTO>>>(
+    "/a/car-mng/list-available",
+    params
+  );
+  return res.data;
+};
+
+/**
  * Lấy chi tiết xe
  */
 export const getCarDetail = async (

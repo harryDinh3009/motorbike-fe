@@ -996,6 +996,8 @@ const ContractCreateComponent = () => {
             ]);
             setShowAddMotor(false);
           }}
+          startDate={form.startDate}
+          endDate={form.endDate}
         />
 
         {/* Modal thêm phụ phí */}
