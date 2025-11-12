@@ -15,7 +15,10 @@ import {
   getCarStatuses,
   uploadCarImage,
 } from "@/service/business/carMng/carMng.service";
-import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import {
+  getAllActiveBranches,
+  getBranchByCurrentUser,
+} from "@/service/business/branchMng/branchMng.service";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 
@@ -59,6 +62,10 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
   const [branchOptions, setBranchOptions] = useState([
     { value: "", label: "Chi nhánh" },
   ]);
+  const [currentBranch, setCurrentBranch] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [modelOptions, setModelOptions] = useState([
     { value: "", label: "Mẫu xe" },
   ]);
@@ -76,14 +83,13 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
   ]);
 
   useEffect(() => {
-    getAllActiveBranches().then((res) => {
-      setBranchOptions([
-        { value: "", label: "Chi nhánh" },
-        ...(res.data || []).map((b: BranchDTO) => ({
-          value: b.id,
-          label: b.name,
-        })),
-      ]);
+    // Lấy chi nhánh của user hiện tại
+    getBranchByCurrentUser().then((res) => {
+      if (res.data) {
+        setCurrentBranch({ value: res.data.id, label: res.data.name });
+        setForm((prev) => ({ ...prev, branch: res.data.id }));
+        setBranchOptions([{ value: res.data.id, label: res.data.name }]);
+      }
     });
     getCarModels().then((res) => {
       setModelOptions([
@@ -249,8 +255,19 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   required
                   value={form.branch}
                   options={branchOptions}
-                  placeholder="Chọn chi nhánh"
-                  onChange={(val) => handleChange("branch", val)}
+                  placeholder="Chi nhánh"
+                  onChange={() => {}}
+                  style={{ width: "100%" }}
+                  disabled
+                />
+              </div>
+              <div>
+                <SelectboxBase
+                  label="Loại xe"
+                  value={form.carType}
+                  options={typeOptions}
+                  placeholder="Chọn loại xe"
+                  onChange={(val) => handleChange("carType", val)}
                   style={{ width: "100%" }}
                 />
               </div>
@@ -263,14 +280,14 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   onChange={(val) => handleChange("condition", val)}
                   style={{ width: "100%" }}
                 />
-              </div>
+              </div>{" "}
               <div>
                 <SelectboxBase
-                  label="Loại xe"
-                  value={form.carType}
-                  options={typeOptions}
-                  placeholder="Chọn loại xe"
-                  onChange={(val) => handleChange("carType", val)}
+                  label="Trạng thái"
+                  value={form.status}
+                  options={statusOptions}
+                  placeholder="Chọn trạng thái"
+                  onChange={(val) => handleChange("status", val)}
                   style={{ width: "100%" }}
                 />
               </div>
@@ -292,16 +309,6 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   modelValue={form.hourlyPrice}
                   placeholder="Nhập giá giờ"
                   onChange={(val) => handleChange("hourlyPrice", val)}
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div>
-                <SelectboxBase
-                  label="Trạng thái"
-                  value={form.status}
-                  options={statusOptions}
-                  placeholder="Chọn trạng thái"
-                  onChange={(val) => handleChange("status", val)}
                   style={{ width: "100%" }}
                 />
               </div>
@@ -463,24 +470,36 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
         <div>
           <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Năm sản xuất
+              </label>
               <InputBase
-                label="Năm sản xuất"
                 modelValue={form.year}
                 placeholder="Nhập năm sản xuất"
                 onChange={(val) => handleChange("year", val)}
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Xuất xứ
+              </label>
               <InputBase
-                label="Xuất xứ"
                 modelValue={form.origin}
                 placeholder="Nhập xuất xứ"
                 onChange={(val) => handleChange("origin", val)}
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Giá trị xe
+              </label>
               <InputBase
-                label="Giá trị xe"
                 modelValue={form.value}
                 placeholder="Nhập giá trị xe"
                 onChange={(val) => handleChange("value", val)}
@@ -489,22 +508,35 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
           </div>
           <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Số khung
+              </label>
               <InputBase
-                label="Số khung"
                 modelValue={form.frameNo}
                 placeholder="Nhập số khung"
                 onChange={(val) => handleChange("frameNo", val)}
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Số máy
+              </label>
               <InputBase
-                label="Số máy"
                 modelValue={form.engineNo}
                 placeholder="Nhập số máy"
                 onChange={(val) => handleChange("engineNo", val)}
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Màu sắc
+              </label>
               <SelectboxBase
                 value={form.color}
                 options={colorOptions}
@@ -516,24 +548,36 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
           </div>
           <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Số giấy đăng ký xe
+              </label>
               <InputBase
-                label="Số giấy đăng ký xe"
                 modelValue={form.regNo}
                 placeholder="Nhập số giấy đăng ký xe"
                 onChange={(val) => handleChange("regNo", val)}
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Tên trên đăng ký
+              </label>
               <InputBase
-                label="Tên trên đăng ký"
                 modelValue={form.regName}
                 placeholder="Nhập tên trên đăng ký"
                 onChange={(val) => handleChange("regName", val)}
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Nơi đăng ký
+              </label>
               <InputBase
-                label="Nơi đăng ký"
                 modelValue={form.regPlace}
                 placeholder="Nhập nơi đăng ký"
                 onChange={(val) => handleChange("regPlace", val)}
@@ -542,16 +586,24 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
           </div>
           <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Số hợp đồng bảo hiểm TNDS
+              </label>
               <InputBase
-                label="Số hợp đồng bảo hiểm TNDS"
                 modelValue={form.insuranceNo}
                 placeholder="Nhập số hợp đồng bảo hiểm TNDS"
                 onChange={(val) => handleChange("insuranceNo", val)}
               />
             </div>
             <div style={{ flex: 1 }}>
+              <label
+                style={{ display: "block", marginBottom: 4, fontWeight: 500 }}
+              >
+                Ngày hết hạn bảo hiểm TNDS
+              </label>
               <DatePickerBase
-                label="Ngày hết hạn bảo hiểm TNDS"
                 value={form.insuranceExpire}
                 placeholder="Chọn ngày hết hạn"
                 onChange={(val) => handleChange("insuranceExpire", val)}

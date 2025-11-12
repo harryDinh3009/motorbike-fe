@@ -12,7 +12,7 @@ import {
   getContractDetail,
   saveContract,
 } from "@/service/business/contractMng/contractMng.service";
-import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/surchargeTypeMng.service";
 import { getAllCustomers } from "@/service/business/customerMng/customerMng.service";
 import { ContractSaveDTO } from "@/service/business/contractMng/contractMng.type";
@@ -148,6 +148,7 @@ const ContractCreateComponent = () => {
       price: number;
     }[]
   >([]);
+  const [currentBranchId, setCurrentBranchId] = useState<string>("");
 
   // Fetch options
   useEffect(() => {
@@ -178,6 +179,17 @@ const ContractCreateComponent = () => {
         }))
       );
     });
+    // Lấy chi nhánh hiện tại của user
+    getBranchByCurrentUser()
+      .then((res) => {
+        setCurrentBranchId(res.data?.id || "");
+        // Nếu tạo mới hợp đồng thì set branchRent mặc định
+        setForm((prev) => ({
+          ...prev,
+          branchRent: res.data?.id || "",
+        }));
+      })
+      .catch(() => setCurrentBranchId(""));
   }, []);
 
   // Khi ở mode sửa, load dữ liệu hợp đồng
@@ -190,7 +202,7 @@ const ContractCreateComponent = () => {
           source: c.source || "",
           branchRent: c.pickupBranchId || "",
           branchReturn: c.returnBranchId || "",
-          startDate: c.startDate ? c.startDate.slice(0, 16) : "", // ISO string to yyyy-MM-ddTHH:mm
+          startDate: c.startDate ? c.startDate.slice(0, 16) : "",
           endDate: c.endDate ? c.endDate.slice(0, 16) : "",
           needDelivery: !!c.needPickupDelivery,
           needReceive: !!c.needReturnDelivery,
@@ -474,13 +486,9 @@ const ContractCreateComponent = () => {
                 <SelectboxBase
                   value={form.branchRent}
                   options={branchOptions}
-                  onChange={(val: string | string[]) =>
-                    setForm({
-                      ...form,
-                      branchRent: typeof val === "string" ? val : val[0] || "",
-                    })
-                  }
+                  onChange={() => {}}
                   style={{ width: "100%", minWidth: 160 }}
+                  disabled={true}
                 />
               </div>
               <div>
@@ -578,11 +586,14 @@ const ContractCreateComponent = () => {
                   onChange={(e) =>
                     setForm({ ...form, deliveryAddress: e.target.value })
                   }
+                  disabled={!form.needDelivery}
                   style={{
                     width: "100%",
                     borderRadius: 6,
                     padding: "6px 10px",
                     border: "1px solid #eee",
+                    background: !form.needDelivery ? "#f5f5f5" : undefined,
+                    color: !form.needDelivery ? "#bbb" : undefined,
                   }}
                 />
               </div>
@@ -595,11 +606,14 @@ const ContractCreateComponent = () => {
                   onChange={(e) =>
                     setForm({ ...form, receiveAddress: e.target.value })
                   }
+                  disabled={!form.needReceive}
                   style={{
                     width: "100%",
                     borderRadius: 6,
                     padding: "6px 10px",
                     border: "1px solid #eee",
+                    background: !form.needReceive ? "#f5f5f5" : undefined,
+                    color: !form.needReceive ? "#bbb" : undefined,
                   }}
                 />
               </div>

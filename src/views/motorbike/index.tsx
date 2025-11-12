@@ -67,6 +67,13 @@ const MotorbikeList = () => {
   const [showModal, setShowModal] = useState(false);
   const [editMotorbike, setEditMotorbike] = useState<any>(null);
   const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    count: number;
+    message: string;
+  } | null>(null);
+  const [importFileName, setImportFileName] = useState<string>("");
+
+  // Detail motorbike state
   const [detailMotorbike, setDetailMotorbike] = useState<CarDTO | null>(null);
 
   // Fetch filter options
@@ -145,15 +152,23 @@ const MotorbikeList = () => {
 
   // Xử lý nhập Excel
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoading(true);
     const file = e.target.files?.[0];
     if (!file) return;
+    setImportFileName(file.name);
+    setLoading(true);
     setImporting(true);
     try {
-      await importCarExcel(file);
+      const res = await importCarExcel(file);
+      setImportResult(res.data);
       fetchMotorbikes(filter);
+      alert(`Nhập xe thành công!\n${res.data.message || ""}`);
+    } catch (err: any) {
+      alert(
+        "Có lỗi khi nhập file Excel. Vui lòng kiểm tra lại file hoặc liên hệ quản trị viên."
+      );
     } finally {
       setImporting(false);
+      setImportFileName("");
       e.target.value = "";
       setLoading(false);
     }
@@ -262,7 +277,10 @@ const MotorbikeList = () => {
           ]}
         />
         <ContainerBase>
-          <div className="box_section" style={{ paddingBottom: 0 }}>
+          <div
+            className="box_section"
+            style={{ paddingBottom: 0, position: "relative" }}
+          >
             <div
               className="dp_flex"
               style={{ gap: 16, alignItems: "center", flexWrap: "wrap" }}
@@ -324,6 +342,11 @@ const MotorbikeList = () => {
                   })
                 }
               />
+            </div>
+            <div
+              className="dp_flex"
+              style={{ gap: 12, alignItems: "center", marginTop: 16 }}
+            >
               <ButtonBase
                 label="Xuất Excel"
                 className="btn_yellow"
@@ -331,44 +354,79 @@ const MotorbikeList = () => {
                 style={{ minWidth: 140 }}
                 onClick={handleExportExcel}
               />
-              <label style={{ minWidth: 140 }}>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  style={{ display: "none" }}
-                  onChange={handleImportExcel}
-                  disabled={importing}
-                />
-                <ButtonBase
-                  label={importing ? "Đang nhập..." : "Nhập Excel"}
-                  className="btn_yellow"
-                  icon={<ImportOutlined />}
-                  style={{ minWidth: 140 }}
-                  onClick={() => {}}
-                  disabled={importing}
-                />
-              </label>
               <ButtonBase
                 label="Tải file mẫu"
                 className="btn_gray"
                 style={{ minWidth: 140 }}
                 onClick={handleDownloadTemplate}
               />
-              <ButtonBase
-                label="Thêm xe"
-                className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{ minWidth: 140 }}
-                onClick={() => {
-                  setEditMotorbike(null);
-                  setShowModal(true);
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  minWidth: 220,
+                  gap: 8,
                 }}
-              />
+              >
+                <label style={{ minWidth: 0 }}>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    style={{ display: "none" }}
+                    onChange={handleImportExcel}
+                    disabled={importing}
+                    id="import-excel-input"
+                  />
+                  <ButtonBase
+                    label={importing ? "Đang nhập..." : "Chọn file Excel"}
+                    className="btn_yellow"
+                    icon={<ImportOutlined />}
+                    style={{ minWidth: 140 }}
+                    onClick={() => {
+                      const input = document.getElementById(
+                        "import-excel-input"
+                      ) as HTMLInputElement;
+                      if (input) input.click();
+                    }}
+                    disabled={importing}
+                  />
+                </label>
+                {importFileName && (
+                  <span
+                    style={{
+                      fontSize: 13,
+                      color: "#333",
+                      maxWidth: 120,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {importFileName}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </ContainerBase>
         <ContainerBase>
-          <div className="box_section">
+          <div className="box_section" style={{ position: "relative" }}>
+            <ButtonBase
+              label="Thêm xe"
+              className="btn_primary"
+              icon={<PlusOutlined />}
+              style={{
+                minWidth: 140,
+                position: "absolute",
+                top: 16,
+                right: 16,
+                zIndex: 2,
+              }}
+              onClick={() => {
+                setEditMotorbike(null);
+                setShowModal(true);
+              }}
+            />
             <TableBase
               data={motorbikes}
               columns={[
@@ -382,36 +440,49 @@ const MotorbikeList = () => {
                       ? (filter.page - 1) * (filter.size || 10) + idx + 1
                       : idx + 1,
                 },
-                { title: "Mẫu xe", dataIndex: "model", key: "model" },
+                {
+                  title: "Mẫu xe",
+                  dataIndex: "model",
+                  key: "model",
+                  render: (val: string) => (val ? val : "-"),
+                },
                 {
                   title: "Biển số",
                   dataIndex: "licensePlate",
                   key: "licensePlate",
+                  render: (val: string) => (val ? val : "-"),
                 },
-                { title: "Loại xe", dataIndex: "carType", key: "carType" },
+                {
+                  title: "Loại xe",
+                  dataIndex: "carType",
+                  key: "carType",
+                  render: (val: string) => (val ? val : "-"),
+                },
                 {
                   title: "Chi nhánh sở hữu",
                   dataIndex: "branchName",
                   key: "branchName",
+                  render: (val: string) => (val ? val : "-"),
                 },
                 {
                   title: "Giá ngày (Đ)",
                   dataIndex: "dailyPrice",
                   key: "dailyPrice",
                   render: (val: number) =>
-                    val != null ? val.toLocaleString() : "",
+                    val != null ? val.toLocaleString() : "-",
                 },
                 {
                   title: "Giá giờ (Đ)",
                   dataIndex: "hourlyPrice",
                   key: "hourlyPrice",
                   render: (val: number) =>
-                    val != null ? val.toLocaleString() : "",
+                    val != null ? val.toLocaleString() : "-",
                 },
                 {
                   title: "Tình trạng xe",
                   dataIndex: "condition",
                   key: "condition",
+                  render: (val: string) => (val ? val : "-"),
                 },
                 {
                   title: "Trạng thái",
@@ -432,7 +503,7 @@ const MotorbikeList = () => {
                         color: "#333",
                       }}
                     >
-                      {record.statusNm || record.status}
+                      {record.statusNm || record.status || "-"}
                     </span>
                   ),
                 },
@@ -525,6 +596,32 @@ const MotorbikeList = () => {
             }
           }}
         />
+        {/* Hiển thị kết quả import nếu có */}
+        {importResult && (
+          <TModal
+            title="Kết quả nhập xe từ Excel"
+            visible={!!importResult}
+            onCancel={() => setImportResult(null)}
+            width={500}
+            centered
+            footer={
+              <ButtonBase
+                label="Đóng"
+                className="btn_lightgray"
+                onClick={() => setImportResult(null)}
+              />
+            }
+          >
+            <div style={{ padding: 16 }}>
+              <div>
+                <b>Số lượng xe nhập:</b> {importResult.count}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <b>Thông báo:</b> {importResult.message}
+              </div>
+            </div>
+          </TModal>
+        )}
         {/* Modal chi tiết xe */}
         {detailMotorbike && (
           <TModal

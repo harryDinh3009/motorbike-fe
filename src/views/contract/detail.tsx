@@ -41,6 +41,7 @@ import ModalUpdateInfoDelivery from "./modal/ModalUpdateInfoDelivery";
 import ModalUpdatePayment from "./modal/ModalUpdatePayment";
 import ModalCloseContract from "./modal/ModalCloseContract";
 import { getUserInfo } from "@/utils/storage";
+import { getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 
 const pageTitle = "Chi tiết hợp đồng thuê xe";
 const breadcrumbItems = [
@@ -139,6 +140,9 @@ const ContractDetailComponent = () => {
     time: string;
   }>({ staff: "", time: "" });
 
+  // State cho chi nhánh hiện tại của user
+  const [currentBranchId, setCurrentBranchId] = useState<string>("");
+
   // Hàm reload lại dữ liệu hợp đồng
   const reloadData = async () => {
     if (!id) return;
@@ -169,6 +173,10 @@ const ContractDetailComponent = () => {
         );
       }
     });
+    // Lấy chi nhánh hiện tại của user để phân quyền
+    getBranchByCurrentUser()
+      .then((res) => setCurrentBranchId(res.data?.id || ""))
+      .catch(() => setCurrentBranchId(""));
     // eslint-disable-next-line
   }, [id]);
 
@@ -228,17 +236,15 @@ const ContractDetailComponent = () => {
   const handleDeliverySave = async (data: any) => {
     if (!contract) return;
     // Chuẩn hóa danh sách xe cho API, truyền startOdometer lấy từ detail
-    const cars: ContractCarSaveDTO[] = (contract.cars || []).map(
-      (c: any) => ({
-        id: c.id,
-        carId: c.carId || c.id,
-        dailyPrice: c.dailyPrice,
-        hourlyPrice: c.hourlyPrice,
-        totalAmount: c.totalAmount,
-        startOdometer: c.startOdometer, // luôn truyền startOdometer từ detail
-        notes: c.notes,
-      })
-    );
+    const cars: ContractCarSaveDTO[] = (contract.cars || []).map((c: any) => ({
+      id: c.id,
+      carId: c.carId || c.id,
+      dailyPrice: c.dailyPrice,
+      hourlyPrice: c.hourlyPrice,
+      totalAmount: c.totalAmount,
+      startOdometer: c.startOdometer, // luôn truyền startOdometer từ detail
+      notes: c.notes,
+    }));
     await updateDelivery({
       contractId: contract.id,
       cars,
@@ -401,17 +407,22 @@ const ContractDetailComponent = () => {
     }
   };
 
-  // Dropdown menu cho button "Khác"
-  const moreMenu = (
-    <Menu>
-      <Menu.Item key="print" onClick={handlePrintContract}>
-        In hợp đồng
-      </Menu.Item>
-      <Menu.Item key="cancel" onClick={handleCancelContract}>
-        Hủy hợp đồng
-      </Menu.Item>
-    </Menu>
-  );
+  // Phân quyền chức năng
+  const canEditOrCancelOrPay =
+    currentBranchId &&
+    (contract?.pickupBranchId === currentBranchId ||
+      contract?.returnBranchId === currentBranchId);
+
+  const canDelivery =
+    currentBranchId && contract?.pickupBranchId === currentBranchId;
+
+  const canReturn =
+    currentBranchId && contract?.returnBranchId === currentBranchId;
+
+  // Handler cho các chức năng bị hạn chế quyền
+  const handleNoPermission = () => {
+    message.error("Lỗi không được thực hiện chức năng");
+  };
 
   return (
     <div className="content_wrap">
@@ -428,42 +439,47 @@ const ContractDetailComponent = () => {
             width: "100%",
           }}
         >
+          {/* Chỉnh sửa: chỉ user thuộc chi nhánh thuê hoặc trả */}
           <ButtonBase
             label="Chỉnh sửa"
             className="btn_primary"
             icon={<EditOutlined />}
             onClick={() => {
+              if (!canEditOrCancelOrPay) return handleNoPermission();
               if (contract?.id) {
                 navigate(`/contract/create?id=${contract.id}`);
               }
             }}
           />
-          {/* Hiển thị button Giao xe/Trả xe theo trạng thái */}
+          {/* Giao xe: chỉ user thuộc chi nhánh thuê */}
           {(() => {
-            // Ẩn cả hai nút nếu là Đã trả xe, Hoàn thành, Đã hủy
             const hideAll = ["RETURNED", "COMPLETED", "CANCELLED"];
             if (hideAll.includes(contract?.status || "")) {
               return null;
             }
-            // Chỉ hiện Giao xe nếu là Đã xác nhận
             if (contract.status === "CONFIRMED") {
               return (
                 <ButtonBase
                   label="Giao xe"
                   className="btn_primary"
                   icon={<CarOutlined />}
-                  onClick={handleShowDeliveryModal}
+                  onClick={() => {
+                    if (!canDelivery) return handleNoPermission();
+                    handleShowDeliveryModal();
+                  }}
                 />
               );
             }
-            // Chỉ hiện Trả xe nếu là Đã giao xe
             if (contract.status === "DELIVERED") {
               return (
                 <ButtonBase
                   label="Trả xe"
                   className="btn_primary"
                   icon={<RollbackOutlined />}
-                  onClick={handleShowPickupModal}
+                  onClick={() => {
+                    if (!canReturn) return handleNoPermission();
+                    handleShowPickupModal();
+                  }}
                 />
               );
             }
@@ -474,30 +490,64 @@ const ContractDetailComponent = () => {
                   label="Giao xe"
                   className="btn_primary"
                   icon={<CarOutlined />}
-                  onClick={handleShowDeliveryModal}
+                  onClick={() => {
+                    if (!canDelivery) return handleNoPermission();
+                    handleShowDeliveryModal();
+                  }}
                 />
                 <ButtonBase
                   label="Trả xe"
                   className="btn_primary"
                   icon={<RollbackOutlined />}
-                  onClick={handleShowPickupModal}
+                  onClick={() => {
+                    if (!canReturn) return handleNoPermission();
+                    handleShowPickupModal();
+                  }}
                 />
               </>
             );
           })()}
+          {/* Thanh toán: chỉ user thuộc chi nhánh thuê hoặc trả */}
           <ButtonBase
             label="Thanh toán"
             className="btn_primary"
             icon={<DollarOutlined />}
-            onClick={handleShowPaymentModal}
+            onClick={() => {
+              if (!canEditOrCancelOrPay) return handleNoPermission();
+              handleShowPaymentModal();
+            }}
           />
+          {/* Đóng HĐ: chỉ user thuộc chi nhánh thuê hoặc trả */}
           <ButtonBase
             label="Đóng HĐ"
             className="btn_primary"
             icon={<FileDoneOutlined />}
-            onClick={() => setShowModalClose(true)}
+            onClick={() => {
+              if (!canEditOrCancelOrPay) return handleNoPermission();
+              setShowModalClose(true);
+            }}
           />
-          <Dropdown overlay={moreMenu} trigger={["click"]}>
+          {/* In hợp đồng: All user */}
+          <Dropdown
+            overlay={
+              <Menu>
+                <Menu.Item key="print" onClick={handlePrintContract}>
+                  In hợp đồng
+                </Menu.Item>
+                {/* Hủy hợp đồng: chỉ user thuộc chi nhánh thuê hoặc trả */}
+                <Menu.Item
+                  key="cancel"
+                  onClick={() => {
+                    if (!canEditOrCancelOrPay) return handleNoPermission();
+                    handleCancelContract();
+                  }}
+                >
+                  Hủy hợp đồng
+                </Menu.Item>
+              </Menu>
+            }
+            trigger={["click"]}
+          >
             <ButtonBase
               label="Khác"
               className="btn_lightgray"
