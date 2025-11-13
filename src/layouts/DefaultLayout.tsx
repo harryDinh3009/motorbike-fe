@@ -1,8 +1,9 @@
 import React, { PropsWithChildren } from "react";
+import { Outlet } from "react-router-dom";
 import TFooter from "./components/TFooter";
 import THeaderHorizontal from "./components/horizontalMenu/THeaderHorizontal";
 
-const DefaultLayout: React.FC<PropsWithChildren> = ({ children }) => {
+const DefaultLayout: React.FC<PropsWithChildren> = () => {
   return (
     <div className="page_wrap">
       {/* Header */}
@@ -11,7 +12,9 @@ const DefaultLayout: React.FC<PropsWithChildren> = ({ children }) => {
       </header>
 
       {/* Main Content */}
-      <main id="main_content">{children}</main>
+      <main id="main_content">
+        <Outlet />
+      </main>
 
       {/* Footer */}
       <TFooter />

@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { store } from "./app/store";
 import { AlertProvider } from "./plugins/global";
 import "@/assets/style/_sweetaleart.scss";
+import { BrowserRouter } from "react-router-dom";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -16,9 +17,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <Provider store={store}>
     <I18nextProvider i18n={i18n}>
-      <AlertProvider>
+      <BrowserRouter>
         <App />
-      </AlertProvider>
+      </BrowserRouter>
     </I18nextProvider>
   </Provider>
 );

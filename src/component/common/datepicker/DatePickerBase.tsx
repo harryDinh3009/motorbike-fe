@@ -12,8 +12,8 @@ import {
 interface DatePickerBaseProps extends DatePickerProps {
   id?: string;
   required?: boolean;
-  value?: string; 
-  onChange?: (date: string | null, dateString: string) => void; 
+  value?: string;
+  onChange?: (date: string | null, dateString: string) => void;
 }
 
 const DatePickerBase: React.FC<DatePickerBaseProps> = ({
@@ -45,11 +45,14 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
     if (id && required) dispatch(checkRequired());
   }, [value, dispatch, id]);
 
-  const dayjsValue: Dayjs | null = value ? dayjs(value, "YYYY-MM-DD") : null;
+
+  // Parse value as ISO string for full date-time
+  const dayjsValue: Dayjs | null = value ? dayjs(value) : null;
 
   const handleChange = (date: Dayjs | null) => {
-    const dateString = date ? date.format("YYYY-MM-DD") : null;
-    onChange?.(dateString, dateString); 
+    // Output ISO string for full date-time
+    const isoString = date ? date.toISOString() : null;
+    onChange?.(isoString, isoString || "");
   };
 
   return (
@@ -58,6 +61,8 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
         {...props}
         value={dayjsValue}
         onChange={handleChange}
+        showTime={{ format: "HH:mm:ss" }}
+        format="YYYY-MM-DD HH:mm:ss"
         className={isError ? "error-validate" : ""}
         style={isError ? { borderColor: "red" } : {}}
       />

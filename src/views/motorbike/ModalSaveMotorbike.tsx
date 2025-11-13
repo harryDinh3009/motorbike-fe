@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TModal from "@/component/common/modal/TModal";
 import InputBase from "@/component/common/input/InputBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
@@ -7,31 +7,17 @@ import ButtonBase from "@/component/common/button/ButtonBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 import TabBase from "@/component/common/tab/TabBase";
 import ImageBase from "@/component/common/image/ImageBase";
-
-const modelOptions = [
-  { value: "", label: "Mẫu xe" },
-  { value: "Honda Wave Alpha", label: "Honda Wave Alpha" },
-  { value: "Yamaha Sirius", label: "Yamaha Sirius" },
-  { value: "Yamaha PG-1", label: "Yamaha PG-1" },
-  { value: "Honda XR150", label: "Honda XR150" },
-  { value: "Honda Winner 150", label: "Honda Winner 150" },
-];
-const branchOptions = [
-  { value: "", label: "Chi nhánh" },
-  { value: "1", label: "Chi nhánh 1" },
-  { value: "2", label: "Chi nhánh 2" },
-];
-const conditionOptions = [
-  { value: "Nguyên vẹn", label: "Nguyên vẹn" },
-  { value: "Hỏng hóc", label: "Hỏng hóc" },
-];
-const colorOptions = [
-  { value: "", label: "Màu sắc" },
-  { value: "Đen", label: "Đen" },
-  { value: "Trắng", label: "Trắng" },
-  { value: "Đỏ", label: "Đỏ" },
-  { value: "Xanh", label: "Xanh" },
-];
+import {
+  getCarModels,
+  getCarConditions,
+  getCarTypes,
+  getCarColors,
+  getCarStatuses,
+  uploadCarImage,
+} from "@/service/business/carMng/carMng.service";
+import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
+import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 
 interface Props {
   open: boolean;
@@ -46,11 +32,11 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
     model: "",
     branch: "",
     license: "",
-    condition: "Nguyên vẹn",
+    condition: "",
     odometer: "",
     note: "",
     image: "",
-    // Thông tin bổ sung
+    imageUrl: "",
     year: "",
     origin: "",
     value: "",
@@ -62,24 +48,114 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
     regPlace: "",
     insuranceNo: "",
     insuranceExpire: "",
+    carType: "",
+    dailyPrice: "",
+    hourlyPrice: "",
+    status: "",
   });
+  const [saving, setSaving] = useState(false);
+
+  // Filter options state
+  const [branchOptions, setBranchOptions] = useState([
+    { value: "", label: "Chi nhánh" },
+  ]);
+  const [modelOptions, setModelOptions] = useState([
+    { value: "", label: "Mẫu xe" },
+  ]);
+  const [conditionOptions, setConditionOptions] = useState([
+    { value: "", label: "Tình trạng xe" },
+  ]);
+  const [typeOptions, setTypeOptions] = useState([
+    { value: "", label: "Loại xe" },
+  ]);
+  const [colorOptions, setColorOptions] = useState([
+    { value: "", label: "Màu sắc" },
+  ]);
+  const [statusOptions, setStatusOptions] = useState([
+    { value: "", label: "Trạng thái" },
+  ]);
+
+  useEffect(() => {
+    getAllActiveBranches().then((res) => {
+      setBranchOptions([
+        { value: "", label: "Chi nhánh" },
+        ...(res.data || []).map((b: BranchDTO) => ({
+          value: b.id,
+          label: b.name,
+        })),
+      ]);
+    });
+    getCarModels().then((res) => {
+      setModelOptions([
+        { value: "", label: "Mẫu xe" },
+        ...(res.data || []).map((m: string) => ({
+          value: m,
+          label: m,
+        })),
+      ]);
+    });
+    getCarTypes().then((res) => {
+      setTypeOptions([
+        { value: "", label: "Loại xe" },
+        ...(res.data || []).map((t: string) => ({
+          value: t,
+          label: t,
+        })),
+      ]);
+    });
+    getCarConditions().then((res) => {
+      setConditionOptions([
+        { value: "", label: "Tình trạng xe" },
+        ...(res.data || []).map((c: string) => ({
+          value: c,
+          label: c,
+        })),
+      ]);
+    });
+    getCarColors().then((res) => {
+      setColorOptions([
+        { value: "", label: "Màu sắc" },
+        ...(res.data || []).map((c: string) => ({
+          value: c,
+          label: c,
+        })),
+      ]);
+    });
+    getCarStatuses().then((res) => {
+      setStatusOptions([
+        { value: "", label: "Trạng thái" },
+        ...(res.data || []).map((s: any) => ({
+          value: s.code,
+          label: s.name,
+        })),
+      ]);
+    });
+  }, []);
 
   // Reset form khi mở modal mới
-  React.useEffect(() => {
+  useEffect(() => {
     if (motorbike) {
       setForm({
         ...form,
         ...motorbike,
+        carType: motorbike.carType || "",
+        dailyPrice: motorbike.dailyPrice || "",
+        hourlyPrice: motorbike.hourlyPrice || "",
+        status: motorbike.status || "",
+        condition: motorbike.condition || "",
+        color: motorbike.color || "",
+        imageUrl: motorbike.imageUrl || "",
       });
     } else {
       setForm({
         model: "",
         branch: "",
         license: "",
-        condition: "Nguyên vẹn",
+        condition: "",
         odometer: "",
         note: "",
         image: "",
+        imageUrl: "",
         year: "",
         origin: "",
         value: "",
@@ -91,6 +167,10 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
         regPlace: "",
         insuranceNo: "",
         insuranceExpire: "",
+        carType: "",
+        dailyPrice: "",
+        hourlyPrice: "",
+        status: "",
       });
     }
     setActiveTab("1");
@@ -100,29 +180,70 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    onSave(form);
+  const handleSave = async () => {
+    setSaving(true);
+    let imageUrl = form.imageUrl || "";
+    try {
+      if (
+        form.image &&
+        typeof form.image !== "string" &&
+        form.image instanceof File &&
+        motorbike?.id
+      ) {
+        const imgRes = await uploadCarImage(motorbike.id, form.image);
+        imageUrl = typeof imgRes.data === "string" ? imgRes.data : "";
+      }
+      await onSave({
+        ...form,
+        imageUrl,
+        image: undefined,
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // Thêm ref để trigger chọn file qua ButtonBase
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const tabItems = [
     {
       label: "Thông tin cơ bản",
       key: "1",
       content: (
-        <div className="dp_flex" style={{ gap: 32 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ marginBottom: 16 }}>
-              <SelectboxBase
-                label="Mẫu xe"
-                required
-                value={form.model}
-                options={modelOptions}
-                placeholder="Ví dụ: Honda Wave Alpha"
-                onChange={(val) => handleChange("model", val)}
-              />
-            </div>
-            <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
-              <div style={{ flex: 1 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 32,
+            alignItems: "flex-start",
+          }}
+        >
+          {/* Form bên trái */}
+          <div
+            style={{
+              flex: 2,
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 24,
+              }}
+            >
+              <div style={{ gridColumn: "span 2" }}>
+                <SelectboxBase
+                  label="Mẫu xe"
+                  required
+                  value={form.model}
+                  options={modelOptions}
+                  placeholder="Ví dụ: Honda Wave Alpha"
+                  onChange={(val) => handleChange("model", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
                 <SelectboxBase
                   label="Chi nhánh sở hữu"
                   required
@@ -130,84 +251,162 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   options={branchOptions}
                   placeholder="Chọn chi nhánh"
                   onChange={(val) => handleChange("branch", val)}
+                  style={{ width: "100%" }}
                 />
               </div>
-              <div style={{ flex: 1 }}>
+              <div>
                 <SelectboxBase
                   label="Tình trạng xe"
                   value={form.condition}
                   options={conditionOptions}
                   placeholder="Chọn tình trạng"
                   onChange={(val) => handleChange("condition", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <SelectboxBase
+                  label="Loại xe"
+                  value={form.carType}
+                  options={typeOptions}
+                  placeholder="Chọn loại xe"
+                  onChange={(val) => handleChange("carType", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <label>Giá / ngày</label>
+                <InputBase
+                  label="Giá ngày (Đ)"
+                  modelValue={form.dailyPrice}
+                  placeholder="Nhập giá ngày"
+                  onChange={(val) => handleChange("dailyPrice", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                {" "}
+                <label>Giá / giờ</label>
+                <InputBase
+                  label="Giá giờ (Đ)"
+                  modelValue={form.hourlyPrice}
+                  placeholder="Nhập giá giờ"
+                  onChange={(val) => handleChange("hourlyPrice", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <SelectboxBase
+                  label="Trạng thái"
+                  value={form.status}
+                  options={statusOptions}
+                  placeholder="Chọn trạng thái"
+                  onChange={(val) => handleChange("status", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                {" "}
+                <label>Biển số xe</label>
+                <InputBase
+                  label="Biển số xe"
+                  required
+                  modelValue={form.license}
+                  placeholder="Ví dụ: 34E-06869"
+                  onChange={(val) => handleChange("license", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                {" "}
+                <label>Odometer hiện tại</label>
+                <InputBase
+                  label={
+                    <>
+                      Odometer hiện tại{" "}
+                      <span
+                        title="Số km trên đồng hồ"
+                        style={{
+                          color: "#999",
+                          fontSize: 14,
+                          marginLeft: 4,
+                          cursor: "help",
+                        }}
+                      >
+                        <i className="fa fa-info-circle" />
+                      </span>
+                    </>
+                  }
+                  modelValue={form.odometer}
+                  placeholder="Nhập số km trên đồng hồ"
+                  onChange={(val) => handleChange("odometer", val)}
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div style={{ gridColumn: "span 2" }}>
+                <TextAreaBase
+                  label="Ghi chú"
+                  placeholder="Nhập ghi chú"
+                  defaultValue={form.note}
+                  onChange={(val) => handleChange("note", val)}
+                  rows={2}
+                  style={{ width: "100%" }}
                 />
               </div>
             </div>
-            <div style={{ marginBottom: 16 }}>
-              <InputBase
-                label="Biển số xe"
-                required
-                modelValue={form.license}
-                placeholder="Ví dụ: 34E-06869"
-                onChange={(val) => handleChange("license", val)}
-              />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <InputBase
-                label={
-                  <>
-                    Odometer hiện tại{" "}
-                    <span
-                      title="Số km trên đồng hồ"
-                      style={{
-                        color: "#999",
-                        fontSize: 14,
-                        marginLeft: 4,
-                        cursor: "help",
-                      }}
-                    >
-                      <i className="fa fa-info-circle" />
-                    </span>
-                  </>
-                }
-                modelValue={form.odometer}
-                placeholder="Nhập số km trên đồng hồ"
-                onChange={(val) => handleChange("odometer", val)}
-              />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <TextAreaBase
-                label="Ghi chú"
-                placeholder="Nhập ghi chú"
-                defaultValue={form.note}
-                onChange={(val) => handleChange("note", val)}
-                rows={2}
-              />
-            </div>
           </div>
-          <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center" }}>
+          {/* Ảnh bên phải */}
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              height: "100%",
+            }}
+          >
             <div
               style={{
                 border: "1px solid #e0e0e0",
                 borderRadius: 8,
                 width: 260,
-                height: 260,
+                minHeight: 420,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 background: "#fafbfc",
                 textAlign: "center",
-                padding: 16,
+                padding: 20,
+                position: "relative",
+                boxSizing: "border-box",
               }}
             >
-              {form.image ? (
-                <ImageBase src={form.image} width={180} height={180} alt="Ảnh xe" />
+              {form.imageUrl || form.imagePreview ? (
+                <ImageBase
+                  src={form.imagePreview || form.imageUrl}
+                  width={180}
+                  height={180}
+                  alt="Ảnh xe"
+                  style={{
+                    borderRadius: 8,
+                    objectFit: "cover",
+                    marginBottom: 12,
+                    boxShadow: "0 2px 8px #eee",
+                  }}
+                />
               ) : (
                 <>
-                  <div style={{ fontSize: 60, color: "#d9d9d9", marginBottom: 12 }}>
+                  <div
+                    style={{ fontSize: 60, color: "#d9d9d9", marginBottom: 12 }}
+                  >
                     <i className="fa fa-image" />
                   </div>
-                  <div style={{ color: "#bdbdbd", fontSize: 15, marginBottom: 8 }}>
+                  <div
+                    style={{ color: "#bdbdbd", fontSize: 15, marginBottom: 8 }}
+                  >
                     Thiết lập hình ảnh đại diện cho xe.
                   </div>
                   <div style={{ color: "#bdbdbd", fontSize: 13 }}>
@@ -215,22 +414,43 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   </div>
                 </>
               )}
-              {/* Upload ảnh: chỉ UI, không xử lý upload thực */}
+              {/* Upload ảnh: UI đẹp hơn, dùng ButtonBase */}
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/png,image/jpeg,image/jpg"
-                style={{ marginTop: 16 }}
+                style={{ display: "none" }}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
+                    handleChange("image", file);
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                      handleChange("image", ev.target?.result);
+                      handleChange("imagePreview", ev.target?.result);
                     };
                     reader.readAsDataURL(file);
                   }
                 }}
               />
+              <ButtonBase
+                label="Chọn tệp"
+                className="btn_gray"
+                style={{
+                  marginTop: 16,
+                  minWidth: 120,
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 15,
+                  height: 40,
+                  boxShadow: "0 1px 4px #eee",
+                }}
+                onClick={() => fileInputRef.current?.click()}
+              />
+              {form.image && typeof form.image !== "string" && (
+                <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>
+                  {form.image.name}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -286,11 +506,11 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
             </div>
             <div style={{ flex: 1 }}>
               <SelectboxBase
-                label="Màu sắc"
                 value={form.color}
                 options={colorOptions}
                 placeholder="Màu sắc"
                 onChange={(val) => handleChange("color", val)}
+                width="274px"
               />
             </div>
           </div>
@@ -352,12 +572,27 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
       width={900}
       centered
       footer={
-        <div className="dp_flex" style={{ justifyContent: "flex-end", gap: 12 }}>
-          <ButtonBase label="Hủy bỏ" className="btn_lightgray" onClick={onClose} />
-          <ButtonBase label="Lưu" className="btn_yellow" onClick={handleSave} />
+        <div
+          className="dp_flex"
+          style={{ justifyContent: "flex-end", gap: 12 }}
+        >
+          <ButtonBase
+            label="Hủy bỏ"
+            className="btn_lightgray"
+            onClick={onClose}
+            disabled={saving}
+          />
+          <ButtonBase
+            label="Lưu"
+            className="btn_yellow"
+            onClick={handleSave}
+            loading={saving}
+            disabled={saving}
+          />
         </div>
       }
     >
+      {saving && <LoadingIndicator />}
       <div className="box_section" style={{ padding: 0 }}>
         <TabBase
           items={tabItems}

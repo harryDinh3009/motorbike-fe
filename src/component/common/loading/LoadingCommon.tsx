@@ -1,4 +1,4 @@
-import "./style-loading.css";
+import styles from "./style-loading.module.css";
 
 const LoadingIndicator = () => (
   <div
@@ -15,26 +15,26 @@ const LoadingIndicator = () => (
       zIndex: 999999999,
     }}
   >
-    <div className="boxes">
-      <div className="box">
+    <div className={styles.boxes}>
+      <div className={styles.box}>
         <div></div>
         <div></div>
         <div></div>
         <div></div>
       </div>
-      <div className="box">
+      <div className={styles.box}>
         <div></div>
         <div></div>
         <div></div>
         <div></div>
       </div>
-      <div className="box">
+      <div className={styles.box}>
         <div></div>
         <div></div>
         <div></div>
         <div></div>
       </div>
-      <div className="box">
+      <div className={styles.box}>
         <div></div>
         <div></div>
         <div></div>

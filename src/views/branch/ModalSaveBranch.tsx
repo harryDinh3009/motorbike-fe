@@ -13,8 +13,8 @@ interface Props {
 }
 
 const statusOptions = [
-  { value: true, label: "Hoạt động" },
-  { value: false, label: "Ngừng" },
+  { value: 1, label: "Hoạt động" },
+  { value: 0, label: "Ngừng" },
 ];
 
 const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
@@ -32,10 +32,13 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
       setForm({
         id: branch.id,
         name: branch.name || "",
-        phone: branch.phone || "",
+        phone: branch.phone || branch.phoneNumber || "",
         address: branch.address || "",
         note: branch.note || "",
-        status: branch.status !== "inactive",
+        status:
+          branch.status === 1 ||
+          branch.status === true ||
+          branch.status === "active",
       });
     } else {
       setForm({
@@ -56,13 +59,15 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
   const handleSubmit = () => {
     onSave({
       ...form,
-      status: form.status ? "active" : "inactive",
+      phoneNumber: form.phone,
+      status: form.status ? 1 : 0,
     });
   };
 
+  const isUpdate = !!form.id;
   return (
     <TModal
-      title="Cập nhật chi nhánh"
+      title={isUpdate ? "Cập nhật chi nhánh" : "Thêm chi nhánh"}
       visible={open}
       onCancel={onClose}
       footer={
@@ -77,7 +82,7 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
               onClick={onClose}
             />
             <ButtonBase
-              label="Lưu"
+              label={isUpdate ? "Cập nhật" : "Thêm mới"}
               className="btn_yellow"
               onClick={handleSubmit}
             />
@@ -93,6 +98,7 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
             <InputBase
               label="Tên chi nhánh"
               modelValue={form.name}
+              placeholder="Nhập tên chi nhánh"
               onChange={(val) => handleChange("name", val)}
               required={true}
             />
@@ -101,6 +107,7 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
             <InputBase
               label="Số điện thoại"
               modelValue={form.phone}
+              placeholder="Nhập số điện thoại"
               onChange={(val) => handleChange("phone", val)}
               required={true}
             />
@@ -110,18 +117,9 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
           <InputBase
             label="Địa chỉ"
             modelValue={form.address}
+            placeholder="Nhập địa chỉ"
             onChange={(val) => handleChange("address", val)}
             required={true}
-          />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <TextAreaBase
-            id="branch-note"
-            label="Ghi chú"
-            placeholder="Nhập ghi chú..."
-            defaultValue={form.note}
-            onChange={(val) => handleChange("note", val)}
-            rows={2}
           />
         </div>
         <div
@@ -130,12 +128,14 @@ const ModalSaveBranch = ({ open, branch, onClose, onSave }: Props) => {
         >
           <span style={{ minWidth: 90 }}>Trạng thái</span>
           <SelectboxBase
-            value={form.status}
+            value={form.status ? 1 : 0}
             options={statusOptions}
             style={{ minWidth: 140 }}
-            onChange={(val) =>
-              handleChange("status", val === "true" || val === true)
-            }
+            onChange={(val) => {
+              let v = val;
+              if (Array.isArray(val)) v = val[0];
+              handleChange("status", Number(v) === 1);
+            }}
           />
         </div>
       </div>

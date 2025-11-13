@@ -1,84 +1,134 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import InputBase from "@/component/common/input/InputBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
-import { HomeOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import ModalSaveBranch from "./ModalSaveBranch";
+import {
+  searchBranches,
+  saveBranch as apiSaveBranch,
+  deleteBranch as apiDeleteBranch,
+  getBranchDetail,
+} from "@/service/business/branchMng/branchMng.service";
+import {
+  BranchDTO,
+  BranchSaveDTO,
+} from "@/service/business/branchMng/branchMng.type";
+import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 
 const statusOptions = [
   { value: "", label: "Trạng thái" },
-  { value: "active", label: "Hoạt động" },
-  { value: "inactive", label: "Ngừng" },
+  { value: 1, label: "Hoạt động" },
+  { value: 0, label: "Ngừng" },
 ];
 
-const branchListInit = [
+const statusMap: Record<number, { label: string; color: string; bg: string }> =
   {
-    id: 1,
-    name: "Chi nhánh trung tâm",
-    address: "123 Xuân Thuỷ, Cầu Giấy",
-    phone: "024.3456.7890",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Chi nhánh Đống Đa",
-    address: "456 Thái Hà, Đống Đa",
-    phone: "024.3567.8901",
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Chi nhánh Quận 1",
-    address: "789 Nguyễn Huệ, Q1",
-    phone: "028.3678.9012",
-    status: "inactive",
-  },
-];
-
-const statusMap: Record<string, { label: string; color: string }> = {
-  active: { label: "Hoạt động", color: "#27ae60" },
-  inactive: { label: "Ngừng", color: "#ff4d4f" },
-};
+    1: { label: "Hoạt động", color: "#27ae60", bg: "#eafbe7" },
+    0: { label: "Ngừng", color: "#ff4d4f", bg: "#fff1f0" },
+  };
 
 const BranchList = () => {
-  const [filter, setFilter] = useState({ search: "", status: "" });
-  const [branches, setBranches] = useState(branchListInit);
+  const [filter, setFilter] = useState<{
+    search: string;
+    status: string | number;
+  }>({ search: "", status: 1 }); // Default to active branches
+  const [branches, setBranches] = useState<BranchDTO[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [editBranch, setEditBranch] = useState<any>(null);
+  const [editBranch, setEditBranch] = useState<BranchDTO | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
 
-  const filteredBranches = branches.filter(
-    (b) =>
-      (!filter.search ||
-        b.name.toLowerCase().includes(filter.search.toLowerCase()) ||
-        b.phone.includes(filter.search)) &&
-      (!filter.status || b.status === filter.status)
-  );
+  const fetchBranches = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = {
+        keyword: filter.search,
+        status: filter.status === "" ? undefined : Number(filter.status),
+        page: page,
+        size: pageSize,
+      };
+      const res = await searchBranches(params);
+      const apiData = res.data as any;
+      console.log(res);
 
-  const handleEdit = (branch: any) => {
-    setEditBranch(branch);
-    setShowModal(true);
-  };
+      setBranches(apiData.data || []);
 
-  const handleDelete = (branchId: number) => {
-    setBranches(branches.filter((b) => b.id !== branchId));
-  };
-
-  const handleSave = (branch: any) => {
-    if (branch.id) {
-      setBranches(
-        branches.map((b) => (b.id === branch.id ? { ...branch } : b))
-      );
-    } else {
-      setBranches([
-        ...branches,
-        { ...branch, id: branches.length + 1, status: "active" },
-      ]);
+      setTotal(apiData.totalPages || 0);
+    } catch (err: any) {
+      setError("Không thể tải danh sách chi nhánh");
+    } finally {
+      setLoading(false);
     }
-    setShowModal(false);
-    setEditBranch(null);
+  };
+
+  useEffect(() => {
+    fetchBranches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, page, pageSize]);
+
+  const handleEdit = async (branch: BranchDTO) => {
+    setLoading(true);
+    try {
+      const res = await getBranchDetail(branch.id);
+      setEditBranch(res.data);
+      setShowModal(true);
+    } catch (err) {
+      setError("Không thể lấy thông tin chi nhánh");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (branchId: string) => {
+    setLoading(true);
+    try {
+      await apiDeleteBranch(branchId);
+      fetchBranches();
+    } catch (err) {
+      setError("Xóa chi nhánh thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (branch: any) => {
+    setLoading(true);
+    try {
+      const payload: BranchSaveDTO = {
+        id: branch.id,
+        name: branch.name,
+        phoneNumber: branch.phone || branch.phoneNumber,
+        address: branch.address,
+        note: branch.note,
+        status:
+          branch.status === true ||
+          branch.status === 1 ||
+          branch.status === "active"
+            ? 1
+            : 0,
+      };
+      await apiSaveBranch(payload);
+      setShowModal(false);
+      setEditBranch(null);
+      fetchBranches();
+    } catch (err) {
+      setError("Lưu chi nhánh thất bại");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -107,12 +157,18 @@ const BranchList = () => {
                 value={filter.status}
                 options={statusOptions}
                 style={{ minWidth: 140 }}
-                onChange={(val) =>
-                  setFilter({
-                    ...filter,
-                    status: typeof val === "string" ? val : val[0] || "",
-                  })
-                }
+                onChange={(val) => {
+                  let v: string | number = "";
+                  if (Array.isArray(val)) {
+                    v = val[0] || "";
+                  } else if (
+                    typeof val === "string" ||
+                    typeof val === "number"
+                  ) {
+                    v = val;
+                  }
+                  setFilter({ ...filter, status: v });
+                }}
               />
               <ButtonBase
                 label="Thêm chi nhánh"
@@ -129,15 +185,27 @@ const BranchList = () => {
         </ContainerBase>
         <ContainerBase>
           <div className="box_section">
+            {loading && <LoadingIndicator />}
+            {error && (
+              <div style={{ color: "red", marginBottom: 8 }}>{error}</div>
+            )}
             <TableBase
-              data={filteredBranches}
+              data={branches.map((b, idx) => ({
+                ...b,
+                phone: b.phoneNumber,
+                statusLabel: statusMap[b.status]?.label,
+                statusColor: statusMap[b.status]?.color,
+                statusBg: statusMap[b.status]?.bg,
+                idx,
+              }))}
               columns={[
                 {
                   title: "STT",
                   dataIndex: "id",
                   key: "id",
                   width: 60,
-                  render: (_: any, __: any, idx: number) => idx + 1,
+                  render: (_: any, __: any, idx: number) =>
+                    (page - 1) * pageSize + idx + 1,
                 },
                 {
                   title: "Tên chi nhánh",
@@ -158,12 +226,12 @@ const BranchList = () => {
                   title: "Trạng thái",
                   dataIndex: "status",
                   key: "status",
-                  width: 120,
-                  render: (val: string) => (
+                  width: 160,
+                  render: (val: number, record: any) => (
                     <span
                       style={{
-                        background: val === "active" ? "#eafbe7" : "#fff1f0",
-                        color: statusMap[val]?.color,
+                        background: record.statusBg,
+                        color: record.statusColor,
                         borderRadius: 8,
                         padding: "2px 12px",
                         fontWeight: 500,
@@ -173,7 +241,7 @@ const BranchList = () => {
                         textAlign: "center",
                       }}
                     >
-                      {statusMap[val]?.label}
+                      {record.statusLabel}
                     </span>
                   ),
                 },
@@ -188,18 +256,26 @@ const BranchList = () => {
                         className="btn_gray"
                         onClick={() => handleEdit(record)}
                         title="Sửa"
+                        label=""
                       />
                       <ButtonBase
                         icon={<DeleteOutlined />}
                         className="btn_gray"
                         onClick={() => handleDelete(record.id)}
                         title="Xóa"
+                        label=""
                       />
                     </div>
                   ),
                 },
               ]}
-              pageSize={5}
+              pageSize={pageSize}
+              paginationType="BE"
+              totalPages={total}
+              onPageChange={(p, ps) => {
+                setPage(p);
+                setPageSize(ps);
+              }}
             />
           </div>
         </ContainerBase>

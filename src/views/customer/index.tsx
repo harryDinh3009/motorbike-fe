@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import InputBase from "@/component/common/input/InputBase";
@@ -6,73 +6,113 @@ import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
 import { HomeOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import ModalSaveInfoCustomer from "./ModalSaveInfoCustomer";
-
-const customerListInit = [
-  {
-    id: 1,
-    name: "Đinh Mạnh Hòa",
-    phone: "0912345678",
-    email: "hoa@gmail.com",
-    birthday: "18/09/2004",
-    country: "Việt Nam",
-    total: 1000000,
-  },
-  {
-    id: 2,
-    name: "Đinh Mạnh Hòa",
-    phone: "0912345678",
-    email: "hoa@gmail.com",
-    birthday: "18/09/2004",
-    country: "Việt Nam",
-    total: 1000000,
-  },
-  {
-    id: 3,
-    name: "Đinh Mạnh Hòa",
-    phone: "0912345678",
-    email: "hoa@gmail.com",
-    birthday: "18/09/2004",
-    country: "Việt Nam",
-    total: 1000000,
-  },
-];
+import {
+  searchCustomers,
+  saveCustomer as apiSaveCustomer,
+  deleteCustomer as apiDeleteCustomer,
+  getCustomerDetail,
+} from "@/service/business/customerMng/customerMng.service";
+import {
+  CustomerDTO,
+  CustomerSaveDTO,
+} from "@/service/business/customerMng/customerMng.type";
+import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+import dayjs from "dayjs";
 
 const CustomerList = () => {
   const [filter, setFilter] = useState("");
-  const [customers, setCustomers] = useState(customerListInit);
+  const [customers, setCustomers] = useState<CustomerDTO[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [editCustomer, setEditCustomer] = useState<any>(null);
+  const [editCustomer, setEditCustomer] = useState<CustomerDTO | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
 
-  const filteredCustomers = customers.filter(
-    (c) =>
-      !filter ||
-      c.name.toLowerCase().includes(filter.toLowerCase()) ||
-      c.phone.includes(filter) ||
-      c.email.toLowerCase().includes(filter.toLowerCase())
-  );
+  const fetchCustomers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = {
+        keyword: filter || undefined,
+        page: page,
+        size: pageSize,
+      };
+      const res = await searchCustomers(params);
+      const apiData = res.data as any;
 
-  const handleEdit = (customer: any) => {
-    setEditCustomer(customer);
-    setShowModal(true);
-  };
-
-  const handleDelete = (customerId: number) => {
-    setCustomers(customers.filter((c) => c.id !== customerId));
-  };
-
-  const handleSave = (customer: any) => {
-    if (customer.id) {
-      setCustomers(
-        customers.map((c) => (c.id === customer.id ? { ...customer } : c))
-      );
-    } else {
-      setCustomers([
-        ...customers,
-        { ...customer, id: customers.length + 1, total: 0 },
-      ]);
+      setCustomers(apiData.data || []);
+      setTotal(apiData.totalPages || 0);
+    } catch (err: any) {
+      setError("Không thể tải danh sách khách hàng");
+    } finally {
+      setLoading(false);
     }
-    setShowModal(false);
-    setEditCustomer(null);
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, page, pageSize]);
+
+  const handleEdit = async (customer: CustomerDTO) => {
+    setLoading(true);
+    try {
+      const res = await getCustomerDetail(customer.id);
+      setEditCustomer(res.data);
+      setShowModal(true);
+    } catch (err) {
+      setError("Không thể lấy thông tin khách hàng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (customerId: string) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa khách hàng này?")) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await apiDeleteCustomer(customerId);
+      fetchCustomers();
+    } catch (err) {
+      setError("Xóa khách hàng thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (customer: any) => {
+    setLoading(true);
+    try {
+      const payload: CustomerSaveDTO = {
+        id: customer.id,
+        fullName: customer.name || customer.fullName,
+        phoneNumber: customer.phone || customer.phoneNumber,
+        email: customer.email,
+        dateOfBirth: customer.birthday || customer.dateOfBirth,
+        gender: customer.gender,
+        country: customer.country,
+        address: customer.address,
+        citizenId: customer.cccd || customer.citizenId,
+        citizenIdImageUrl: customer.cccdImg || customer.citizenIdImageUrl,
+        driverLicense: customer.license || customer.driverLicense,
+        driverLicenseImageUrl: customer.licenseImg || customer.driverLicenseImageUrl,
+        passport: customer.passport,
+        passportImageUrl: customer.passportImg || customer.passportImageUrl,
+        note: customer.note,
+      };
+      await apiSaveCustomer(payload);
+      setShowModal(false);
+      setEditCustomer(null);
+      fetchCustomers();
+    } catch (err) {
+      setError("Lưu khách hàng thất bại");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,6 +138,7 @@ const CustomerList = () => {
               <ButtonBase
                 label="+ Thêm khách hàng"
                 className="btn_yellow"
+                icon={<PlusOutlined />}
                 style={{ minWidth: 180, marginLeft: "auto" }}
                 onClick={() => {
                   setEditCustomer(null);
@@ -109,15 +150,27 @@ const CustomerList = () => {
         </ContainerBase>
         <ContainerBase>
           <div className="box_section">
+            {loading && <LoadingIndicator />}
+            {error && (
+              <div style={{ color: "red", marginBottom: 8 }}>{error}</div>
+            )}
             <TableBase
-              data={filteredCustomers}
+              data={customers.map((c, idx) => ({
+                ...c,
+                name: c.fullName,
+                phone: c.phoneNumber,
+                birthday: c.dateOfBirth ? dayjs(c.dateOfBirth).format("DD/MM/YYYY") : "",
+                total: c.totalSpent || 0,
+                idx,
+              }))}
               columns={[
                 {
                   title: "STT",
                   dataIndex: "id",
                   key: "id",
                   width: 60,
-                  render: (_: any, __: any, idx: number) => idx + 1,
+                  render: (_: any, __: any, idx: number) =>
+                    (page - 1) * pageSize + idx + 1,
                 },
                 {
                   title: "Họ tên",
@@ -149,7 +202,8 @@ const CustomerList = () => {
                   title: "Tổng tiền",
                   dataIndex: "total",
                   key: "total",
-                  render: (val: number) => val.toLocaleString(),
+                  render: (val: number) =>
+                    val ? val.toLocaleString("vi-VN") : "0",
                 },
                 {
                   title: "Hành động",
@@ -162,18 +216,26 @@ const CustomerList = () => {
                         className="btn_gray"
                         onClick={() => handleEdit(record)}
                         title="Sửa"
+                        label=""
                       />
                       <ButtonBase
                         icon={<DeleteOutlined />}
                         className="btn_gray"
                         onClick={() => handleDelete(record.id)}
                         title="Xóa"
+                        label=""
                       />
                     </div>
                   ),
                 },
               ]}
-              pageSize={5}
+              pageSize={pageSize}
+              paginationType="BE"
+              totalPages={total}
+              onPageChange={(p, ps) => {
+                setPage(p);
+                setPageSize(ps);
+              }}
             />
           </div>
         </ContainerBase>

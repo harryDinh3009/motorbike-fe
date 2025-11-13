@@ -1,25 +1,36 @@
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import CommonService from "@/service/common/CommonService";
 import { getUserInfo } from "@/utils/storage";
 import { SCREEN } from "@/router/screen";
+import { MiddlewareContext } from "@/router";
+import { getToken, isTokenExpired } from "@/utils/token";
 
-const authMiddleware = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+const authMiddleware = ({ from, to, next }: MiddlewareContext) => {
+  const userInfoStr = getUserInfo();
+  let userInfo: any = null;
+  try {
+    userInfo = JSON.parse(userInfoStr || "null");
+  } catch {
+    userInfo = null;
+  }
+  const token = getToken();
 
-  useEffect(() => {
-    const userInfo = getUserInfo();
-
-    if (!userInfo && location.pathname !== SCREEN.login.path) {
-      CommonService.logout();
-      navigate(SCREEN.login.path);
+  if (
+    !token ||
+    !userInfo ||
+    typeof userInfo !== "object" ||
+    Object.keys(userInfo).length === 0
+  ) {
+    if (to !== SCREEN.login.path) {
+      next(SCREEN.login.path);
+    } else {
+      next();
     }
-
-    if (userInfo && location.pathname === SCREEN.login.path) {
-      navigate(SCREEN.dashboard.path);
-    }
-  }, [navigate, location]);
+  } else if (isTokenExpired(token)) {
+    next(SCREEN.login.path);
+  } else if (to === SCREEN.login.path) {
+    next(SCREEN.dashboard.path);
+  } else {
+    next();
+  }
 };
 
 export default authMiddleware;

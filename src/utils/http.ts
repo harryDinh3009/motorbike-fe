@@ -1,8 +1,9 @@
 import axios, { AxiosInstance } from "axios";
-import { removeUserInfo } from "@/utils/storage";
+import { removeUserInfo, getUserInfo } from "@/utils/storage";
 import { decode } from "html-entities";
 import { createBrowserHistory } from "history";
 import { SCREEN } from "@/router/screen";
+import { getToken, isTokenExpired } from "./token";
 
 const history = createBrowserHistory();
 
@@ -26,6 +27,12 @@ class Http {
 
     this.instance.interceptors.request.use(
       (config) => {
+        const token = getToken();
+
+        if (token && !isTokenExpired(token)) {
+          config.headers["Authorization"] = `Bearer ${token}`;
+        }
+
         return config;
       },
       (error) => Promise.reject(error)

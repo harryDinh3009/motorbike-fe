@@ -10,7 +10,7 @@ const TFooter: React.FC = () => {
 
   return (
     <div id="footer" className="footer_wrap">
-      <p className="copyright" style={{ fontSize: 13, fontWeight: 500 }}>
+      {/* <p className="copyright" style={{ fontSize: 13, fontWeight: 500 }}>
         <img
           src={Logo4sDigital}
           alt=""
@@ -34,7 +34,7 @@ const TFooter: React.FC = () => {
             4S Digital Services
           </span>
         </Link>
-      </p>
+      </p> */}
       <a
         href="javascript:void(0);"
         className="move_top"

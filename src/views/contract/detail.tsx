@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import {
@@ -6,7 +6,7 @@ import {
   CheckCircleTwoTone,
   ClockCircleTwoTone,
 } from "@ant-design/icons";
-import { Table } from "antd";
+import { Table, Dropdown, Menu, message } from "antd";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import {
   EditOutlined,
@@ -16,61 +16,31 @@ import {
   FileDoneOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
-
-// Nếu có TableBase thì import TableBase từ "@/component/common/table/TableBase"
-// import TableBase from "@/component/common/table/TableBase";
-
-// Dữ liệu mẫu
-const contract = {
-  code: "HD000123",
-  status: "Đã đặt",
-  statusColor: "#FFF6D8",
-  statusTextColor: "#E6A100",
-  source: "Facebook",
-  bookingDate: "10/10/2025 17:00",
-  startDate: "13/10/2025 17:00",
-  endDate: "15/10/2025 18:00",
-  branchRent: "Chi nhánh 1",
-  branchReturn: "Chi nhánh 2",
-  deliveryAddress: "Tổ 1, Phương Thiện, Hà Giang",
-  receiveAddress: "Tổ 5,  Phương Thiện, Hà Giang",
-  note: "Khách hàng yêu cầu giao xe tại khách sạn",
-  customer: {
-    name: "Đinh Mạnh Hòa",
-    phone: "0901234567",
-    email: "-",
-    country: "Việt Nam",
-    id: "001204020439",
-  },
-  carList: [
-    {
-      type: "Xe số",
-      name: "Honda Wave Alpha",
-      plate: "33R4-00005",
-      priceDay: 200000,
-      priceHour: 20000,
-      total: 420000,
-    },
-    {
-      type: "Xe số",
-      name: "Honda Wave Alpha",
-      plate: "33R4-00006",
-      priceDay: 200000,
-      priceHour: 20000,
-      total: 420000,
-    },
-    {
-      type: "Xe số",
-      name: "Yamaha PG-1",
-      plate: "33R4-00007",
-      priceDay: 200000,
-      priceHour: 20000,
-      total: 420000,
-    },
-  ],
-  totalCar: 1260000,
-  rentDuration: "2 ngày 1 giờ",
-};
+import {
+  getContractDetail,
+  getSurchargesByContractId,
+  getPaymentHistory,
+  updateDelivery,
+  updateReturn,
+  addPayment,
+  completeContract,
+  getContractStatuses,
+  deleteContract,
+  downloadContractPDF,
+} from "@/service/business/contractMng/contractMng.service";
+import {
+  ContractDTO,
+  SurchargeDTO,
+  PaymentTransactionDTO,
+  ContractCarSaveDTO,
+} from "@/service/business/contractMng/contractMng.type";
+import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+import { useParams, useNavigate } from "react-router-dom";
+import ModalUpdateInfoPickup from "./modal/ModalUpdateInfoPickup";
+import ModalUpdateInfoDelivery from "./modal/ModalUpdateInfoDelivery";
+import ModalUpdatePayment from "./modal/ModalUpdatePayment";
+import ModalCloseContract from "./modal/ModalCloseContract";
+import { getUserInfo } from "@/utils/storage";
 
 const pageTitle = "Chi tiết hợp đồng thuê xe";
 const breadcrumbItems = [
@@ -79,166 +49,368 @@ const breadcrumbItems = [
   { label: "Chi tiết hợp đồng", path: "/contract/detail" },
 ];
 
-// Dữ liệu mẫu bổ sung
-const surchargeList = [
-  {
-    desc: "Phí trả xe tại khu vực khác",
-    amount: 2000000,
-    note: "Khách hàng yêu cầu giao xe tại khách sạn",
-  },
-];
-const totalSurcharge = 2000000;
+// Hàm tính số ngày, số giờ phát sinh và tổng tiền thuê cho từng xe
+function calcRentalInfo(
+  start: string,
+  end: string,
+  dailyPrice: number,
+  hourlyPrice: number
+) {
+  if (!start || !end || !dailyPrice)
+    return { days: 0, extraHours: 0, total: 0, durationText: "" };
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (ms <= 0) return { days: 0, extraHours: 0, total: 0, durationText: "" };
+  let totalHours = Math.ceil(ms / (1000 * 60 * 60));
+  let days = Math.floor(totalHours / 24);
+  let extraHours = totalHours % 24;
 
-const paymentInfo = {
-  car: 1260000,
-  surcharge: 2200000,
-  total: 3360000,
-  paid: 3000000,
-  remain: 360000,
-  staff: {
-    name: "Nguyễn Văn Demo",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-  },
-};
+  // Nếu chỉ thuê vài tiếng trong ngày đầu tiên, vẫn tính là 1 ngày
+  if (days === 0) {
+    days = 1;
+    extraHours = 0;
+  } else {
+    // Nếu giờ phát sinh > 8h thì làm tròn thành 1 ngày
+    if (extraHours > 8) {
+      days += 1;
+      extraHours = 0;
+    }
+  }
 
-const paymentHistory = [
-  {
-    code: "TT000558",
-    method: "Chuyển khoản NH",
-    amount: 500000,
-    date: "13/10/2025 14:50",
-    staff: "Demo",
-    note: "Đặt cọc",
-  },
-  {
-    code: "TT000559",
-    method: "Tiền mặt",
-    amount: 1000000,
-    date: "15/10/2025 16:10",
-    staff: "Demo",
-    note: "_",
-  },
-];
+  // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
+  const msMod = ms % (1000 * 60 * 60);
+  if (days > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
+    extraHours -= 1;
+    if (extraHours < 0) extraHours = 0;
+  }
 
-// Table columns
-const carColumns = [
-  {
-    title: "STT",
-    dataIndex: "stt",
-    key: "stt",
-    width: 60,
-    align: "center" as const,
-    render: (_: any, __: any, idx: number) => idx + 1,
-  },
-  {
-    title: "Loại xe",
-    dataIndex: "type",
-    key: "type",
-  },
-  {
-    title: "Xe",
-    dataIndex: "name",
-    key: "name",
-  },
-  {
-    title: "Biển số xe",
-    dataIndex: "plate",
-    key: "plate",
-  },
-  {
-    title: "Giá/ngày",
-    dataIndex: "priceDay",
-    key: "priceDay",
-    align: "right" as const,
-    render: (val: number) => val.toLocaleString(),
-  },
-  {
-    title: "Giá/giờ",
-    dataIndex: "priceHour",
-    key: "priceHour",
-    align: "right" as const,
-    render: (val: number) => val.toLocaleString(),
-  },
-  {
-    title: "Tiền thuê",
-    dataIndex: "total",
-    key: "total",
-    align: "right" as const,
-    render: (val: number) => <b>{val.toLocaleString()}</b>,
-  },
-];
-
-const surchargeColumns = [
-  {
-    title: "STT",
-    dataIndex: "stt",
-    key: "stt",
-    width: 60,
-    align: "center" as const,
-    render: (_: any, __: any, idx: number) => idx + 1,
-  },
-  {
-    title: "Lý do thu",
-    dataIndex: "desc",
-    key: "desc",
-  },
-  {
-    title: "Số tiền",
-    dataIndex: "amount",
-    key: "amount",
-    align: "right" as const,
-    render: (val: number) => val.toLocaleString() + "đ",
-  },
-  {
-    title: "Ghi chú",
-    dataIndex: "note",
-    key: "note",
-  },
-];
-
-const paymentHistoryColumns = [
-  {
-    title: "Mã TT",
-    dataIndex: "code",
-    key: "code",
-  },
-  {
-    title: "Phương thức",
-    dataIndex: "method",
-    key: "method",
-  },
-  {
-    title: "Số tiền",
-    dataIndex: "amount",
-    key: "amount",
-    align: "right" as const,
-    render: (val: number) => val.toLocaleString() + "đ",
-  },
-  {
-    title: "Ngày thanh toán",
-    dataIndex: "date",
-    key: "date",
-  },
-  {
-    title: "Nhân viên",
-    dataIndex: "staff",
-    key: "staff",
-  },
-  {
-    title: "Ghi chú",
-    dataIndex: "note",
-    key: "note",
-  },
-];
-
-const statusIcon =
-  contract.status === "Đã đặt" ? (
-    <CheckCircleTwoTone twoToneColor="#52c41a" style={{ marginRight: 6 }} />
-  ) : (
-    <ClockCircleTwoTone twoToneColor="#faad14" style={{ marginRight: 6 }} />
-  );
+  const total = dailyPrice * days + hourlyPrice * extraHours;
+  // Chuỗi mô tả thời gian thuê
+  let durationText = "";
+  if (days > 0 && extraHours > 0) {
+    durationText = `${days} ngày ${extraHours} giờ`;
+  } else if (days > 0) {
+    durationText = `${days} ngày`;
+  } else {
+    durationText = `${extraHours} giờ`;
+  }
+  return { days, extraHours, total, durationText };
+}
 
 const ContractDetailComponent = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [contract, setContract] = useState<ContractDTO | null>(null);
+  const [surchargeList, setSurchargeList] = useState<SurchargeDTO[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentTransactionDTO[]>(
+    []
+  );
+
+  // Modal states
+  const [showModalPickup, setShowModalPickup] = useState(false);
+  const [showModalDelivery, setShowModalDelivery] = useState(false);
+  const [showModalPayment, setShowModalPayment] = useState(false);
+  const [showModalClose, setShowModalClose] = useState(false);
+  // Parse user info from localStorage or use as object
+  let currentUser: any = getUserInfo();
+  if (typeof currentUser === "string") {
+    try {
+      currentUser = JSON.parse(currentUser);
+    } catch {
+      currentUser = {};
+    }
+  }
+
+  // Lưu lại danh sách thanh toán hiện tại để truyền vào modal
+  const [currentPayments, setCurrentPayments] = useState<any[]>([]);
+
+  // State cho danh sách trạng thái xe
+  const [carStatusOptions, setCarStatusOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  // State để lưu defaultStaff, defaultTime cho modal giao/nhận xe
+  const [deliveryDefault, setDeliveryDefault] = useState<{
+    staff: string;
+    time: string;
+  }>({ staff: "", time: "" });
+  const [pickupDefault, setPickupDefault] = useState<{
+    staff: string;
+    time: string;
+  }>({ staff: "", time: "" });
+
+  // Hàm reload lại dữ liệu hợp đồng
+  const reloadData = async () => {
+    if (!id) return;
+    setLoading(true);
+    Promise.all([
+      getContractDetail(id),
+      getSurchargesByContractId(id),
+      getPaymentHistory(id),
+    ])
+      .then(([contractRes, surchargeRes, paymentRes]) => {
+        setContract(contractRes.data);
+        setSurchargeList(surchargeRes.data || []);
+        setPaymentHistory(paymentRes.data || []);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    reloadData();
+    // Lấy trạng thái xe từ API
+    getContractStatuses().then((res) => {
+      if (Array.isArray(res.data)) {
+        setCarStatusOptions(
+          res.data.map((item) => ({
+            value: item.code,
+            label: item.name,
+          }))
+        );
+      }
+    });
+    // eslint-disable-next-line
+  }, [id]);
+
+  if (loading || !contract) {
+    return <LoadingIndicator />;
+  }
+
+  // Tính toán thời gian thuê và tiền thuê từng xe
+  const rentalStart = contract.startDate;
+  const rentalEnd = contract.endDate;
+  const carRentalList = (contract.cars || []).map((c) => {
+    const { days, extraHours, total, durationText } = calcRentalInfo(
+      rentalStart,
+      rentalEnd,
+      c.dailyPrice || 0,
+      c.hourlyPrice || 0
+    );
+    return {
+      ...c,
+      rentalDays: days,
+      rentalExtraHours: extraHours,
+      rentalDurationText: durationText,
+      rentalTotal: total,
+    };
+  });
+
+  // Tính tổng tiền thuê xe theo công thức mới
+  const totalCar = carRentalList.reduce(
+    (sum, c) => sum + (c.rentalTotal || 0),
+    0
+  );
+
+  // Tính tổng phụ thu
+  const totalSurcharge = (surchargeList || []).reduce(
+    (sum, s) => sum + (s.amount || 0),
+    0
+  );
+  // Tính tổng đã thanh toán
+  const totalPaid = (paymentHistory || []).reduce(
+    (sum, p) => sum + (p.amount || 0),
+    0
+  );
+  // Tổng cộng
+  const totalAll = totalCar + totalSurcharge;
+  // Còn lại
+  const remain = totalAll - totalPaid;
+
+  // Status icon
+  const statusIcon =
+    contract.statusNm === "Đã đặt" || contract.status === "CONFIRMED" ? (
+      <CheckCircleTwoTone twoToneColor="#52c41a" style={{ marginRight: 6 }} />
+    ) : (
+      <ClockCircleTwoTone twoToneColor="#faad14" style={{ marginRight: 6 }} />
+    );
+
+  // Handler cho modal giao xe
+  const handleDeliverySave = async (data: any) => {
+    if (!contract) return;
+    // Chuẩn hóa danh sách xe cho API
+    const cars: ContractCarSaveDTO[] = (data.cars || contract.cars || []).map(
+      (c: any) => ({
+        id: c.id,
+        carId: c.carId || c.id,
+        dailyPrice: c.dailyPrice,
+        hourlyPrice: c.hourlyPrice,
+        totalAmount: c.totalAmount,
+        startOdometer: c.odometer ? Number(c.odometer) : undefined,
+        notes: c.notes,
+      })
+    );
+    await updateDelivery({
+      contractId: contract.id,
+      cars,
+      deliveryUserId: data.staff,
+      deliveryUserName:
+        currentUser?.userCurrent?.fullName ||
+        currentUser?.userCurrent?.userName ||
+        currentUser?.userCurrent?.username ||
+        "",
+      deliveryTime: data.time,
+    });
+    setShowModalDelivery(false);
+    reloadData();
+  };
+
+  // Handler cho modal trả xe
+  const handlePickupSave = async (data: any) => {
+    if (!contract) return;
+    // Chuẩn hóa danh sách xe cho API
+    const cars: ContractCarSaveDTO[] = (data.cars || contract.cars || []).map(
+      (c: any) => ({
+        id: c.id,
+        carId: c.carId || c.id,
+        endOdometer: c.odometer ? Number(c.odometer) : undefined,
+        notes: c.notes,
+        status: c.status, // Truyền status vào API
+      })
+    );
+    await updateReturn({
+      contractId: contract.id,
+      cars,
+      returnUserId: data.staff,
+      returnUserName:
+        currentUser?.userCurrent?.fullName ||
+        currentUser?.userCurrent?.userName ||
+        currentUser?.userCurrent?.username ||
+        "",
+      returnTime: data.time,
+    });
+    setShowModalPickup(false);
+    reloadData();
+  };
+
+  // Handler cho modal thanh toán
+  const handlePaymentSave = async (payments: any[]) => {
+    if (!contract) return;
+    for (const p of payments) {
+      await addPayment({
+        contractId: contract.id,
+        paymentMethod: p.method,
+        amount: Number(p.amount),
+        paymentDate: p.date,
+        notes: p.note,
+      });
+    }
+    setShowModalPayment(false);
+    reloadData();
+  };
+
+  // Handler cho modal đóng hợp đồng
+  const handleCloseContract = async (data: any) => {
+    if (!contract) return;
+    await completeContract({
+      contractId: contract.id,
+      completedDate: data.closeDate,
+      finalPaymentAmount: data.paymentAmount,
+      paymentMethod: data.paymentMethod,
+    });
+    setShowModalClose(false);
+    reloadData();
+  };
+
+  // Khi bấm nút "Thanh toán", truyền danh sách thanh toán hiện tại vào modal
+  const handleShowPaymentModal = () => {
+    if (!contract) return;
+    const mapped = (paymentHistory || []).map((p) => ({
+      id: p.id,
+      contractId: contract.id, // truyền contractId vào từng item
+      method: p.paymentMethod || "",
+      amount: p.amount || "",
+      date: p.paymentDate || "",
+      note: p.notes || "",
+    }));
+    setShowModalPayment(true);
+    setCurrentPayments(mapped.length ? mapped : []);
+  };
+
+  // Khi bấm nút "Giao xe"
+  const handleShowDeliveryModal = () => {
+    setDeliveryDefault({
+      staff: currentUser?.userCurrent?.id || "",
+      time: contract?.deliveryTime || new Date().toISOString(),
+    });
+    setShowModalDelivery(true);
+  };
+
+  // Khi bấm nút "Trả xe"
+  const handleShowPickupModal = () => {
+    setPickupDefault({
+      staff: currentUser?.userCurrent?.id || "",
+      time: contract?.returnTime || new Date().toISOString(),
+    });
+    setShowModalPickup(true);
+  };
+
+  // Chuẩn hóa dữ liệu cho các modal
+  // TODO: Replace with real staff list if available
+  const staffOptions: { value: string; label: string }[] =
+    currentUser?.userCurrent
+      ? [
+          {
+            value: currentUser.userCurrent.id,
+            label:
+              currentUser.userCurrent.fullName ||
+              currentUser.userCurrent.userName ||
+              currentUser.userCurrent.username ||
+              "Nhân viên",
+          },
+        ]
+      : [];
+
+  // In hợp đồng
+  const handlePrintContract = async () => {
+    if (!contract?.id) return;
+    try {
+      setLoading(true);
+      const blob = await downloadContractPDF(contract.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hop-dong-thue-xe-${
+        contract.contractCode || contract.id
+      }.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setLoading(false);
+    } catch {
+      setLoading(false);
+      message.error("Tải file hợp đồng thất bại!");
+    }
+  };
+
+  // Hủy hợp đồng
+  const handleCancelContract = async () => {
+    if (!contract?.id) return;
+    if (!window.confirm("Bạn có chắc chắn muốn hủy hợp đồng này?")) return;
+    try {
+      setLoading(true);
+      await deleteContract(contract.id);
+      setLoading(false);
+      message.success("Đã hủy hợp đồng!");
+      navigate("/contract");
+    } catch {
+      setLoading(false);
+      message.error("Hủy hợp đồng thất bại!");
+    }
+  };
+
+  // Dropdown menu cho button "Khác"
+  const moreMenu = (
+    <Menu>
+      <Menu.Item key="print" onClick={handlePrintContract}>
+        In hợp đồng
+      </Menu.Item>
+      <Menu.Item key="cancel" onClick={handleCancelContract}>
+        Hủy hợp đồng
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
     <div className="content_wrap">
       <div id="content" className="grid_content">
@@ -258,38 +430,44 @@ const ContractDetailComponent = () => {
             label="Chỉnh sửa"
             className="btn_primary"
             icon={<EditOutlined />}
-            onClick={() => {}}
+            onClick={() => {
+              if (contract?.id) {
+                navigate(`/contract/create?id=${contract.id}`);
+              }
+            }}
           />
           <ButtonBase
             label="Giao xe"
             className="btn_primary"
             icon={<CarOutlined />}
-            onClick={() => {}}
+            onClick={handleShowDeliveryModal}
           />
           <ButtonBase
             label="Trả xe"
             className="btn_primary"
             icon={<RollbackOutlined />}
-            onClick={() => {}}
+            onClick={handleShowPickupModal}
           />
           <ButtonBase
             label="Thanh toán"
             className="btn_primary"
             icon={<DollarOutlined />}
-            onClick={() => {}}
+            onClick={handleShowPaymentModal}
           />
           <ButtonBase
             label="Đóng HĐ"
             className="btn_primary"
             icon={<FileDoneOutlined />}
-            onClick={() => {}}
+            onClick={() => setShowModalClose(true)}
           />
-          <ButtonBase
-            label="Khác"
-            className="btn_lightgray"
-            icon={<MoreOutlined />}
-            onClick={() => {}}
-          />
+          <Dropdown overlay={moreMenu} trigger={["click"]}>
+            <ButtonBase
+              label="Khác"
+              className="btn_lightgray"
+              icon={<MoreOutlined />}
+              onClick={(e) => e.preventDefault()}
+            />
+          </Dropdown>
         </div>
 
         <div
@@ -304,8 +482,7 @@ const ContractDetailComponent = () => {
           {/* Thông tin hợp đồng */}
           <ContainerBase
             style={{
-              flex: 2,
-              minWidth: 420,
+              flex: 1,
               display: "flex",
               flexDirection: "column",
             }}
@@ -316,6 +493,7 @@ const ContractDetailComponent = () => {
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
+                minWidth: 750,
               }}
             >
               <p
@@ -344,7 +522,9 @@ const ContractDetailComponent = () => {
                         <td style={{ width: 120, color: "#888" }}>
                           Mã hợp đồng
                         </td>
-                        <td style={{ fontWeight: 500 }}>{contract.code}</td>
+                        <td style={{ fontWeight: 500 }}>
+                          {contract.contractCode}
+                        </td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Nguồn</td>
@@ -352,19 +532,25 @@ const ContractDetailComponent = () => {
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ngày thuê</td>
-                        <td>{contract.startDate}</td>
+                        <td>
+                          {contract.startDate
+                            ? contract.startDate
+                                .replace("T", " ")
+                                .substring(0, 16)
+                            : ""}
+                        </td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Chi nhánh thuê</td>
-                        <td>{contract.branchRent}</td>
+                        <td>{contract.pickupBranchName}</td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Địa điểm giao xe</td>
-                        <td>{contract.deliveryAddress}</td>
+                        <td>{contract.pickupAddress}</td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ghi chú</td>
-                        <td>{contract.note}</td>
+                        <td>{contract.notes}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -386,8 +572,8 @@ const ContractDetailComponent = () => {
                         <td>
                           <span
                             style={{
-                              background: contract.statusColor,
-                              color: contract.statusTextColor,
+                              background: "#FFF6D8",
+                              color: "#E6A100",
                               borderRadius: 8,
                               padding: "2px 12px",
                               fontWeight: 500,
@@ -397,25 +583,38 @@ const ContractDetailComponent = () => {
                             }}
                           >
                             {statusIcon}
-                            {contract.status}
+                            {contract.statusNm}
                           </span>
                         </td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ngày đặt</td>
-                        <td>{contract.bookingDate}</td>
+                        <td>
+                          {/* Sử dụng createdDate nếu có, nếu không thì để trống */}
+                          {contract.createdDate
+                            ? contract.createdDate
+                                .replace("T", " ")
+                                .substring(0, 16)
+                            : ""}
+                        </td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ngày trả</td>
-                        <td>{contract.endDate}</td>
+                        <td>
+                          {contract.endDate
+                            ? contract.endDate
+                                .replace("T", " ")
+                                .substring(0, 16)
+                            : ""}
+                        </td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Chi nhánh trả</td>
-                        <td>{contract.branchReturn}</td>
+                        <td>{contract.returnBranchName}</td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Địa điểm trả xe</td>
-                        <td>{contract.receiveAddress}</td>
+                        <td>{contract.returnAddress}</td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}></td>
@@ -428,7 +627,6 @@ const ContractDetailComponent = () => {
             </div>
           </ContainerBase>
 
-          {/* Thông tin khách hàng */}
           <ContainerBase>
             <div
               className="box_section"
@@ -436,7 +634,7 @@ const ContractDetailComponent = () => {
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                minWidth: 380,
+                minWidth: 350,
               }}
             >
               <p
@@ -467,25 +665,23 @@ const ContractDetailComponent = () => {
                 <tbody>
                   <tr>
                     <td style={{ width: 110, color: "#888" }}>Họ tên</td>
-                    <td style={{ fontWeight: 500 }}>
-                      {contract.customer.name}
-                    </td>
+                    <td style={{ fontWeight: 500 }}>{contract.customerName}</td>
                   </tr>
                   <tr>
                     <td style={{ color: "#888" }}>Số điện thoại</td>
-                    <td>{contract.customer.phone}</td>
+                    <td>{contract.phoneNumber}</td>
                   </tr>
                   <tr>
                     <td style={{ color: "#888" }}>Email</td>
-                    <td>{contract.customer.email}</td>
+                    <td>{contract.email || "-"}</td>
                   </tr>
                   <tr>
                     <td style={{ color: "#888" }}>Quốc gia</td>
-                    <td>{contract.customer.country}</td>
+                    <td>{contract.country || "-"}</td>
                   </tr>
                   <tr>
                     <td style={{ color: "#888" }}>Căn cước công dân</td>
-                    <td>{contract.customer.id}</td>
+                    <td>{contract.citizenId || "-"}</td>
                   </tr>
                 </tbody>
               </table>
@@ -522,21 +718,60 @@ const ContractDetailComponent = () => {
                 </span>
                 Danh sách xe
               </p>
-              <span
-                style={{
-                  color: "#1677ff",
-                  fontStyle: "italic",
-                  fontWeight: 500,
-                  fontSize: 15,
-                }}
-              >
-                Thời gian thuê: {contract.rentDuration}
+              {/* Thời gian thuê có thể tính toán nếu cần */}
+              <span style={{ color: "#1677ff", fontWeight: 500, fontSize: 15 }}>
+                Thời gian tính thuê:{" "}
+                {carRentalList[0]?.rentalDurationText || ""}
               </span>
             </div>
-            {/* Nếu có TableBase thì thay Table bằng TableBase */}
             <Table
-              columns={carColumns}
-              dataSource={contract.carList}
+              columns={[
+                {
+                  title: "STT",
+                  dataIndex: "stt",
+                  key: "stt",
+                  width: 60,
+                  align: "center" as const,
+                  render: (_: any, __: any, idx: number) => idx + 1,
+                },
+                {
+                  title: "Loại xe",
+                  dataIndex: "carType",
+                  key: "carType",
+                },
+                {
+                  title: "Xe",
+                  dataIndex: "carModel",
+                  key: "carModel",
+                },
+                {
+                  title: "Biển số xe",
+                  dataIndex: "licensePlate",
+                  key: "licensePlate",
+                },
+                {
+                  title: "Giá/ngày",
+                  dataIndex: "dailyPrice",
+                  key: "dailyPrice",
+                  align: "right" as const,
+                  render: (val: number) => val?.toLocaleString(),
+                },
+                {
+                  title: "Giá/giờ",
+                  dataIndex: "hourlyPrice",
+                  key: "hourlyPrice",
+                  align: "right" as const,
+                  render: (val: number) => val?.toLocaleString(),
+                },
+                {
+                  title: "Tiền thuê",
+                  dataIndex: "rentalTotal",
+                  key: "rentalTotal",
+                  align: "right" as const,
+                  render: (val: number) => <b>{val?.toLocaleString()}</b>,
+                },
+              ]}
+              dataSource={carRentalList}
               pagination={false}
               rowKey={(r, idx) => idx.toString()}
               style={{ marginTop: 8 }}
@@ -544,7 +779,7 @@ const ContractDetailComponent = () => {
                 <div style={{ textAlign: "right", fontWeight: 500 }}>
                   Tổng tiền thuê xe:{" "}
                   <span style={{ fontWeight: "bold", color: "#1677ff" }}>
-                    {contract.totalCar.toLocaleString()}đ
+                    {totalCar.toLocaleString()}đ
                   </span>
                 </div>
               )}
@@ -575,7 +810,33 @@ const ContractDetailComponent = () => {
               Danh sách phụ thu
             </p>
             <Table
-              columns={surchargeColumns}
+              columns={[
+                {
+                  title: "STT",
+                  dataIndex: "stt",
+                  key: "stt",
+                  width: 60,
+                  align: "center" as const,
+                  render: (_: any, __: any, idx: number) => idx + 1,
+                },
+                {
+                  title: "Lý do thu",
+                  dataIndex: "description",
+                  key: "description",
+                },
+                {
+                  title: "Số tiền",
+                  dataIndex: "amount",
+                  key: "amount",
+                  align: "right" as const,
+                  render: (val: number) => val?.toLocaleString() + "đ",
+                },
+                {
+                  title: "Ghi chú",
+                  dataIndex: "notes",
+                  key: "notes",
+                },
+              ]}
               dataSource={surchargeList}
               pagination={false}
               rowKey={(_, idx) => idx.toString()}
@@ -635,7 +896,7 @@ const ContractDetailComponent = () => {
                   }}
                 >
                   <span>Tiền thuê xe:</span>
-                  <span>{paymentInfo.car.toLocaleString()} đ</span>
+                  <span>{totalCar.toLocaleString()} đ</span>
                 </div>
                 <div
                   style={{
@@ -645,7 +906,7 @@ const ContractDetailComponent = () => {
                   }}
                 >
                   <span>Tiền phụ thu:</span>
-                  <span>{paymentInfo.surcharge.toLocaleString()} đ</span>
+                  <span>{totalSurcharge.toLocaleString()} đ</span>
                 </div>
                 <div
                   style={{
@@ -658,7 +919,7 @@ const ContractDetailComponent = () => {
                     <b>Tổng tiền:</b>
                   </span>
                   <span>
-                    <b>{paymentInfo.total.toLocaleString()} đ</b>
+                    <b>{totalAll.toLocaleString()} đ</b>
                   </span>
                 </div>
               </div>
@@ -671,22 +932,7 @@ const ContractDetailComponent = () => {
                   }}
                 >
                   <span>Đã thanh toán:</span>
-                  <span>
-                    {paymentInfo.paid.toLocaleString()} đ
-                    <img
-                      src={paymentInfo.staff.avatar}
-                      alt="staff"
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        marginLeft: 8,
-                        verticalAlign: "middle",
-                        border: "1px solid #eee",
-                      }}
-                    />
-                  </span>
+                  <span>{totalPaid.toLocaleString()} đ</span>
                 </div>
                 <div
                   style={{
@@ -699,7 +945,7 @@ const ContractDetailComponent = () => {
                     Phải thu khách:
                   </span>
                   <span style={{ color: "#1677ff", fontWeight: 600 }}>
-                    {paymentInfo.remain.toLocaleString()} đ
+                    {remain.toLocaleString()} đ
                   </span>
                 </div>
               </div>
@@ -728,7 +974,42 @@ const ContractDetailComponent = () => {
               Lịch sử thanh toán
             </p>
             <Table
-              columns={paymentHistoryColumns}
+              columns={[
+                {
+                  title: "Mã TT",
+                  dataIndex: "transactionCode",
+                  key: "transactionCode",
+                },
+                {
+                  title: "Phương thức",
+                  dataIndex: "paymentMethod",
+                  key: "paymentMethod",
+                },
+                {
+                  title: "Số tiền",
+                  dataIndex: "amount",
+                  key: "amount",
+                  align: "right" as const,
+                  render: (val: number) => val?.toLocaleString() + "đ",
+                },
+                {
+                  title: "Ngày thanh toán",
+                  dataIndex: "paymentDate",
+                  key: "paymentDate",
+                  render: (val: string) =>
+                    val ? new Date(val).toLocaleString() : "",
+                },
+                {
+                  title: "Nhân viên",
+                  dataIndex: "userName",
+                  key: "userName",
+                },
+                {
+                  title: "Ghi chú",
+                  dataIndex: "notes",
+                  key: "notes",
+                },
+              ]}
               dataSource={paymentHistory}
               pagination={false}
               rowKey={(_, idx) => idx.toString()}
@@ -738,6 +1019,73 @@ const ContractDetailComponent = () => {
             />
           </div>
         </ContainerBase>
+
+        {/* Modals */}
+        <ModalUpdateInfoPickup
+          open={showModalPickup}
+          onClose={() => setShowModalPickup(false)}
+          onSave={handlePickupSave}
+          cars={(contract.cars || []).map((c) => ({
+            id: c.id,
+            type: c.carType,
+            model: c.carModel,
+            licensePlate: c.licensePlate,
+            odometer: c.endOdometer || "",
+            condition: "", // truyền lại nếu có field tình trạng
+            status: c.status || "", // Truyền status sang modal
+          }))}
+          staffOptions={staffOptions}
+          defaultStaff={pickupDefault.staff}
+          defaultTime={pickupDefault.time}
+          totalCar={totalCar}
+          totalSurcharge={totalSurcharge}
+          carStatusOptions={carStatusOptions}
+        />
+        <ModalUpdateInfoDelivery
+          open={showModalDelivery}
+          onClose={() => setShowModalDelivery(false)}
+          onSave={handleDeliverySave}
+          staffOptions={staffOptions}
+          defaultStaff={deliveryDefault.staff}
+          defaultTime={deliveryDefault.time}
+          totalCar={totalCar}
+          totalSurcharge={totalSurcharge}
+        />
+        <ModalUpdatePayment
+          open={showModalPayment}
+          onClose={() => setShowModalPayment(false)}
+          onSave={handlePaymentSave}
+          payments={
+            currentPayments.length
+              ? currentPayments
+              : contract
+              ? [
+                  {
+                    contractId: contract.id, // truyền contractId cho payment mới
+                    method: "",
+                    amount: "",
+                    date: "",
+                    note: "",
+                  },
+                ]
+              : []
+          }
+          contractId={contract.id} // truyền contractId vào props
+        />
+        <ModalCloseContract
+          open={showModalClose}
+          onClose={() => setShowModalClose(false)}
+          onSubmit={handleCloseContract}
+          customerName={contract.customerName}
+          totalAmount={totalCar + totalSurcharge}
+          discount={contract.discountAmount || 0}
+          mustPay={totalAll - (contract.discountAmount || 0)}
+          paid={totalPaid}
+          paymentMethods={[
+            { value: "bank", label: "Chuyển khoản NH" },
+            { value: "cash", label: "Tiền mặt" },
+          ]}
+        />
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
-import Logo from "@/assets/images/common/images_vite_react.jpg";
+import Logo from "@/assets/images/motorbike_logo.png";
 import { gnbOneDepth, headerStyle, mobileGnb } from "@/assets/js/common";
 import { SCREEN } from "@/router/screen";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getUserInfo, removeUserInfo } from "@/utils/storage";
 
 type MenuItem = {
   name: string;
@@ -14,9 +15,11 @@ const THeaderHorizontal = () => {
   const [userInfo, setUserInfo] = useState<{
     userName: string;
     lastLoginDate: string | null;
+    avatar?: string;
   }>({
-    userName: "Nguyễn Công Thắng",
+    userName: "",
     lastLoginDate: null,
+    avatar: "",
   });
   const [currentDate, setCurrentDate] = useState<string>("");
 
@@ -27,6 +30,29 @@ const THeaderHorizontal = () => {
     headerStyle();
     mobileGnb();
     gnbOneDepth();
+
+    // Lấy user info từ localStorage
+    try {
+      const raw = getUserInfo();
+      if (raw) {
+        const info = JSON.parse(raw);
+        setUserInfo({
+          userName:
+            info.userCurrent?.fullName ||
+            info.userCurrent?.username ||
+            info.username ||
+            "",
+          lastLoginDate: info.userCurrent?.lastLoginDate || null,
+          avatar: info.userCurrent?.avatar || info.avatar || "",
+        });
+      }
+    } catch {
+      setUserInfo({
+        userName: "",
+        lastLoginDate: null,
+        avatar: "",
+      });
+    }
   }, []);
 
   const subMenus: MenuItem[] = [
@@ -36,7 +62,7 @@ const THeaderHorizontal = () => {
       subMenus: [],
     },
     {
-      name: "Quản lý xe pháo",
+      name: "Quản lý xe",
       path: SCREEN.motorbike?.path || "#",
       subMenus: [],
     },
@@ -45,11 +71,11 @@ const THeaderHorizontal = () => {
       path: SCREEN.contractMng.path,
       subMenus: [],
     },
-    {
-      name: "Quản lý phụ thu",
-      path: SCREEN.surcharge?.path || "#",
-      subMenus: [],
-    },
+    // {
+    //   name: "Quản lý phụ thu",
+    //   path: SCREEN.surcharge?.path || "#",
+    //   subMenus: [],
+    // },
     {
       name: "Chi nhánh",
       path: SCREEN.branch?.path || "#",
@@ -83,6 +109,20 @@ const THeaderHorizontal = () => {
           </h1>
           <div className="header_function">
             <p className="login_info">
+              {userInfo.avatar && (
+                <img
+                  src={userInfo.avatar}
+                  alt="avatar"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    marginRight: 8,
+                    verticalAlign: "middle",
+                  }}
+                />
+              )}
               {userInfo.userName}{" "}
               {userInfo.lastLoginDate && `[${userInfo.lastLoginDate}]`} [
               {currentDate}]
@@ -91,6 +131,7 @@ const THeaderHorizontal = () => {
               type="button"
               className="btn_logout"
               onClick={() => {
+                removeUserInfo();
                 navigate(SCREEN.login.path);
               }}
             >

@@ -1,19 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TModal from "@/component/common/modal/TModal";
 import { SearchOutlined } from "@ant-design/icons";
-
-// Dummy data xe
-const motorList = [
-  { id: 1, name: "Mazda CX5 2020", plate: "30E-42103" },
-  { id: 2, name: "Toyota Vios 2019", plate: "29A-15678" },
-  { id: 3, name: "Honda City 2021", plate: "51D-98765" },
-  { id: 4, name: "Hyundai Accent 2020", plate: "43B-23456" },
-  { id: 5, name: "Kia Morning 2018", plate: "60A-87654" },
-];
+import { searchCars } from "@/service/business/carMng/carMng.service";
+import { CarDTO } from "@/service/business/carMng/carMng.type";
 
 interface MotorSelect {
-  id: number;
+  id: string;
   checked: boolean;
   priceDay: number;
   priceHour: number;
@@ -29,30 +22,41 @@ const ModalAddMotor = ({
   onAdd: (motors: any[]) => void;
 }) => {
   const [search, setSearch] = useState("");
-  const [motors, setMotors] = useState<MotorSelect[]>(
-    motorList.map((m) => ({
-      id: m.id,
-      checked: false,
-      priceDay: 0,
-      priceHour: 0,
-    }))
-  );
+  const [carList, setCarList] = useState<CarDTO[]>([]);
+  const [motors, setMotors] = useState<MotorSelect[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Lọc xe theo search
-  const filtered = motorList.filter(
-    (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.plate.toLowerCase().includes(search.toLowerCase())
-  );
+  // Fetch all cars with filter
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    searchCars({
+      keyword: search,
+      page: 1,
+      size: 10000,
+    }).then((res) => {
+      const cars = res.data.data || [];
+      setCarList(cars);
+      setMotors(
+        cars.map((car) => ({
+          id: car.id,
+          checked: false,
+          priceDay: car.dailyPrice || 0,
+          priceHour: car.hourlyPrice || 0,
+        }))
+      );
+      setLoading(false);
+    });
+  }, [open, search]);
 
   // Chọn xe
-  const handleCheck = (id: number, checked: boolean) => {
+  const handleCheck = (id: string, checked: boolean) => {
     setMotors((prev) => prev.map((m) => (m.id === id ? { ...m, checked } : m)));
   };
 
   // Nhập giá/ngày, giá/giờ
   const handleChangePrice = (
-    id: number,
+    id: string,
     field: "priceDay" | "priceHour",
     value: number
   ) => {
@@ -66,11 +70,16 @@ const ModalAddMotor = ({
     const selected = motors
       .filter((m) => m.checked)
       .map((m) => {
-        const info = motorList.find((motor) => motor.id === m.id);
+        const info = carList.find((car) => car.id === m.id);
         return {
-          type: "", // có thể bổ sung loại xe nếu cần
-          name: info?.name || "",
-          plate: info?.plate || "",
+          id: info?.id || m.id,
+          carId: info?.id || m.id,
+          type: info?.carType || "",
+          name: info?.model || "",
+          plate: info?.licensePlate || "",
+          branch: info?.branchName || "",
+          status: info?.statusNm || "",
+          condition: info?.condition || "",
           priceDay: m.priceDay,
           priceHour: m.priceHour,
           total: (m.priceDay || 0) + (m.priceHour || 0),
@@ -91,34 +100,27 @@ const ModalAddMotor = ({
           </div>
         </div>
       }
-      width={600}
+      width={800}
       footer={
-        <>
-          <div
-            className="modal_footer dp_flex"
-            style={{
-              justifyContent: "flex-end",
-              gap: 8,
-              marginTop: 18,
-            }}
-          >
-            <ButtonBase label="Hủy" className="btn_gray" onClick={onClose} />
-            <ButtonBase
-              label="Thêm xe"
-              className="contract-action-btn"
-              onClick={handleAdd}
-            />
-          </div>
-        </>
+        <div
+          className="modal_footer dp_flex"
+          style={{
+            justifyContent: "flex-end",
+            gap: 8,
+            marginTop: 18,
+          }}
+        >
+          <ButtonBase label="Hủy" className="btn_gray" onClick={onClose} />
+          <ButtonBase
+            label="Thêm xe"
+            className="contract-action-btn"
+            onClick={handleAdd}
+          />
+        </div>
       }
     >
       <div style={{ marginBottom: 18 }}>
-        <div
-          style={{
-            position: "relative",
-            marginBottom: 0,
-          }}
-        >
+        <div style={{ position: "relative", marginBottom: 0 }}>
           <input
             type="text"
             placeholder="Tìm theo Tên xe, Biển số"
@@ -145,103 +147,136 @@ const ModalAddMotor = ({
           />
         </div>
       </div>
-      <div>
-        {filtered.map((motor, idx) => {
-          const mState = motors.find((m) => m.id === motor.id)!;
-          return (
-            <div
-              key={motor.id}
-              className="dp_flex"
-              style={{
-                alignItems: "center",
-                gap: 0,
-                marginBottom: 0,
-                borderBottom: "1px solid #f0f0f0",
-                padding: "16px 0",
-                fontSize: 15,
-              }}
-            >
-              <div style={{ width: 40, textAlign: "center" }}>
-                <input
-                  type="checkbox"
-                  checked={mState.checked}
-                  onChange={(e) => handleCheck(motor.id, e.target.checked)}
-                  style={{
-                    width: 18,
-                    height: 18,
-                    accentColor: "#222",
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500 }}>{motor.name}</div>
-                <div style={{ fontSize: 13, color: "#888" }}>{motor.plate}</div>
-              </div>
+      <div
+        style={{
+          maxHeight: 400,
+          overflowY: "auto",
+          overflowX: "auto",
+          border: "1px solid #f0f0f0",
+          borderRadius: 8,
+          background: "#fff",
+        }}
+      >
+        <div
+          style={{
+            minWidth: 600,
+            fontWeight: 500,
+            padding: "8px 0",
+            borderBottom: "1px solid #eee",
+            display: "flex",
+            alignItems: "center",
+            background: "#fafbfc",
+          }}
+        >
+          <div style={{ width: "20%", textAlign: "left" }} />
+          <div style={{ width: "20%", textAlign: "left" }}>Tên xe</div>
+          <div style={{ width: "20%", textAlign: "left" }}>Biển số</div>
+          <div style={{ width: "20%", textAlign: "center" }}>Giá/ngày</div>
+          <div style={{ width: "20%", textAlign: "center" }}>Giá/giờ</div>
+        </div>
+        {loading ? (
+          <div style={{ padding: 32, textAlign: "center" }}>
+            Đang tải dữ liệu...
+          </div>
+        ) : (
+          carList.map((motor, idx) => {
+            const mState = motors.find((m) => m.id === motor.id)!;
+            return (
               <div
+                key={motor.id}
+                className="dp_flex"
                 style={{
-                  width: 120,
-                  display: "flex",
                   alignItems: "center",
-                  gap: 4,
+                  gap: 0,
+                  borderBottom: "1px solid #f0f0f0",
+                  padding: "12px 0",
+                  fontSize: 15,
+                  minWidth: 600,
+                  background: idx % 2 === 0 ? "#fff" : "#fafbfc",
                 }}
               >
-                <input
-                  type="number"
-                  placeholder="0"
-                  value={mState.priceDay}
-                  onChange={(e) =>
-                    handleChangePrice(
-                      motor.id,
-                      "priceDay",
-                      Number(e.target.value)
-                    )
-                  }
+                <div style={{ width: 40, textAlign: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={mState?.checked || false}
+                    onChange={(e) => handleCheck(motor.id, e.target.checked)}
+                    style={{
+                      width: 18,
+                      height: 18,
+                      accentColor: "#222",
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>{motor.model}</div>
+                <div style={{ width: "20%" }}>{motor.licensePlate}</div>
+                <div
                   style={{
-                    width: 60,
-                    padding: "6px 8px",
-                    borderRadius: 6,
-                    border: "1px solid #e0e0e0",
-                    fontSize: 15,
-                    marginRight: 4,
-                    background: "#fff",
+                    width: "20%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    justifyContent: "center",
                   }}
-                />
-                <span style={{ fontSize: 14, color: "#888" }}>/ngày</span>
-              </div>
-              <div
-                style={{
-                  width: 120,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <input
-                  type="number"
-                  placeholder="0"
-                  value={mState.priceHour}
-                  onChange={(e) =>
-                    handleChangePrice(
-                      motor.id,
-                      "priceHour",
-                      Number(e.target.value)
-                    )
-                  }
+                >
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={mState?.priceDay || 0}
+                    onChange={(e) =>
+                      handleChangePrice(
+                        motor.id,
+                        "priceDay",
+                        Number(e.target.value)
+                      )
+                    }
+                    style={{
+                      width: 60,
+                      padding: "6px 8px",
+                      borderRadius: 6,
+                      border: "1px solid #e0e0e0",
+                      fontSize: 15,
+                      marginRight: 4,
+                      background: "#fff",
+                    }}
+                  />
+                  <span style={{ fontSize: 14, color: "#888" }}>/ngày</span>
+                </div>
+                <div
                   style={{
-                    width: 60,
-                    padding: "6px 8px",
-                    borderRadius: 6,
-                    border: "1px solid #e0e0e0",
-                    fontSize: 15,
-                    marginRight: 4,
-                    background: "#fff",
+                    width: "20%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    justifyContent: "center",
                   }}
-                />
-                <span style={{ fontSize: 14, color: "#888" }}>/giờ</span>
+                >
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={mState?.priceHour || 0}
+                    onChange={(e) =>
+                      handleChangePrice(
+                        motor.id,
+                        "priceHour",
+                        Number(e.target.value)
+                      )
+                    }
+                    style={{
+                      width: 60,
+                      padding: "6px 8px",
+                      borderRadius: 6,
+                      border: "1px solid #e0e0e0",
+                      fontSize: 15,
+                      marginRight: 4,
+                      background: "#fff",
+                    }}
+                  />
+                  <span style={{ fontSize: 14, color: "#888" }}>/giờ</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </TModal>
   );

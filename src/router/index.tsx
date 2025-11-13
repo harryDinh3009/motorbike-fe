@@ -1,25 +1,17 @@
-import React, { Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import {
-  BrowserRouter,
+  Navigate,
   Route,
   Routes,
   useLocation,
   useNavigate,
-  Outlet,
 } from "react-router-dom";
-import { routes } from "./router";
+import { routes, RouteType } from "./router";
+import { useTranslation } from "react-i18next";
+import { SCREEN } from "./screen";
+import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 
-type RouteType = {
-  path: string;
-  component: React.FC;
-  meta?: {
-    title?: string;
-    middleware?: Array<(context: any) => void>;
-  };
-  children?: RouteType[];
-};
-
-type MiddlewareContext = {
+export type MiddlewareContext = {
   from: string;
   to: string;
   next: (path?: string) => void;
@@ -37,7 +29,7 @@ const ScrollToTop: React.FC = () => {
 
 const applyMiddleware = (
   to: RouteType,
-  from: RouteType,
+  from: { path: string },
   navigate: (path: string) => void
 ) => {
   if (to.meta?.middleware) {
@@ -49,69 +41,75 @@ const applyMiddleware = (
       from: from.path,
       to: to.path,
       next: (path?: string) => {
-        if (path) navigate(path);
+        if (path) {
+          navigate(path);
+        }
       },
     };
 
     const runMiddleware = (index: number) => {
       if (index < middlewares.length) {
-        middlewares[index]({
-          ...context,
-          next: () => runMiddleware(index + 1),
-        });
+        middlewares[index](context);
       }
     };
 
     runMiddleware(0);
   }
 };
+
 const RouteWithMiddleware: React.FC<RouteType> = (route) => {
   const Component = route.component;
-  // Nếu có children, giả sử là layout, truyền children là <Outlet />
-  if (route.children && route.children.length > 0) {
-    return (
-      <Suspense>
-        {React.createElement(Component, undefined, <Outlet />)}
-      </Suspense>
-    );
-  }
-  // Nếu không phải layout, chỉ render component
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const from = { path: location.pathname };
+    applyMiddleware(route, from, navigate);
+    if (route.meta?.title) {
+      document.title = "Motogo";
+    }
+  }, [location.pathname, route.meta?.title, t]);
+
+  if (!Component) return null;
   return (
-    <Suspense>
-      {React.createElement(Component)}
+    <Suspense
+      fallback={
+        <>
+          <LoadingIndicator />
+        </>
+      }
+    >
+      <Component />
     </Suspense>
   );
 };
 
-// Đệ quy để render nested routes
-const renderRoutes = (routes: RouteType[]) => {
-  return routes.map((route, index) => {
-    if (route.children && route.children.length > 0) {
-      return (
-        <Route
-          key={index}
-          path={route.path}
-          element={<RouteWithMiddleware {...route} />}
-        >
-          {renderRoutes(route.children)}
-        </Route>
-      );
-    }
-    return (
-      <Route
-        key={index}
-        path={route.path}
-        element={<RouteWithMiddleware {...route} />}
-      />
-    );
-  });
+const renderRoutes = (route: RouteType): JSX.Element => {
+  return (
+    <Route
+      key={route.path}
+      path={route.path}
+      element={<RouteWithMiddleware {...route} />}
+    >
+      {route.children &&
+        route.children.length > 0 &&
+        route.children.map((child) => renderRoutes(child))}
+    </Route>
+  );
 };
+
 const AppRouter: React.FC = () => {
   return (
-    <BrowserRouter>
+    <>
+      {" "}
       <ScrollToTop />
-      <Routes>{renderRoutes(routes)}</Routes>
-    </BrowserRouter>
+      <Routes>
+        <Route element={<ScrollToTop />} />
+        {routes.map((route) => renderRoutes(route))}
+        <Route path="*" element={<Navigate to={SCREEN.login.path} replace />} />
+      </Routes>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "composite": true, // Enable project compilation
     "target": "ESNext", // Specify ECMAScript target version
     "module": "ESNext", // Specify module code generation
     "jsx": "react-jsx", // Use the new JSX transform

@@ -4,41 +4,57 @@ import InputBase from "@/component/common/input/InputBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
+import { Input, message } from "antd";
+import { UserMngSaveDTO, UserMngListDTO } from "@/service/business/userMng/userMng.type";
+import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
+import dayjs from "dayjs";
 
 const genderOptions = [
   { value: "", label: "Chọn giới tính" },
-  { value: "male", label: "Nam" },
-  { value: "female", label: "Nữ" },
-  { value: "other", label: "Khác" },
-];
-
-const branchOptions = [
-  { value: "", label: "Chi nhánh" },
-  { value: "center", label: "Chi nhánh trung tâm" },
-  { value: "dongda", label: "Chi nhánh Đống Đa" },
+  { value: "MALE", label: "Nam" },
+  { value: "FEMALE", label: "Nữ" },
+  { value: "OTHER", label: "Khác" },
 ];
 
 const roleOptions = [
   { value: "", label: "Vai trò" },
-  { value: "manager", label: "Quản lý" },
-  { value: "staff", label: "Nhân viên" },
+  { value: "ADMIN", label: "Quản trị viên" },
+  { value: "MANAGER", label: "Quản lý" },
+  { value: "STAFF", label: "Nhân viên" },
 ];
 
 const statusOptions = [
-  { value: true, label: "Đang làm" },
-  { value: false, label: "Nghỉ" },
+  { value: "ACTIVE", label: "Đang làm" },
+  { value: "INACTIVE", label: "Nghỉ" },
 ];
 
 interface Props {
   open: boolean;
-  employee?: any;
+  employee?: UserMngSaveDTO | UserMngListDTO | null;
   onClose: () => void;
   onSave: (employee: any) => void;
 }
 
+interface FormState {
+  id?: string;
+  username: string;
+  name: string;
+  phone: string;
+  email: string;
+  birthday: string;
+  gender: string;
+  address: string;
+  branch: string;
+  role: string;
+  status: string;
+  password?: string;
+}
+
 const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     id: undefined,
+    username: "",
     name: "",
     phone: "",
     email: "",
@@ -47,26 +63,56 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
     address: "",
     branch: "",
     role: "",
-    status: true,
+    status: "ACTIVE",
+    password: "",
   });
+  const [branchOptions, setBranchOptions] = useState<{ value: string; label: string }[]>([
+    { value: "", label: "Chi nhánh" },
+  ]);
+
+  // Load branches
+  useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const res = await getAllActiveBranches();
+        const branches = res.data || [];
+        setBranchOptions([
+          { value: "", label: "Chi nhánh" },
+          ...branches.map((b: BranchDTO) => ({
+            value: b.id,
+            label: b.name,
+          })),
+        ]);
+      } catch (err) {
+        console.error("Failed to load branches:", err);
+      }
+    };
+    if (open) {
+      loadBranches();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (employee) {
+      const emp = employee as any;
       setForm({
-        id: employee.id,
-        name: employee.name || "",
-        phone: employee.phone || "",
-        email: employee.email || "",
-        birthday: employee.birthday || "",
-        gender: employee.gender || "",
-        address: employee.address || "",
-        branch: branchOptions.find(b => b.label === employee.branch)?.value || "",
-        role: roleOptions.find(r => r.label === employee.role)?.value || "",
-        status: employee.status !== "inactive",
+        id: emp.id,
+        username: emp.username || emp.userName || "",
+        name: emp.fullName || emp.name || "",
+        phone: emp.phoneNumber || emp.phone || "",
+        email: emp.email || "",
+        birthday: emp.dateOfBirth ? dayjs(emp.dateOfBirth).format("YYYY-MM-DD") : "",
+        gender: emp.genderCd || emp.gender || "",
+        address: emp.address || "",
+        branch: emp.branchId || emp.branch || "",
+        role: emp.roleCd || emp.role || "",
+        status: emp.statusCd || "ACTIVE",
+        password: "",
       });
     } else {
       setForm({
         id: undefined,
+        username: "",
         name: "",
         phone: "",
         email: "",
@@ -75,9 +121,11 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
         address: "",
         branch: "",
         role: "",
-        status: true,
+        status: "ACTIVE",
+        password: "",
       });
     }
+    // eslint-disable-next-line
   }, [employee, open]);
 
   const handleChange = (key: string, value: any) => {
@@ -85,17 +133,65 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
   };
 
   const handleSubmit = () => {
+    // Validation
+    if (!form.username || !form.username.trim()) {
+      message.error("Vui lòng nhập tên đăng nhập!");
+      return;
+    }
+    if (!form.name || !form.name.trim()) {
+      message.error("Vui lòng nhập họ và tên!");
+      return;
+    }
+    if (!form.phone || !form.phone.trim()) {
+      message.error("Vui lòng nhập số điện thoại!");
+      return;
+    }
+    // Email is required when creating new user (backend requirement)
+    if (!form.id && (!form.email || !form.email.trim())) {
+      message.error("Vui lòng nhập email!");
+      return;
+    }
+    if (form.email && form.email.trim()) {
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email)) {
+        message.error("Email không hợp lệ!");
+        return;
+      }
+    }
+    if (!form.id && (!form.password || !form.password.trim())) {
+      message.error("Vui lòng nhập mật khẩu!");
+      return;
+    }
+    if (!form.id && form.password && form.password.length < 6) {
+      message.error("Mật khẩu phải có ít nhất 6 ký tự!");
+      return;
+    }
+    // Role is required when creating new user (backend requirement)
+    if (!form.id && !form.role) {
+      message.error("Vui lòng chọn vai trò!");
+      return;
+    }
+
     onSave({
-      ...form,
-      branch: branchOptions.find(b => b.value === form.branch)?.label || "",
-      role: roleOptions.find(r => r.value === form.role)?.label || "",
-      status: form.status ? "active" : "inactive",
+      id: form.id,
+      username: form.username.trim(),
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email?.trim() || "",
+      birthday: form.birthday || "",
+      gender: form.gender || "",
+      address: form.address || "",
+      branch: form.branch || "",
+      role: form.role || "",
+      status: form.status || "ACTIVE",
+      password: form.password || "",
     });
   };
 
   return (
     <TModal
-      title="Cập nhật nhân viên"
+      title={form.id ? "Cập nhật nhân viên" : "Thêm mới nhân viên"}
       visible={open}
       onCancel={onClose}
       width={600}
@@ -111,6 +207,15 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
         <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
             <InputBase
+              label="Tên đăng nhập"
+              placeholder="Nhập tên đăng nhập"
+              modelValue={form.username}
+              onChange={(val) => handleChange("username", val)}
+              required={true}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <InputBase
               label="Họ và tên"
               placeholder="Nhập họ và tên"
               modelValue={form.name}
@@ -118,6 +223,8 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
               required={true}
             />
           </div>
+        </div>
+        <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
             <InputBase
               label="Số điện thoại"
@@ -127,23 +234,39 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
               required={true}
             />
           </div>
+          <div style={{ flex: 1 }}>
+            <InputBase
+              label="Email"
+              placeholder="Nhập email"
+              modelValue={form.email}
+              onChange={(val) => handleChange("email", val)}
+              required={true}
+            />
+          </div>
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <InputBase
-            label="Email"
-            placeholder="Nhập email"
-            modelValue={form.email}
-            onChange={(val) => handleChange("email", val)}
-            required={true}
-          />
-        </div>
+        {!form.id && (
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Mật khẩu <span style={{ color: "red" }}>*</span>
+            </label>
+            <Input.Password
+              placeholder="Nhập mật khẩu"
+              value={form.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              required={true}
+              style={{ width: "100%" }}
+            />
+          </div>
+        )}
         <div className="dp_flex" style={{ gap: 16, marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+              Ngày sinh
+            </label>
             <DatePickerBase
-              label="Ngày sinh"
               placeholder="dd/mm/yyyy"
               value={form.birthday}
-              onChange={(val) => handleChange("birthday", val)}
+              onChange={(val) => handleChange("birthday", val || "")}
               style={{ width: "100%" }}
             />
           </div>
@@ -188,13 +311,14 @@ const ModalSaveEmployee = ({ open, employee, onClose, onSave }: Props) => {
             />
           </div>
         </div>
-        <div className="dp_flex" style={{ alignItems: "center", marginBottom: 24 }}>
-          <span style={{ minWidth: 90 }}>Trạng thái</span>
+        <div style={{ marginBottom: 16 }}>
           <SelectboxBase
+            label="Trạng thái"
+            placeholder="Chọn trạng thái"
             value={form.status}
             options={statusOptions}
-            style={{ minWidth: 140 }}
-            onChange={(val) => handleChange("status", val === "true" || val === true)}
+            onChange={(val) => handleChange("status", val)}
+            style={{ width: "100%" }}
           />
         </div>
       </div>
