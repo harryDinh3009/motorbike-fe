@@ -11,11 +11,16 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   getContractDetail,
   saveContract,
+  deleteContract, // thêm import này
 } from "@/service/business/contractMng/contractMng.service";
-import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
+import {
+  getAllActiveBranches,
+  getBranchByCurrentUser,
+} from "@/service/business/branchMng/branchMng.service";
 import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/surchargeTypeMng.service";
 import { getAllCustomers } from "@/service/business/customerMng/customerMng.service";
 import { ContractSaveDTO } from "@/service/business/contractMng/contractMng.type";
+import { message } from "antd"; // thêm import này
 
 const getPageTitle = (isEdit: boolean) =>
   isEdit ? "Cập nhật hợp đồng thuê xe" : "Tạo hợp đồng thuê xe";
@@ -317,7 +322,10 @@ const ContractCreateComponent = () => {
   });
 
   // Tổng tiền thuê xe theo công thức mới
-  const totalCar = carRentalList.reduce((sum, c) => sum + (c.rentalTotal || 0), 0);
+  const totalCar = carRentalList.reduce(
+    (sum, c) => sum + (c.rentalTotal || 0),
+    0
+  );
   // Tính tổng phụ phí
   const totalFee = feeList.reduce((sum, f) => sum + (f.amount || 0), 0);
   // Tính giảm giá
@@ -391,6 +399,19 @@ const ContractCreateComponent = () => {
       navigate("/contract");
     } catch (err) {
       alert("Lưu hợp đồng thất bại!");
+    }
+  };
+
+  // Hàm hủy hợp đồng (chỉ dùng khi chỉnh sửa)
+  const handleCancelContract = async () => {
+    if (!contractId) return;
+    if (!window.confirm("Bạn có chắc chắn muốn hủy hợp đồng này?")) return;
+    try {
+      await deleteContract(contractId);
+      message.success("Đã hủy hợp đồng!");
+      navigate("/contract");
+    } catch {
+      message.error("Hủy hợp đồng thất bại!");
     }
   };
 
@@ -1061,8 +1082,25 @@ const ContractCreateComponent = () => {
 
         <div
           className="dp_flex"
-          style={{ justifyContent: "flex-end", margin: "24px 0" }}
+          style={{ justifyContent: "flex-end", margin: "24px 0", gap: 12 }}
         >
+          {isEditMode && (
+            <ButtonBase
+              label="Hủy hợp đồng"
+              className="btn_lightgray"
+              style={{
+                minWidth: 140,
+                fontWeight: 600,
+                fontSize: 16,
+                borderRadius: 8,
+                padding: "10px 24px",
+                border: "1px solid #ff4d4f",
+                color: "#ff4d4f",
+                background: "#fff",
+              }}
+              onClick={handleCancelContract}
+            />
+          )}
           <ButtonBase
             label={isEditMode ? "Cập nhật hợp đồng" : "Lưu hợp đồng"}
             className="contract-action-btn"
