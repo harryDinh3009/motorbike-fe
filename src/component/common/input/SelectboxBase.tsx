@@ -17,7 +17,7 @@ interface Option {
 
 interface SelectboxBaseProps extends Omit<SelectProps, "onChange"> {
   id?: string;
-  label?: string;
+  label?: React.ReactNode;
   options: Option[];
   required?: boolean;
   multiSelect?: boolean;

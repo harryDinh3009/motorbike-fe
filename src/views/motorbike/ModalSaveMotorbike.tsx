@@ -282,7 +282,8 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
             >
               <div style={{ gridColumn: "span 2" }}>
                 <SelectboxBase
-                  label="Mẫu xe"
+                  id="model"
+                  label={<span>Mẫu xe <span style={{ color: 'red' }}>*</span></span>}
                   required
                   value={form.model}
                   options={modelOptions}
@@ -293,7 +294,8 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
               </div>
               <div>
                 <SelectboxBase
-                  label="Chi nhánh sở hữu"
+                  id="branch"
+                  label={<span>Chi nhánh sở hữu <span style={{ color: 'red' }}>*</span></span>}
                   required
                   value={form.branch}
                   options={branchOptions}
@@ -358,7 +360,8 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                 {" "}
                 <label>Biển số xe</label>
                 <InputBase
-                  label="Biển số xe"
+                  id="license"
+                  label={<span>Biển số xe <span style={{ color: 'red' }}>*</span></span>}
                   required
                   modelValue={form.license}
                   placeholder="Ví dụ: 34E-06869"
