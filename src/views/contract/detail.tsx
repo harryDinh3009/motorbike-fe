@@ -1002,11 +1002,21 @@ const ContractDetailComponent = () => {
                     marginBottom: 4,
                   }}
                 >
+                  <span>Giảm giá:</span>
+                  <span>{(contract.discountAmount || 0).toLocaleString()} đ</span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 4,
+                  }}
+                >
                   <span>
                     <b>Tổng tiền:</b>
                   </span>
                   <span>
-                    <b>{totalAll.toLocaleString()} đ</b>
+                    <b>{(totalAll - (contract.discountAmount || 0)).toLocaleString()} đ</b>
                   </span>
                 </div>
               </div>
