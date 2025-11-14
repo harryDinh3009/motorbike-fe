@@ -1032,7 +1032,7 @@ const ContractDetailComponent = () => {
                     {remain >= 0 ? "Phải thu khách:" : "Phải trả khách:"}
                   </span>
                   <span style={{ color: "#1677ff", fontWeight: 600 }}>
-                    {remain.toLocaleString()} đ
+                    {Math.abs(remain).toLocaleString()} đ
                   </span>
                 </div>
               </div>

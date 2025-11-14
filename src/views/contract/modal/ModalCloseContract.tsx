@@ -29,8 +29,10 @@ const ModalCloseContract = ({
   paymentMethods,
 }: Props) => {
   const [closeDate, setCloseDate] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   useEffect(() => {
     setCloseDate("");
+    setPaymentMethod("");
   }, [open, mustPay]);
 
   const remain = mustPay - paid;
@@ -39,6 +41,7 @@ const ModalCloseContract = ({
     onSubmit({
       paymentAmount: remain,
       closeDate,
+      paymentMethod: remain >= 0 ? paymentMethod : undefined,
     });
   };
 
@@ -111,7 +114,51 @@ const ModalCloseContract = ({
         </div>
       </div>
       <div style={{ borderTop: "1px solid #eee", margin: "16px 0" }} />
-      {/* BỎ phần sinh thanh toán, chỉ còn ngày đóng hợp đồng */}
+      {/* Chỉ hiện trường thanh toán nếu phải thu khách */}
+      {remain >= 0 && (
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontWeight: 500, marginBottom: 6 }}>
+              Khách thanh toán
+            </div>
+            <input
+              type="text"
+              value={remain.toLocaleString() + " đ"}
+              disabled
+              style={{
+                width: "100%",
+                border: "1px solid #eee",
+                borderRadius: 4,
+                padding: 8,
+                color: '#888',
+                background: '#f5f5f5',
+                fontWeight: 600,
+              }}
+            />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontWeight: 500, marginBottom: 6 }}>
+              Hình thức thanh toán
+            </div>
+            <select
+              value={paymentMethod}
+              onChange={e => setPaymentMethod(e.target.value)}
+              style={{
+                width: "100%",
+                border: "1px solid #eee",
+                borderRadius: 4,
+                padding: 8,
+              }}
+              required
+            >
+              <option value="">Chọn hình thức</option>
+              {paymentMethods.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
       <div style={{ marginBottom: 12 }}>
         <div style={{ fontWeight: 500, marginBottom: 6 }}>
           Ngày đóng hợp đồng
