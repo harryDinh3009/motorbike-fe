@@ -407,33 +407,38 @@ const ContractComponent = () => {
                   },
                   {
                     title: "Tổng tiền",
-                    dataIndex: "finalAmount",
                     key: "finalAmount",
                     width: "9%",
-                    render: (val: number) =>
-                      val != null && val !== undefined && val !== ""
-                        ? val.toLocaleString() + " đ"
-                        : "-",
+                    render: (_: any, record: any) => {
+                      const totalCar = (record.cars || []).reduce((sum, car) => sum + (car.totalAmount || 0), 0);
+                      const totalSurcharge = (record.surcharges || []).reduce((sum, s) => sum + (s.amount || 0), 0);
+                      const discount = record.discountAmount || 0;
+                      const total = totalCar + totalSurcharge - discount;
+                      return total.toLocaleString() + " đ";
+                    },
                   },
                   {
                     title: "Đã trả",
-                    dataIndex: "paidAmount",
                     key: "paidAmount",
                     width: "9%",
-                    render: (val: number) =>
-                      val != null && val !== undefined && val !== ""
-                        ? val.toLocaleString() + " đ"
-                        : "-",
+                    render: (_: any, record: any) => {
+                      const paid = record.paidAmount || 0;
+                      return paid.toLocaleString() + " đ";
+                    },
                   },
                   {
                     title: "Còn lại",
-                    dataIndex: "remainingAmount",
                     key: "remainingAmount",
                     width: "9%",
-                    render: (val: number) =>
-                      val != null && val !== undefined && val !== ""
-                        ? val.toLocaleString() + " đ"
-                        : "-",
+                    render: (_: any, record: any) => {
+                      const totalCar = (record.cars || []).reduce((sum, car) => sum + (car.totalAmount || 0), 0);
+                      const totalSurcharge = (record.surcharges || []).reduce((sum, s) => sum + (s.amount || 0), 0);
+                      const discount = record.discountAmount || 0;
+                      const total = totalCar + totalSurcharge - discount;
+                      const paid = record.paidAmount || 0;
+                      const remain = total - paid;
+                      return remain.toLocaleString() + " đ";
+                    },
                   },
                   {
                     title: "Trạng thái",
