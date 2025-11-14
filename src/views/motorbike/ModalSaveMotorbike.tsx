@@ -82,15 +82,8 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
     { value: "", label: "Trạng thái" },
   ]);
 
+  // Fetch static options on mount
   useEffect(() => {
-    // Lấy chi nhánh của user hiện tại
-    getBranchByCurrentUser().then((res) => {
-      if (res.data) {
-        setCurrentBranch({ value: res.data.id, label: res.data.name });
-        setForm((prev) => ({ ...prev, branch: res.data.id }));
-        setBranchOptions([{ value: res.data.id, label: res.data.name }]);
-      }
-    });
     getCarModels().then((res) => {
       setModelOptions([
         { value: "", label: "Mẫu xe" },
@@ -137,6 +130,19 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
       ]);
     });
   }, []);
+
+  // Always fetch current branch when modal opens
+  useEffect(() => {
+    if (open) {
+      getBranchByCurrentUser().then((res) => {
+        if (res.data) {
+          setCurrentBranch({ value: res.data.id, label: res.data.name });
+          setForm((prev) => ({ ...prev, branch: res.data.id }));
+          setBranchOptions([{ value: res.data.id, label: res.data.name }]);
+        }
+      });
+    }
+  }, [open]);
 
   // Reset form khi mở modal mới
   useEffect(() => {
