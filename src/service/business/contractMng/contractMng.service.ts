@@ -14,6 +14,8 @@ import {
   ContractReturnDTO,
   ContractCompleteDTO,
   UploadImageResponse,
+  ContractCarCreateDTO,
+  ContractCarUpdateDTO,
 } from "./contractMng.type";
 
 /**
@@ -86,6 +88,20 @@ export const addSurcharge = async (
 ): Promise<ApiResponse<boolean>> => {
   const res = await http.post<ApiResponse<boolean>>(
     "/a/contract-mng/surcharge/add",
+    data
+  );
+  return res.data;
+};
+
+/**
+ * Cập nhật phụ thu
+ */
+export const updateSurcharge = async (
+  id: string,
+  data: SurchargeSaveDTO
+): Promise<ApiResponse<boolean>> => {
+  const res = await http.put<ApiResponse<boolean>>(
+    `/a/contract-mng/surcharge/update/${id}`,
     data
   );
   return res.data;
@@ -257,6 +273,45 @@ export const getContractStatuses = async (): Promise<
 > => {
   const res = await http.get<ApiResponse<{ code: string; name: string }[]>>(
     "/a/contract-mng/contract-statuses"
+  );
+  return res.data;
+};
+
+/**
+ * Thêm xe vào hợp đồng
+ */
+export const addContractCar = async (
+  data: ContractCarCreateDTO
+): Promise<ApiResponse<ContractCarDTO>> => {
+  const res = await http.post<ApiResponse<ContractCarDTO>>(
+    "/a/contract-mng/cars",
+    data
+  );
+  return res.data;
+};
+
+/**
+ * Cập nhật xe trong hợp đồng
+ */
+export const updateContractCar = async (
+  id: string,
+  data: ContractCarUpdateDTO
+): Promise<ApiResponse<ContractCarDTO>> => {
+  const res = await http.put<ApiResponse<ContractCarDTO>>(
+    `/a/contract-mng/cars/${id}`,
+    data
+  );
+  return res.data;
+};
+
+/**
+ * Xóa xe khỏi hợp đồng
+ */
+export const deleteContractCar = async (
+  id: string
+): Promise<ApiResponse<boolean>> => {
+  const res = await http.delete<ApiResponse<boolean>>(
+    `/a/contract-mng/cars/${id}`
   );
   return res.data;
 };

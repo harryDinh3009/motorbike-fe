@@ -381,16 +381,7 @@ const ContractComponent = () => {
                     key: "startDate",
                     width: "8%",
                     render: (val: string) =>
-                      val
-                        ? new Date(val)
-                            .toLocaleString("vi-VN", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                        : "-",
+                      val ? val.replace("T", " ").substring(0, 16) : "-",
                   },
                   {
                     title: "Ngày trả",
@@ -398,16 +389,7 @@ const ContractComponent = () => {
                     key: "endDate",
                     width: "8%",
                     render: (val: string) =>
-                      val
-                        ? new Date(val)
-                            .toLocaleString("vi-VN", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                        : "-",
+                      val ? val.replace("T", " ").substring(0, 16) : "-",
                   },
                   {
                     title: "Chi nhánh thuê",
@@ -428,19 +410,74 @@ const ContractComponent = () => {
                     key: "finalAmount",
                     width: "9%",
                     render: (_: any, record: any) => {
-                      // Tính tổng tiền thuê xe
-                      const totalCar = (record.cars || []).reduce(
-                        (sum, car) => sum + (car.dailyPrice && car.hourlyPrice
-                          ? (car.totalAmount || 0)
-                          : (car.totalAmount || 0)), 0
+                      // Tính tổng tiền thuê xe giống detail
+                      const rentalStart = record.startDate;
+                      const rentalEnd = record.endDate;
+                      const carRentalList = (record.cars || []).map(
+                        (c: any) => {
+                          let total = 0;
+                          let ms = 0;
+                          let days = 0;
+                          let extraHours = 0;
+                          if (
+                            rentalStart &&
+                            rentalEnd &&
+                            (c.dailyPrice || c.hourlyPrice)
+                          ) {
+                            ms =
+                              new Date(rentalEnd).getTime() -
+                              new Date(rentalStart).getTime();
+                            if (ms > 0) {
+                              let totalHours = Math.ceil(ms / (1000 * 60 * 60));
+                              if (c.dailyPrice) {
+                                days = Math.floor(totalHours / 24);
+                                extraHours = totalHours % 24;
+                                if (days === 0) {
+                                  days = 1;
+                                  extraHours = 0;
+                                } else {
+                                  if (extraHours > 8) {
+                                    days += 1;
+                                    extraHours = 0;
+                                  }
+                                }
+                                const msMod = ms % (1000 * 60 * 60);
+                                if (
+                                  days > 0 &&
+                                  msMod > 0 &&
+                                  msMod <= 1000 * 60 * 30 &&
+                                  extraHours > 0
+                                ) {
+                                  extraHours -= 1;
+                                  if (extraHours < 0) extraHours = 0;
+                                }
+                                total =
+                                  (c.dailyPrice || 0) * days +
+                                  (c.hourlyPrice || 0) * extraHours;
+                              } else if (c.hourlyPrice) {
+                                total = (c.hourlyPrice || 0) * totalHours;
+                              }
+                            }
+                          }
+                          return total;
+                        }
                       );
-                      // Tổng phụ thu
-                      const totalSurcharge = (record.surcharges || []).reduce(
-                        (sum, s) => sum + (s.amount || 0), 0
+                      const totalCar = carRentalList.reduce(
+                        (sum: number, t: number) => sum + t,
+                        0
                       );
-                      // Giảm giá
+                      // Lấy đúng tổng phụ thu từ trường totalSurcharge nếu có, nếu không thì tính lại từ surcharges
+                      let totalSurcharge = 0;
+                      if (typeof record.totalSurcharge === "number") {
+                        totalSurcharge = record.totalSurcharge;
+                      } else if (Array.isArray(record.surcharges)) {
+                        totalSurcharge = record.surcharges.reduce(
+                          (sum: number, s: any) => sum + (s.amount || 0),
+                          0
+                        );
+                      }
                       const discount = record.discountAmount || 0;
-                      // Tổng tiền
+                      // Tổng tiền = Tiền thuê xe + Tiền phụ thu - Giảm giá
                       const total = totalCar + totalSurcharge - discount;
                       return total.toLocaleString() + " đ";
                     },
@@ -452,9 +489,13 @@ const ContractComponent = () => {
                     render: (_: any, record: any) => {
                       // Tổng các lần thanh toán (nếu có)
                       let paid = 0;
-                      if (Array.isArray(record.paymentTransactions) && record.paymentTransactions.length > 0) {
-                        paid = record.paymentTransactions.reduce(
-                          (sum: number, p: any) => sum + (p.amount || 0), 0
+                      if (
+                        Array.isArray(record.payments) &&
+                        record.payments.length > 0
+                      ) {
+                        paid = record.payments.reduce(
+                          (sum: number, p: any) => sum + (p.amount || 0),
+                          0
                         );
                       } else {
                         paid = record.paidAmount || 0;
@@ -467,21 +508,82 @@ const ContractComponent = () => {
                     key: "remainingAmount",
                     width: "9%",
                     render: (_: any, record: any) => {
-                      // Tính lại giống detail
-                      const totalCar = (record.cars || []).reduce(
-                        (sum, car) => sum + (car.dailyPrice && car.hourlyPrice
-                          ? (car.totalAmount || 0)
-                          : (car.totalAmount || 0)), 0
+                      // Tính lại giống detail: Còn lại = Tổng tiền - Đã trả
+                      const rentalStart = record.startDate;
+                      const rentalEnd = record.endDate;
+                      const carRentalList = (record.cars || []).map(
+                        (c: any) => {
+                          let total = 0;
+                          let ms = 0;
+                          let days = 0;
+                          let extraHours = 0;
+                          if (
+                            rentalStart &&
+                            rentalEnd &&
+                            (c.dailyPrice || c.hourlyPrice)
+                          ) {
+                            ms =
+                              new Date(rentalEnd).getTime() -
+                              new Date(rentalStart).getTime();
+                            if (ms > 0) {
+                              let totalHours = Math.ceil(ms / (1000 * 60 * 60));
+                              if (c.dailyPrice) {
+                                days = Math.floor(totalHours / 24);
+                                extraHours = totalHours % 24;
+                                if (days === 0) {
+                                  days = 1;
+                                  extraHours = 0;
+                                } else {
+                                  if (extraHours > 8) {
+                                    days += 1;
+                                    extraHours = 0;
+                                  }
+                                }
+                                const msMod = ms % (1000 * 60 * 60);
+                                if (
+                                  days > 0 &&
+                                  msMod > 0 &&
+                                  msMod <= 1000 * 60 * 30 &&
+                                  extraHours > 0
+                                ) {
+                                  extraHours -= 1;
+                                  if (extraHours < 0) extraHours = 0;
+                                }
+                                total =
+                                  (c.dailyPrice || 0) * days +
+                                  (c.hourlyPrice || 0) * extraHours;
+                              } else if (c.hourlyPrice) {
+                                total = (c.hourlyPrice || 0) * totalHours;
+                              }
+                            }
+                          }
+                          return total;
+                        }
                       );
-                      const totalSurcharge = (record.surcharges || []).reduce(
-                        (sum, s) => sum + (s.amount || 0), 0
+                      const totalCar = carRentalList.reduce(
+                        (sum: number, t: number) => sum + t,
+                        0
                       );
+                      // Lấy đúng tổng phụ thu từ trường totalSurcharge nếu có, nếu không thì tính lại từ surcharges
+                      let totalSurcharge = 0;
+                      if (typeof record.totalSurcharge === "number") {
+                        totalSurcharge = record.totalSurcharge;
+                      } else if (Array.isArray(record.surcharges)) {
+                        totalSurcharge = record.surcharges.reduce(
+                          (sum: number, s: any) => sum + (s.amount || 0),
+                          0
+                        );
+                      }
                       const discount = record.discountAmount || 0;
                       const total = totalCar + totalSurcharge - discount;
                       let paid = 0;
-                      if (Array.isArray(record.paymentTransactions) && record.paymentTransactions.length > 0) {
-                        paid = record.paymentTransactions.reduce(
-                          (sum: number, p: any) => sum + (p.amount || 0), 0
+                      if (
+                        Array.isArray(record.payments) &&
+                        record.payments.length > 0
+                      ) {
+                        paid = record.payments.reduce(
+                          (sum: number, p: any) => sum + (p.amount || 0),
+                          0
                         );
                       } else {
                         paid = record.paidAmount || 0;

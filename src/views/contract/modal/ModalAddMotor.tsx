@@ -92,6 +92,8 @@ const ModalAddMotor = ({
           startOdometer: info?.currentOdometer ?? null, // Thêm dòng này
         };
       });
+      console.log(selected);
+      
     onAdd(selected);
   };
 

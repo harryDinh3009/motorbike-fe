@@ -224,3 +224,24 @@ export interface UploadImageResponse {
   imageUrls: string[];
   message: string;
 }
+
+export interface ContractCarCreateDTO {
+  contractId: string;
+  carId: string;
+  dailyPrice?: number;
+  hourlyPrice?: number;
+  totalAmount: number;
+  startOdometer?: number;
+  endOdometer?: number;
+  notes?: string;
+}
+
+export interface ContractCarUpdateDTO {
+  carId: string;
+  dailyPrice?: number;
+  hourlyPrice?: number;
+  totalAmount?: number;
+  startOdometer?: number;
+  endOdometer?: number;
+  notes?: string;
+}

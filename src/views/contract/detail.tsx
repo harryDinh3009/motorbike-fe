@@ -1143,6 +1143,7 @@ const ContractDetailComponent = () => {
           onSave={handlePickupSave}
           cars={(contract.cars || []).map((c) => ({
             id: c.id,
+            carId: c.carId,
             type: c.carType,
             model: c.carModel,
             licensePlate: c.licensePlate,

@@ -7,6 +7,7 @@ import { getCarStatuses } from "@/service/business/carMng/carMng.service";
 
 interface CarReceiveItem {
   id: string;
+  carId: string;
   type: string;
   model: string;
   licensePlate: string;
@@ -55,6 +56,8 @@ Props) => {
   >([{ value: "", label: "Chọn trạng thái" }]);
 
   const [odoError, setOdoError] = useState<string | null>(null);
+  console.log(carStates);
+  
 
   useEffect(() => {
     setStaff(defaultStaff);
@@ -86,7 +89,7 @@ Props) => {
     value: any
   ) => {
     console.log(value);
-    
+
     setCarStates((prev) =>
       prev.map((item, i) => (i === idx ? { ...item, [key]: value } : item))
     );
@@ -94,16 +97,16 @@ Props) => {
 
   const handleSave = () => {
     const missingOdoIdx = carStates.findIndex(
-      (c) => c.odometer === "" || c.odometer === null || isNaN(Number(c.odometer))
+      (c) =>
+        c.odometer === "" || c.odometer === null || isNaN(Number(c.odometer))
     );
     if (missingOdoIdx !== -1) {
       setOdoError(`Vui lòng nhập Odo cho xe số ${missingOdoIdx + 1}`);
       return;
     }
     setOdoError(null);
-    const carsPayload = carStates.map((c) => ({
-      id: c.id,
-      carId: c.id,
+    const carsPayload = carStates.map((c, idx) => ({
+      id: c.carId,
       endOdometer: Number(c.odometer),
       status: c.status,
     }));
