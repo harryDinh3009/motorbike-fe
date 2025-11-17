@@ -12,7 +12,6 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   getContractDetail,
   saveContract,
-  deleteContract,
   addContractCar,
   updateContractCar,
   deleteContractCar,
@@ -230,6 +229,7 @@ const ContractCreateComponent = () => {
           (c.cars || []).map((car) => ({
             id: car.carId,
             carId: car.carId,
+            contractCarId: car.id,
             type: car.carType,
             name: car.carModel,
             plate: car.licensePlate,
@@ -261,12 +261,11 @@ const ContractCreateComponent = () => {
     // eslint-disable-next-line
   }, [contractId]);
 
-  // Xóa xe thuê (nếu là hợp đồng đã có trên server)
   const handleRemoveCar = async (idx: number) => {
     const car = carList[idx];
-    if (isEditMode && car.id) {
+    if (isEditMode && car.contractCarId) {
       try {
-        await deleteContractCar(car.id);
+        await deleteContractCar(car.contractCarId);
         setCarList(carList.filter((_, i) => i !== idx));
         message.success("Đã xóa xe khỏi hợp đồng!");
       } catch {

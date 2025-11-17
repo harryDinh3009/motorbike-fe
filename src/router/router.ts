@@ -74,6 +74,11 @@ export const routes: RouteType[] = [
         name: SCREEN.motorbike.name,
         component: getView("motorbike/index"),
       },
+      {
+        path: SCREEN.motorbikeModel.path,
+        name: SCREEN.motorbikeModel.name,
+        component: getView("motorbikeModel/index"),
+      },
     ],
   },
   {

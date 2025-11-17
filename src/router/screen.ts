@@ -35,6 +35,10 @@ export const SCREEN = {
     path: "/motorbike",
     name: "Motorbike",
   },
+  motorbikeModel: {
+    path: "/motorbike-model",
+    name: "MotorbikeModel",
+  },
   branch: {
     path: "/branch",
     name: "Branch",

@@ -231,10 +231,7 @@ const ContractDetailComponent = () => {
   const totalAll = totalCar + totalSurcharge;
   // Còn lại (đã sửa công thức: trừ thêm giảm giá)
   const remain =
-    totalCar +
-    totalSurcharge -
-    (contract.discountAmount || 0) -
-    totalPaid;
+    totalCar + totalSurcharge - (contract.discountAmount || 0) - totalPaid;
 
   // Status icon
   const statusIcon =
@@ -689,7 +686,6 @@ const ContractDetailComponent = () => {
                       <tr>
                         <td style={{ color: "#888" }}>Ngày đặt</td>
                         <td>
-                          {/* Sử dụng createdDate nếu có, nếu không thì để trống */}
                           {contract.createdDate
                             ? contract.createdDate
                                 .replace("T", " ")

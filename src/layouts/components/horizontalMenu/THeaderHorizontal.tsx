@@ -72,19 +72,25 @@ const THeaderHorizontal = () => {
     },
     {
       name: "Quản lý xe",
-      path: SCREEN.motorbike?.path || "#",
-      subMenus: [],
+      path: "#",
+      subMenus: [
+        {
+          name: "Danh sách mẫu xe",
+          path: SCREEN.motorbikeModel?.path || "#",
+          subMenus: [],
+        },
+        {
+          name: "Danh sách xe",
+          path: SCREEN.motorbike?.path || "#",
+          subMenus: [],
+        },
+      ],
     },
     {
       name: "Hợp đồng thuê xe",
       path: SCREEN.contractMng.path,
       subMenus: [],
     },
-    // {
-    //   name: "Quản lý phụ thu",
-    //   path: SCREEN.surcharge?.path || "#",
-    //   subMenus: [],
-    // },
     {
       name: "Chi nhánh",
       path: SCREEN.branch?.path || "#",
@@ -141,10 +147,30 @@ const THeaderHorizontal = () => {
                 title={branchName}
               >
                 {/* Icon chi nhánh */}
-                <span style={{ marginRight: 6, color: "#FFD600", verticalAlign: "middle", display: "inline-flex", alignItems: "center" }}>
+                <span
+                  style={{
+                    marginRight: 6,
+                    color: "#FFD600",
+                    verticalAlign: "middle",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                    <rect x="3" y="7" width="14" height="9" rx="2" stroke="#FFD600" strokeWidth="1.5" />
-                    <path d="M7 7V5a3 3 0 0 1 6 0v2" stroke="#FFD600" strokeWidth="1.5" />
+                    <rect
+                      x="3"
+                      y="7"
+                      width="14"
+                      height="9"
+                      rx="2"
+                      stroke="#FFD600"
+                      strokeWidth="1.5"
+                    />
+                    <path
+                      d="M7 7V5a3 3 0 0 1 6 0v2"
+                      stroke="#FFD600"
+                      strokeWidth="1.5"
+                    />
                   </svg>
                 </span>
                 {branchName}
@@ -200,13 +226,18 @@ const THeaderHorizontal = () => {
                   <ul className="gnb_2depth">
                     {subMenu1.subMenus?.map((subMenu2, indexMenu2) => (
                       <li key={indexMenu2}>
-                        <a href="#">{subMenu2.name}</a>
+                        <Link to={subMenu2.path}>{subMenu2.name}</Link>
                         <ul
                           className={`gnb_3depth ${!indexMenu2 ? "first" : ""}`}
                         >
                           {subMenu2.subMenus?.map((subMenu3, indexMenu3) => (
                             <li key={indexMenu3}>
-                              <a href="#">{subMenu3.name}</a>
+                              {/* Nếu có subMenu3, dùng Link, nếu không có path thì không render */}
+                              {subMenu3.path ? (
+                                <Link to={subMenu3.path}>{subMenu3.name}</Link>
+                              ) : (
+                                subMenu3.name
+                              )}
                             </li>
                           ))}
                         </ul>
