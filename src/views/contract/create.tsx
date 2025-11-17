@@ -100,7 +100,8 @@ function calcRentalInfo(
     }
     // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
     const msMod = ms % (1000 * 60 * 60);
-    if (days > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
+    // Sửa: chỉ trừ 1 giờ nếu msMod > 0 (tức là có phút lẻ), tránh trừ ở các mức tròn giờ
+    if (days > 0 && msMod > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
       extraHours -= 1;
       if (extraHours < 0) extraHours = 0;
     }

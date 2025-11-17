@@ -381,7 +381,16 @@ const ContractComponent = () => {
                     key: "startDate",
                     width: "8%",
                     render: (val: string) =>
-                      val ? new Date(val).toLocaleDateString() : "-",
+                      val
+                        ? new Date(val)
+                            .toLocaleString("vi-VN", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                        : "-",
                   },
                   {
                     title: "Ngày trả",
@@ -389,7 +398,16 @@ const ContractComponent = () => {
                     key: "endDate",
                     width: "8%",
                     render: (val: string) =>
-                      val ? new Date(val).toLocaleDateString() : "-",
+                      val
+                        ? new Date(val)
+                            .toLocaleString("vi-VN", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                        : "-",
                   },
                   {
                     title: "Chi nhánh thuê",
@@ -410,9 +428,19 @@ const ContractComponent = () => {
                     key: "finalAmount",
                     width: "9%",
                     render: (_: any, record: any) => {
-                      const totalCar = (record.cars || []).reduce((sum, car) => sum + (car.totalAmount || 0), 0);
-                      const totalSurcharge = (record.surcharges || []).reduce((sum, s) => sum + (s.amount || 0), 0);
+                      // Tính tổng tiền thuê xe
+                      const totalCar = (record.cars || []).reduce(
+                        (sum, car) => sum + (car.dailyPrice && car.hourlyPrice
+                          ? (car.totalAmount || 0)
+                          : (car.totalAmount || 0)), 0
+                      );
+                      // Tổng phụ thu
+                      const totalSurcharge = (record.surcharges || []).reduce(
+                        (sum, s) => sum + (s.amount || 0), 0
+                      );
+                      // Giảm giá
                       const discount = record.discountAmount || 0;
+                      // Tổng tiền
                       const total = totalCar + totalSurcharge - discount;
                       return total.toLocaleString() + " đ";
                     },
@@ -422,7 +450,15 @@ const ContractComponent = () => {
                     key: "paidAmount",
                     width: "9%",
                     render: (_: any, record: any) => {
-                      const paid = record.paidAmount || 0;
+                      // Tổng các lần thanh toán (nếu có)
+                      let paid = 0;
+                      if (Array.isArray(record.paymentTransactions) && record.paymentTransactions.length > 0) {
+                        paid = record.paymentTransactions.reduce(
+                          (sum: number, p: any) => sum + (p.amount || 0), 0
+                        );
+                      } else {
+                        paid = record.paidAmount || 0;
+                      }
                       return paid.toLocaleString() + " đ";
                     },
                   },
@@ -431,11 +467,25 @@ const ContractComponent = () => {
                     key: "remainingAmount",
                     width: "9%",
                     render: (_: any, record: any) => {
-                      const totalCar = (record.cars || []).reduce((sum, car) => sum + (car.totalAmount || 0), 0);
-                      const totalSurcharge = (record.surcharges || []).reduce((sum, s) => sum + (s.amount || 0), 0);
+                      // Tính lại giống detail
+                      const totalCar = (record.cars || []).reduce(
+                        (sum, car) => sum + (car.dailyPrice && car.hourlyPrice
+                          ? (car.totalAmount || 0)
+                          : (car.totalAmount || 0)), 0
+                      );
+                      const totalSurcharge = (record.surcharges || []).reduce(
+                        (sum, s) => sum + (s.amount || 0), 0
+                      );
                       const discount = record.discountAmount || 0;
                       const total = totalCar + totalSurcharge - discount;
-                      const paid = record.paidAmount || 0;
+                      let paid = 0;
+                      if (Array.isArray(record.paymentTransactions) && record.paymentTransactions.length > 0) {
+                        paid = record.paymentTransactions.reduce(
+                          (sum: number, p: any) => sum + (p.amount || 0), 0
+                        );
+                      } else {
+                        paid = record.paidAmount || 0;
+                      }
                       const remain = total - paid;
                       return remain.toLocaleString() + " đ";
                     },
