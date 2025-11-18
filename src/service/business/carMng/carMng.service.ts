@@ -171,3 +171,23 @@ export const exportCarExcel = async (params: CarSearchDTO): Promise<Blob> => {
   });
   return res.data;
 };
+
+/**
+ * Export báo cáo xe khả dụng cho thuê (PDF)
+ */
+export interface AvailableCarReportRequestDTO {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+  modelName?: string;
+  carType?: string;
+}
+
+export const exportAvailableCarsReport = async (
+  params: AvailableCarReportRequestDTO
+): Promise<Blob> => {
+  const res = await http.post("/a/car-mng/report/available-cars", params, {
+    responseType: "blob",
+  });
+  return res.data;
+};

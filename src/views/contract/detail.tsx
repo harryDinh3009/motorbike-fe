@@ -27,7 +27,9 @@ import {
   getContractStatuses,
   deleteContract,
   downloadContractPDF,
+  exportContractReceipt,
 } from "@/service/business/contractMng/contractMng.service";
+
 import {
   ContractDTO,
   SurchargeDTO,
@@ -150,6 +152,30 @@ const ContractDetailComponent = () => {
 
   // State cho chi nhánh hiện tại của user
   const [currentBranchId, setCurrentBranchId] = useState<string>("");
+
+  // Export biên nhận trả xe
+  const handleExportReceipt = async () => {
+    if (!contract?.id) return;
+    try {
+      setLoading(true);
+      const blob = await exportContractReceipt({ contractId: contract.id });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bien-nhan-hop-dong-${
+        contract.contractCode || contract.id
+      }.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setLoading(false);
+      message.success("Xuất biên nhận trả xe thành công!");
+    } catch {
+      setLoading(false);
+      message.error("Xuất biên nhận trả xe thất bại!");
+    }
+  };
 
   // Hàm reload lại dữ liệu hợp đồng
   const reloadData = async () => {
@@ -542,6 +568,9 @@ const ContractDetailComponent = () => {
               <Menu>
                 <Menu.Item key="print" onClick={handlePrintContract}>
                   In hợp đồng
+                </Menu.Item>
+                <Menu.Item key="export_receipt" onClick={handleExportReceipt}>
+                  In biên nhận
                 </Menu.Item>
                 {/* Hủy hợp đồng: chỉ user thuộc chi nhánh thuê hoặc trả */}
                 <Menu.Item

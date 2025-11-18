@@ -55,4 +55,12 @@ export const SCREEN = {
     path: "/surcharge",
     name: "Surcharge",
   },
+  carAvailableReport: {
+    path: "/car-available-report",
+    name: "carAvailableReport",
+  },
+  revenueReport: {
+    path: "/revenue-report",
+    name: "revenueReport",
+  },
 };

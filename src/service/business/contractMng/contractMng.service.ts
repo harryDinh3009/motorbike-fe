@@ -244,9 +244,7 @@ export const completeContract = async (
 /**
  * Tải xuống file PDF hợp đồng
  */
-export const downloadContractPDF = async (
-  id: string
-): Promise<Blob> => {
+export const downloadContractPDF = async (id: string): Promise<Blob> => {
   const res = await http.get(`/a/contract-mng/download-pdf/${id}`, {
     responseType: "blob",
   });
@@ -313,5 +311,41 @@ export const deleteContractCar = async (
   const res = await http.delete<ApiResponse<boolean>>(
     `/a/contract-mng/cars/${id}`
   );
+  return res.data;
+};
+/**
+ * Export báo cáo doanh thu theo tháng (PDF)
+ */
+export interface MonthlyRevenueReportRequestDTO {
+  year: number;
+  branchId?: string;
+}
+
+export const exportMonthlyRevenueReport = async (
+  params: MonthlyRevenueReportRequestDTO
+): Promise<Blob> => {
+  const res = await http.post(
+    "/a/contract-mng/revenue/monthly-report",
+    params,
+    {
+      responseType: "blob",
+    }
+  );
+  return res.data;
+};
+
+/**
+ * Export biên nhận trả xe (PDF)
+ */
+export interface ContractReceiptRequestDTO {
+  contractId: string;
+}
+
+export const exportContractReceipt = async (
+  params: ContractReceiptRequestDTO
+): Promise<Blob> => {
+  const res = await http.post("/a/contract-mng/receipt/export", params, {
+    responseType: "blob",
+  });
   return res.data;
 };
