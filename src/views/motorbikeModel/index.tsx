@@ -20,6 +20,8 @@ const CarModelList = () => {
   } = useCarModelList();
   const [showModal, setShowModal] = useState(false);
   const [editingModel, setEditingModel] = useState<CarModelDTO | null>(null);
+  // Thêm state để xác định modal ở chế độ xem chi tiết hay chỉnh sửa/thêm
+  const [viewOnly, setViewOnly] = useState(false);
 
   // Filter state (bỏ brand)
   const [filter, setFilter] = useState({
@@ -108,6 +110,7 @@ const CarModelList = () => {
                 }}
                 onClick={() => {
                   setEditingModel(null);
+                  setViewOnly(false);
                   setShowModal(true);
                 }}
               />
@@ -131,7 +134,22 @@ const CarModelList = () => {
                   title: "Tên mẫu xe",
                   dataIndex: "name",
                   key: "name",
-                  render: (val: string) => val || "-",
+                  render: (val: string, record: CarModelDTO) => (
+                    <span
+                      style={{
+                        color: "#1677ff",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                      onClick={() => {
+                        setEditingModel(record);
+                        setViewOnly(true);
+                        setShowModal(true);
+                      }}
+                    >
+                      {val || "-"}
+                    </span>
+                  ),
                 },
                 {
                   title: "Mô tả",
@@ -151,6 +169,7 @@ const CarModelList = () => {
                         className="btn_gray"
                         onClick={() => {
                           setEditingModel(record);
+                          setViewOnly(false);
                           setShowModal(true);
                         }}
                         title="Sửa"
@@ -186,9 +205,11 @@ const CarModelList = () => {
           onClose={() => {
             setShowModal(false);
             setEditingModel(null);
+            setViewOnly(false);
           }}
           model={editingModel}
           onSave={handleSaved}
+          viewOnly={viewOnly}
         />
       </div>
     </div>

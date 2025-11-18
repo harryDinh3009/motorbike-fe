@@ -13,9 +13,10 @@ interface Props {
   onClose: () => void;
   onSave: (data: CarModelSaveDTO) => void;
   model?: CarModelDTO | null;
+  viewOnly?: boolean;
 }
 
-const ModalSaveCarModel = ({ open, onClose, onSave, model }: Props) => {
+const ModalSaveCarModel = ({ open, onClose, onSave, model, viewOnly }: Props) => {
   const [form, setForm] = useState<CarModelSaveDTO>({
     name: "",
     description: "",
@@ -26,7 +27,7 @@ const ModalSaveCarModel = ({ open, onClose, onSave, model }: Props) => {
     if (model) {
       setForm({
         name: model.name || "",
-        description: model.description || "",
+        description: model.description ?? "", // fix: always set description, even if empty string
         active: model.active ?? true,
       });
     } else {
@@ -50,7 +51,13 @@ const ModalSaveCarModel = ({ open, onClose, onSave, model }: Props) => {
     <TModal
       visible={open}
       onCancel={onClose}
-      title={model ? "Cập nhật mẫu xe" : "Thêm mẫu xe"}
+      title={
+        viewOnly
+          ? "Chi tiết mẫu xe"
+          : model
+          ? "Cập nhật mẫu xe"
+          : "Thêm mẫu xe"
+      }
       width={480}
       centered
       footer={
@@ -58,12 +65,18 @@ const ModalSaveCarModel = ({ open, onClose, onSave, model }: Props) => {
           className="dp_flex"
           style={{ justifyContent: "flex-end", gap: 12 }}
         >
-          <ButtonBase label="Hủy" className="btn_lightgray" onClick={onClose} />
           <ButtonBase
-            label={model ? "Lưu" : "Thêm mới"}
-            className="btn_yellow"
-            onClick={handleSubmit}
+            label={viewOnly ? "Đóng" : "Hủy"}
+            className="btn_lightgray"
+            onClick={onClose}
           />
+          {!viewOnly && (
+            <ButtonBase
+              label={model ? "Lưu" : "Thêm mới"}
+              className="btn_yellow"
+              onClick={handleSubmit}
+            />
+          )}
         </div>
       }
     >
@@ -80,15 +93,29 @@ const ModalSaveCarModel = ({ open, onClose, onSave, model }: Props) => {
             placeholder="Nhập tên mẫu xe"
             onChange={(val) => handleChange("name", val)}
             style={{ width: "100%" }}
+            disabled={!!viewOnly}
           />
           <TextAreaBase
             label="Mô tả"
             placeholder="Nhập mô tả"
-            defaultValue={form.description}
+            value={form.description}
             onChange={(val) => handleChange("description", val)}
             rows={3}
             style={{ width: "100%" }}
+            disabled={!!viewOnly}
           />
+          {viewOnly && (
+            <div>
+              <b>Trạng thái:</b>{" "}
+              {model?.active ? (
+                <span style={{ color: "#52c41a", fontWeight: 500 }}>
+                  Đang sử dụng
+                </span>
+              ) : (
+                <span style={{ color: "#aaa" }}>Ngừng</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </TModal>
