@@ -27,6 +27,7 @@ import {
   PrinterOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import { formatDateDMY } from "@/utils/common";
 
 const ContractComponent = () => {
   const pageTitle = "Quản lý hợp đồng";
@@ -243,6 +244,9 @@ const ContractComponent = () => {
                 value={startDateFrom}
                 placeholder="Chọn ngày thuê"
                 style={{ minWidth: 140 }}
+                picker="date" // chỉ chọn ngày, không chọn giờ phút
+                showTime={false}
+                dateOnly={true}
                 onChange={(val) => setStartDateFrom(val)}
               />
               {/* Chọn ngày thuê đến */}
@@ -251,6 +255,9 @@ const ContractComponent = () => {
                 value={startDateTo}
                 placeholder="Chọn ngày trả"
                 style={{ minWidth: 140 }}
+                picker="date" // chỉ chọn ngày, không chọn giờ phút
+                showTime={false}
+                dateOnly={true}
                 onChange={(val) => setStartDateTo(val)}
               />
               <SelectboxBase
@@ -380,16 +387,14 @@ const ContractComponent = () => {
                     dataIndex: "startDate",
                     key: "startDate",
                     width: "8%",
-                    render: (val: string) =>
-                      val ? val.replace("T", " ").substring(0, 16) : "-",
+                    render: (val: string) => formatDateDMY(val),
                   },
                   {
                     title: "Ngày trả",
                     dataIndex: "endDate",
                     key: "endDate",
                     width: "8%",
-                    render: (val: string) =>
-                      val ? val.replace("T", " ").substring(0, 16) : "-",
+                    render: (val: string) => formatDateDMY(val),
                   },
                   {
                     title: "Chi nhánh thuê",
@@ -597,11 +602,52 @@ const ContractComponent = () => {
                     dataIndex: "statusNm",
                     key: "statusNm",
                     width: "8%",
-                    render: (val: string) => (
-                      <span className={`contract-status ${val}`}>
-                        {val || "-"}
-                      </span>
-                    ),
+                    render: (val: string, record: any) => {
+                      // Map status code to color and label
+                      // You may need to adjust status code if available in record.status
+                      let color = "default";
+                      let label = val || "-";
+                      switch (label) {
+                        case "Đã xác nhận":
+                          color = "#FFD600"; // yellow
+                          break;
+                        case "Đã giao xe":
+                          color = "#345fceff"; // blue
+                          break;
+                        case "Đã trả xe":
+                          color = "#ea0963ff"; // magenta
+                          break;
+                        case "Hoàn thành":
+                          color = "#26d02eff"; // green background
+                          break;
+                        case "Đã hủy":
+                          color = "#f33232ff"; // red
+                          break;
+                        default:
+                          color = "#E0E0E0"; // gray
+                      }
+                      // Use Ant Design Tag or fallback to styled span
+                      return (
+                        <span
+                          className="contract-status"
+                          style={{
+                            background:
+                              label === "Hoàn thành" ? color : undefined,
+                            color: label === "Hoàn thành" ? "#222" : "#fff",
+                            borderRadius: 6,
+                            padding: "2px 12px",
+                            fontWeight: 600,
+                            fontSize: 14,
+                            display: "inline-block",
+                            backgroundColor:
+                              label !== "Hoàn thành" ? color : undefined,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {label}
+                        </span>
+                      );
+                    },
                   },
                   {
                     title: "Thao tác",

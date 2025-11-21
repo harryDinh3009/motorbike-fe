@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import InputBase from "@/component/common/input/InputBase";
@@ -34,7 +35,43 @@ import { CarSearchDTO, CarDTO } from "@/service/business/carMng/carMng.type";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 import TModal from "@/component/common/modal/TModal";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+// Status color mapping for motorbike status
+const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
+  "Hoạt động": { bg: "#D6F5E6", color: "#22A06B" },
+  "Đang bảo dưỡng": { bg: "#E6E8EA", color: "#6B7280" },
+  "Không sẵn sàng": { bg: "#FFE066", color: "#B38600" },
+  "Bị mất": { bg: "#FFD6D6", color: "#E14D4D" },
+};
 
+function getStatusStyle(status: string): React.CSSProperties {
+  const s = STATUS_COLOR_MAP[status?.trim() || ""];
+  if (s) {
+    return {
+      background: s.bg,
+      color: s.color,
+      borderRadius: "16px",
+      padding: "2px 16px",
+      fontWeight: 500,
+      fontSize: 14,
+      display: "inline-block",
+      minWidth: "100px",
+      textAlign: "center" as const,
+      margin: "2px 0",
+    };
+  }
+  return {
+    background: "#f5f5f5",
+    color: "#333",
+    borderRadius: "8px",
+    padding: "2px 12px",
+    fontWeight: 500,
+    fontSize: 14,
+    display: "inline-block",
+    minWidth: "100px",
+    textAlign: "center" as const,
+    margin: "2px 0",
+  };
+}
 const MotorbikeList = () => {
   const [filter, setFilter] = useState<any>({
     keyword: "",
@@ -131,7 +168,7 @@ const MotorbikeList = () => {
       };
       const res = await searchCars(cleanParams);
       setMotorbikes(res.data.data);
-      setTotal(res.data.totalRecords || res.data.totalElements || 0);
+      setTotal(res.data.totalElements || 0);
     } finally {
       setLoading(false);
     }
@@ -143,7 +180,7 @@ const MotorbikeList = () => {
 
   // Table pagination
   const handleTableChange = (page: number, pageSize: number) => {
-    setFilter((prev) => ({
+    setFilter((prev: typeof filter) => ({
       ...prev,
       page,
       size: pageSize,
@@ -283,7 +320,13 @@ const MotorbikeList = () => {
           >
             <div
               className="dp_flex"
-              style={{ gap: 16, alignItems: "center", flexWrap: "wrap" }}
+              style={{
+                gap: 16,
+                alignItems: "center",
+                flexWrap: "wrap",
+                position: "relative",
+                minHeight: 80,
+              }}
             >
               <InputBase
                 modelValue={filter.keyword}
@@ -341,6 +384,21 @@ const MotorbikeList = () => {
                     page: 1,
                   })
                 }
+              />
+              <ButtonBase
+                label="Thêm xe"
+                className="btn_primary"
+                icon={<PlusOutlined />}
+                style={{
+                  minWidth: 140,
+                  position: "absolute",
+                  right: 0,
+                  bottom: -50,
+                }}
+                onClick={() => {
+                  setEditMotorbike(null);
+                  setShowModal(true);
+                }}
               />
             </div>
             <div
@@ -411,22 +469,7 @@ const MotorbikeList = () => {
         </ContainerBase>
         <ContainerBase>
           <div className="box_section" style={{ position: "relative" }}>
-            <ButtonBase
-              label="Thêm xe"
-              className="btn_primary"
-              icon={<PlusOutlined />}
-              style={{
-                minWidth: 140,
-                position: "absolute",
-                top: 16,
-                right: 16,
-                zIndex: 2,
-              }}
-              onClick={() => {
-                setEditMotorbike(null);
-                setShowModal(true);
-              }}
-            />
+            {/* Đã chuyển nút Thêm xe lên filter */}
             <TableBase
               data={motorbikes}
               columns={[
@@ -491,17 +534,9 @@ const MotorbikeList = () => {
                   width: 120,
                   render: (_: string, record: any) => (
                     <span
-                      style={{
-                        borderRadius: 8,
-                        padding: "2px 12px",
-                        fontWeight: 500,
-                        fontSize: 14,
-                        display: "inline-block",
-                        minWidth: 100,
-                        textAlign: "center",
-                        background: "#f5f5f5",
-                        color: "#333",
-                      }}
+                      style={getStatusStyle(
+                        (record.statusNm || record.status || "") + ""
+                      )}
                     >
                       {record.statusNm || record.status || "-"}
                     </span>
@@ -720,17 +755,10 @@ const MotorbikeList = () => {
               <div>
                 <b>Trạng thái:</b>{" "}
                 <span
-                  style={{
-                    borderRadius: 8,
-                    padding: "2px 12px",
-                    fontWeight: 500,
-                    fontSize: 14,
-                    display: "inline-block",
-                    minWidth: 100,
-                    textAlign: "center",
-                    background: "#f5f5f5",
-                    color: "#333",
-                  }}
+                  style={getStatusStyle(
+                    (detailMotorbike.statusNm || detailMotorbike.status || "") +
+                      ""
+                  )}
                 >
                   {detailMotorbike.statusNm || detailMotorbike.status}
                 </span>

@@ -1,3 +1,4 @@
+import { formatDateDMY } from "@/utils/common";
 import React, { useEffect, useState } from "react";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
@@ -27,9 +28,7 @@ import {
   getContractStatuses,
   deleteContract,
   downloadContractPDF,
-  exportContractReceipt,
 } from "@/service/business/contractMng/contractMng.service";
-
 import {
   ContractDTO,
   SurchargeDTO,
@@ -152,30 +151,6 @@ const ContractDetailComponent = () => {
 
   // State cho chi nhánh hiện tại của user
   const [currentBranchId, setCurrentBranchId] = useState<string>("");
-
-  // Export biên nhận trả xe
-  const handleExportReceipt = async () => {
-    if (!contract?.id) return;
-    try {
-      setLoading(true);
-      const blob = await exportContractReceipt({ contractId: contract.id });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `bien-nhan-hop-dong-${
-        contract.contractCode || contract.id
-      }.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      setLoading(false);
-      message.success("Xuất biên nhận trả xe thành công!");
-    } catch {
-      setLoading(false);
-      message.error("Xuất biên nhận trả xe thất bại!");
-    }
-  };
 
   // Hàm reload lại dữ liệu hợp đồng
   const reloadData = async () => {
@@ -569,9 +544,6 @@ const ContractDetailComponent = () => {
                 <Menu.Item key="print" onClick={handlePrintContract}>
                   In hợp đồng
                 </Menu.Item>
-                <Menu.Item key="export_receipt" onClick={handleExportReceipt}>
-                  In biên nhận
-                </Menu.Item>
                 {/* Hủy hợp đồng: chỉ user thuộc chi nhánh thuê hoặc trả */}
                 <Menu.Item
                   key="cancel"
@@ -657,13 +629,7 @@ const ContractDetailComponent = () => {
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ngày thuê</td>
-                        <td>
-                          {contract.startDate
-                            ? contract.startDate
-                                .replace("T", " ")
-                                .substring(0, 16)
-                            : ""}
-                        </td>
+                        <td>{formatDateDMY(contract.startDate)}</td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Chi nhánh thuê</td>
@@ -714,23 +680,11 @@ const ContractDetailComponent = () => {
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ngày đặt</td>
-                        <td>
-                          {contract.createdDate
-                            ? contract.createdDate
-                                .replace("T", " ")
-                                .substring(0, 16)
-                            : ""}
-                        </td>
+                        <td>{formatDateDMY(contract.createdDate)}</td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ngày trả</td>
-                        <td>
-                          {contract.endDate
-                            ? contract.endDate
-                                .replace("T", " ")
-                                .substring(0, 16)
-                            : ""}
-                        </td>
+                        <td>{formatDateDMY(contract.endDate)}</td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Chi nhánh trả</td>
@@ -1137,8 +1091,7 @@ const ContractDetailComponent = () => {
                   title: "Ngày thanh toán",
                   dataIndex: "paymentDate",
                   key: "paymentDate",
-                  render: (val: string) =>
-                    val ? new Date(val).toLocaleString() : "",
+                  render: (val: string) => formatDateDMY(val),
                 },
                 {
                   title: "Nhân viên",
