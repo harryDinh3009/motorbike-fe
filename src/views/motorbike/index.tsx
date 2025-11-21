@@ -58,6 +58,7 @@ function getStatusStyle(status: string): React.CSSProperties {
       minWidth: "100px",
       textAlign: "center" as const,
       margin: "2px 0",
+      whiteSpace: "nowrap" as const,
     };
   }
   return {
@@ -169,7 +170,7 @@ const MotorbikeList = () => {
       };
       const res = await searchCars(cleanParams);
       setMotorbikes(res.data.data);
-      setTotal(res.data.totalElements || 0);
+      setTotal(res.data.totalRecords);
     } finally {
       setLoading(false);
     }
@@ -575,7 +576,7 @@ const MotorbikeList = () => {
                 },
               ]}
               pageSize={filter.size || 10}
-              totalPages={Math.ceil(total / (filter.size || 10))}
+              totalPages={total}
               onPageChange={handleTableChange}
             />
           </div>

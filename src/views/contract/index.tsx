@@ -85,7 +85,7 @@ const ContractComponent = () => {
       const res = await searchContracts(cleanParams);
       // Lấy phân trang từ API
       setContracts(res.data.data);
-      setTotal(res.data.totalPages);
+      setTotal(res.data.totalRecords);
     } finally {
       setLoading(false);
     }
@@ -611,44 +611,33 @@ const ContractComponent = () => {
                     key: "statusNm",
                     width: "8%",
                     render: (val: string, record: any) => {
-                      // Map status code to color and label
-                      // You may need to adjust status code if available in record.status
-                      let color = "default";
-                      let label = val || "-";
-                      switch (label) {
-                        case "Đã xác nhận":
-                          color = "#FFD600"; // yellow
-                          break;
-                        case "Đã giao xe":
-                          color = "#345fceff"; // blue
-                          break;
-                        case "Đã trả xe":
-                          color = "#ea0963ff"; // magenta
-                          break;
-                        case "Hoàn thành":
-                          color = "#26d02eff"; // green background
-                          break;
-                        case "Đã hủy":
-                          color = "#f33232ff"; // red
-                          break;
-                        default:
-                          color = "#E0E0E0"; // gray
-                      }
-                      // Use Ant Design Tag or fallback to styled span
+                      // Status color mapping
+                      const STATUS_COLOR_MAP: Record<
+                        string,
+                        { bg: string; color: string }
+                      > = {
+                        "Đã xác nhận": { bg: "#FFD600", color: "#222" }, // yellow
+                        "Đã giao xe": { bg: "#345FCE", color: "#fff" }, // blue
+                        "Đã trả xe": { bg: "#EA0963", color: "#fff" }, // magenta
+                        "Hoàn thành": { bg: "#26D02E", color: "#fff" }, // green
+                        "Đã hủy": { bg: "#F33232", color: "#fff" }, // red
+                      };
+                      const label = val || "-";
+                      const colorObj = STATUS_COLOR_MAP[label] || {
+                        bg: "#E0E0E0",
+                        color: "#222",
+                      };
                       return (
                         <span
                           className="contract-status"
                           style={{
-                            background:
-                              label === "Hoàn thành" ? color : undefined,
-                            color: label === "Hoàn thành" ? "#222" : "#fff",
+                            background: colorObj.bg,
+                            color: colorObj.color,
                             borderRadius: 6,
                             padding: "2px 12px",
                             fontWeight: 600,
                             fontSize: 14,
                             display: "inline-block",
-                            backgroundColor:
-                              label !== "Hoàn thành" ? color : undefined,
                             whiteSpace: "nowrap",
                           }}
                         >

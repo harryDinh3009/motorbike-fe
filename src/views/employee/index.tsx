@@ -101,7 +101,7 @@ const EmployeeList = () => {
       const apiData = res.data as any;
 
       setEmployees(apiData.data || []);
-      setTotal(apiData.totalPages || 0);
+      setTotal(apiData.totalRecords || 0);
     } catch (err: any) {
       const errorMsg =
         err?.response?.data?.message || "Không thể tải danh sách nhân viên";

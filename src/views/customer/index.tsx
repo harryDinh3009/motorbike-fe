@@ -48,7 +48,7 @@ const CustomerList = () => {
       const apiData = res.data as any;
 
       setCustomers(apiData.data || []);
-      setTotal(apiData.totalPages || 0);
+      setTotal(apiData.totalRecords || 0);
     } catch (err: any) {
       setError("Không thể tải danh sách khách hàng");
     } finally {

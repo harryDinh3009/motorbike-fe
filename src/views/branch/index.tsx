@@ -66,7 +66,7 @@ const BranchList = () => {
 
       setBranches(apiData.data || []);
 
-      setTotal(apiData.totalPages || 0);
+      setTotal(apiData.totalRecords || 0);
     } catch (err: any) {
       setError("Không thể tải danh sách chi nhánh");
     } finally {
