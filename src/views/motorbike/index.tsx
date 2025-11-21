@@ -13,6 +13,7 @@ import {
   PlusOutlined,
   FileExcelOutlined,
   ImportOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import ModalSaveMotorbike from "./ModalSaveMotorbike";
 import {
@@ -564,7 +565,7 @@ const MotorbikeList = () => {
                       />
                       <ButtonBase
                         label=""
-                        icon={<HomeOutlined />}
+                        icon={<EyeOutlined />}
                         className="btn_gray"
                         onClick={() => handleViewDetail(record.id)}
                         title="Xem chi tiết"
