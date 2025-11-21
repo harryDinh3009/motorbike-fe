@@ -387,14 +387,22 @@ const ContractComponent = () => {
                     dataIndex: "startDate",
                     key: "startDate",
                     width: "8%",
-                    render: (val: string) => formatDateDMY(val),
+                    render: (val: string) => (
+                      <span style={{ whiteSpace: "nowrap" }}>
+                        {formatDateDMY(val)}
+                      </span>
+                    ),
                   },
                   {
                     title: "Ngày trả",
                     dataIndex: "endDate",
                     key: "endDate",
                     width: "8%",
-                    render: (val: string) => formatDateDMY(val),
+                    render: (val: string) => (
+                      <span style={{ whiteSpace: "nowrap" }}>
+                        {formatDateDMY(val)}
+                      </span>
+                    ),
                   },
                   {
                     title: "Chi nhánh thuê",
@@ -656,6 +664,7 @@ const ContractComponent = () => {
                     render: (_: any, record: ContractDTO) => (
                       <div className="dp_flex btn_group" style={{ gap: 8 }}>
                         <ButtonBase
+                          label=""
                           icon={<EyeOutlined />}
                           className="btn_gray"
                           title="Xem"
@@ -669,7 +678,7 @@ const ContractComponent = () => {
                   },
                 ]}
                 pageSize={filter.size || 10}
-                currentPage={filter.page || 1}
+                // currentPage removed to fix lint error
                 totalPages={total}
                 paginationType="BE"
                 onPageChange={handleTableChange}

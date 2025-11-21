@@ -29,21 +29,24 @@ const CarAvailableReport: React.FC = () => {
   useEffect(() => {
     // Fetch branches
     getAllActiveBranches().then((res) => {
-      setBranchOptions(
-        (res.data || []).map((b: any) => ({ label: b.name, value: b.id }))
-      );
+      setBranchOptions([
+        { label: "Tất cả", value: "" },
+        ...(res.data || []).map((b: any) => ({ label: b.name, value: b.id })),
+      ]);
     });
     // Fetch car types
     getCarTypes().then((res) => {
-      setCarTypeOptions(
-        (res.data || []).map((t: string) => ({ label: t, value: t }))
-      );
+      setCarTypeOptions([
+        { label: "Tất cả", value: "" },
+        ...(res.data || []).map((t: string) => ({ label: t, value: t })),
+      ]);
     });
     // Fetch car models
     getCarModels().then((res) => {
-      setModelOptions(
-        (res.data || []).map((m: string) => ({ label: m, value: m }))
-      );
+      setModelOptions([
+        { label: "Tất cả", value: "" },
+        ...(res.data || []).map((m: string) => ({ label: m, value: m })),
+      ]);
     });
   }, []);
 
@@ -91,56 +94,53 @@ const CarAvailableReport: React.FC = () => {
             style={{ maxWidth: 600, margin: "0 auto" }}
           >
             <div style={{ display: "flex", gap: 16 }}>
-              <Form.Item
-                label="Chi nhánh"
-                name="branchId"
-                style={{ flex: 1 }}
-                rules={[{ required: true, message: "Vui lòng chọn chi nhánh" }]}
-              >
+              <Form.Item label="Chi nhánh" name="branchId" style={{ flex: 1 }}>
                 <Select
                   options={branchOptions}
                   allowClear
-                  placeholder="Chọn chi nhánh"
+                  placeholder="Tất cả"
                   showSearch
+                  defaultValue=""
                 />
               </Form.Item>
               <Form.Item
                 label="Tên mẫu xe"
                 name="modelName"
                 style={{ flex: 1 }}
-                rules={[{ required: true, message: "Vui lòng chọn mẫu xe" }]}
               >
                 <Select
                   options={modelOptions}
                   allowClear
-                  placeholder="Chọn mẫu xe"
+                  placeholder="Tất cả"
                   showSearch
+                  defaultValue=""
                 />
               </Form.Item>
             </div>
             <div style={{ display: "flex", gap: 16 }}>
-              <Form.Item
-                label="Loại xe"
-                name="carType"
-                style={{ flex: 1 }}
-                rules={[{ required: true, message: "Vui lòng chọn loại xe" }]}
-              >
+              <Form.Item label="Loại xe" name="carType" style={{ flex: 1 }}>
                 <Select
                   options={carTypeOptions}
                   allowClear
-                  placeholder="Chọn loại xe"
+                  placeholder="Tất cả"
                   showSearch
+                  defaultValue=""
                 />
               </Form.Item>
               <Form.Item
-                label="Khoảng ngày"
+                label="Thời gian thuê"
                 name="dateRange"
                 style={{ flex: 1 }}
                 rules={[
-                  { required: true, message: "Vui lòng chọn khoảng ngày" },
+                  { required: true, message: "Vui lòng chọn thời gian thuê" },
                 ]}
               >
-                <RangePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
+                <RangePicker
+                  format="YYYY-MM-DD HH:mm"
+                  style={{ width: "100%" }}
+                  showTime={{ format: "HH:mm" }}
+                  placeholder={["Từ ngày giờ", "Đến ngày giờ"]}
+                />
               </Form.Item>
             </div>
             <div
