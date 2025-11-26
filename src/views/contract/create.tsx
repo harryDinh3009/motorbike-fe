@@ -85,40 +85,46 @@ function calcRentalInfo(
     return { days: 0, extraHours: 0, total: 0, durationText: "" };
   const ms = new Date(end).getTime() - new Date(start).getTime();
   if (ms <= 0) return { days: 0, extraHours: 0, total: 0, durationText: "" };
-  let totalHours = Math.ceil(ms / (1000 * 60 * 60));
+  // Tính số giờ lẻ chính xác
+  let totalHours = Math.floor(ms / (1000 * 60 * 60));
+  const leftoverMinutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  if (leftoverMinutes > 0) {
+    totalHours += 1;
+  }
   let days = 0;
   let extraHours = 0;
   let total = 0;
   let durationText = "";
 
   if (dailyPrice) {
-    days = Math.floor(totalHours / 24);
-    extraHours = totalHours % 24;
-    // Nếu chỉ thuê vài tiếng trong ngày đầu tiên, vẫn tính là 1 ngày
-    if (days === 0) {
-      days = 1;
-      extraHours = 0;
+    if (totalHours < 24) {
+      // Nếu chưa đủ 1 ngày thì chỉ tính số giờ
+      days = 0;
+      extraHours = totalHours;
+      total = (hourlyPrice || 0) * extraHours;
+      durationText = `${extraHours} giờ`;
     } else {
+      days = Math.floor(totalHours / 24);
+      extraHours = totalHours % 24;
       // Nếu giờ phát sinh > 8h thì làm tròn thành 1 ngày
       if (extraHours > 8) {
         days += 1;
         extraHours = 0;
       }
-    }
-    // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
-    const msMod = ms % (1000 * 60 * 60);
-    // Sửa: chỉ trừ 1 giờ nếu msMod > 0 (tức là có phút lẻ), tránh trừ ở các mức tròn giờ
-    if (days > 0 && msMod > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
-      extraHours -= 1;
-      if (extraHours < 0) extraHours = 0;
-    }
-    total = dailyPrice * days + (hourlyPrice || 0) * extraHours;
-    if (days > 0 && extraHours > 0) {
-      durationText = `${days} ngày ${extraHours} giờ`;
-    } else if (days > 0) {
-      durationText = `${days} ngày`;
-    } else {
-      durationText = `${extraHours} giờ`;
+      // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
+      const msMod = ms % (1000 * 60 * 60);
+      if (days > 0 && msMod > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
+        extraHours -= 1;
+        if (extraHours < 0) extraHours = 0;
+      }
+      total = dailyPrice * days + (hourlyPrice || 0) * extraHours;
+      if (days > 0 && extraHours > 0) {
+        durationText = `${days} ngày ${extraHours} giờ`;
+      } else if (days > 0) {
+        durationText = `${days} ngày`;
+      } else {
+        durationText = `${extraHours} giờ`;
+      }
     }
   } else if (hourlyPrice) {
     // Nếu chỉ có giá giờ
@@ -523,13 +529,13 @@ const ContractCreateComponent = () => {
       notes: form.note,
       discountType: form.discountType as any,
       discountValue: Number(form.discountValue) || 0,
-      cars: carList.map((car) => ({
+      cars: carRentalList.map((car) => ({
         carId: car.carId || car.id || "",
         dailyPrice: car.priceDay,
         hourlyPrice: car.priceHour,
-        totalAmount: car.total,
+        totalAmount: car.rentalTotal, // Đã tính chuẩn cả giờ lẻ
         notes: "",
-        startOdometer: car.startOdometer ?? null, // Thêm dòng này
+        startOdometer: car.startOdometer ?? null,
       })),
       surcharges: feeList.map((fee) => ({
         description: fee.desc,
@@ -545,11 +551,7 @@ const ContractCreateComponent = () => {
     };
     try {
       const res = await saveContract(contractPayload);
-      const newId =
-        (res &&
-          res.data &&
-          null) ||
-        contractId;
+      const newId = res.data.id;
       alert(isEditMode ? "Đã cập nhật hợp đồng!" : "Đã lưu hợp đồng!");
       if (newId) {
         navigate(`/contract/detail/${newId}`);

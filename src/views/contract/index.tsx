@@ -46,6 +46,10 @@ const ContractComponent = () => {
     status: "",
     page: 1,
     size: 10,
+    startDateFrom: null,
+    startDateTo: null,
+    endDateFrom: null,
+    endDateTo: null,
   };
   const [filter, setFilter] = useState<ContractSearchDTO>(defaultFilter);
   const [loading, setLoading] = useState(false);
@@ -63,9 +67,11 @@ const ContractComponent = () => {
     { value: "", label: "Trạng thái" },
   ]);
 
-  // Thêm state cho ngày thuê
+  // Thêm state cho ngày thuê và ngày trả
   const [startDateFrom, setStartDateFrom] = useState<string | null>(null);
   const [startDateTo, setStartDateTo] = useState<string | null>(null);
+  const [endDateFrom, setEndDateFrom] = useState<string | null>(null);
+  const [endDateTo, setEndDateTo] = useState<string | null>(null);
 
   // Fetch contract list
   const fetchContracts = async (params: ContractSearchDTO) => {
@@ -81,6 +87,8 @@ const ContractComponent = () => {
         status: params.status === "" ? null : params.status,
         startDateFrom: params.startDateFrom ?? null,
         startDateTo: params.startDateTo ?? null,
+        endDateFrom: params.endDateFrom ?? null,
+        endDateTo: params.endDateTo ?? null,
       };
       const res = await searchContracts(cleanParams);
       // Lấy phân trang từ API
@@ -127,10 +135,12 @@ const ContractComponent = () => {
       ...prev,
       startDateFrom: startDateFrom || null,
       startDateTo: startDateTo || null,
+      endDateFrom: endDateFrom || null,
+      endDateTo: endDateTo || null,
       page: 1,
     }));
     // eslint-disable-next-line
-  }, [startDateFrom, startDateTo]);
+  }, [startDateFrom, startDateTo, endDateFrom, endDateTo]);
 
   // Table pagination
   const handleTableChange = (page: number, pageSize: number) => {
@@ -153,6 +163,8 @@ const ContractComponent = () => {
         source: filter.source ? filter.source : null,
         startDateFrom: filter.startDateFrom ? filter.startDateFrom : null,
         startDateTo: filter.startDateTo ? filter.startDateTo : null,
+        endDateFrom: filter.endDateFrom ? filter.endDateFrom : null,
+        endDateTo: filter.endDateTo ? filter.endDateTo : null,
         pickupBranchId: filter.pickupBranchId ? filter.pickupBranchId : null,
         returnBranchId: filter.returnBranchId ? filter.returnBranchId : null,
         page: filter.page || 1,
@@ -208,6 +220,8 @@ const ContractComponent = () => {
     setFilter(defaultFilter);
     setStartDateFrom(null);
     setStartDateTo(null);
+    setEndDateFrom(null);
+    setEndDateTo(null);
   };
 
   return (
@@ -240,25 +254,47 @@ const ContractComponent = () => {
               />
               {/* Chọn ngày thuê từ */}
               <DatePickerBase
-                label="Chọn ngày thuê"
+                label="Ngày thuê từ"
                 value={startDateFrom}
-                placeholder="Chọn ngày thuê"
+                placeholder="Ngày thuê từ"
                 style={{ minWidth: 140 }}
-                picker="date" // chỉ chọn ngày, không chọn giờ phút
+                picker="date"
                 showTime={false}
                 dateOnly={true}
                 onChange={(val) => setStartDateFrom(val)}
               />
               {/* Chọn ngày thuê đến */}
               <DatePickerBase
-                label="Chọn ngày trả"
+                label="Ngày thuê đến"
                 value={startDateTo}
-                placeholder="Chọn ngày trả"
+                placeholder="Ngày thuê đến"
                 style={{ minWidth: 140 }}
-                picker="date" // chỉ chọn ngày, không chọn giờ phút
+                picker="date"
                 showTime={false}
                 dateOnly={true}
                 onChange={(val) => setStartDateTo(val)}
+              />
+              {/* Chọn ngày trả từ */}
+              <DatePickerBase
+                label="Ngày trả từ"
+                value={endDateFrom}
+                placeholder="Ngày trả từ"
+                style={{ minWidth: 140 }}
+                picker="date"
+                showTime={false}
+                dateOnly={true}
+                onChange={(val) => setEndDateFrom(val)}
+              />
+              {/* Chọn ngày trả đến */}
+              <DatePickerBase
+                label="Ngày trả đến"
+                value={endDateTo}
+                placeholder="Ngày trả đến"
+                style={{ minWidth: 140 }}
+                picker="date"
+                showTime={false}
+                dateOnly={true}
+                onChange={(val) => setEndDateTo(val)}
               />
               <SelectboxBase
                 value={filter.pickupBranchId}
@@ -342,7 +378,25 @@ const ContractComponent = () => {
                     dataIndex: "contractCode",
                     key: "contractCode",
                     width: "7%",
-                    render: (val: string) => val || "-",
+                    render: (val: string, record: ContractDTO) =>
+                      val ? (
+                        <a
+                          href="#"
+                          style={{
+                            color: "#1677ff",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/contract/detail/${record.id}`);
+                          }}
+                        >
+                          {val}
+                        </a>
+                      ) : (
+                        "-"
+                      ),
                   },
                   {
                     title: "Nguồn",

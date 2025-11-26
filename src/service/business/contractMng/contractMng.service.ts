@@ -48,8 +48,8 @@ export const getContractDetail = async (
  */
 export const saveContract = async (
   data: ContractSaveDTO
-): Promise<ApiResponse<boolean>> => {
-  const res = await http.post<ApiResponse<boolean>>(
+): Promise<ApiResponse<ContractDTO>> => {
+  const res = await http.post<ApiResponse<ContractDTO>>(
     "/a/contract-mng/save",
     data
   );

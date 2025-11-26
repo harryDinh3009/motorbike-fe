@@ -1,7 +1,9 @@
 export interface ContractSearchDTO {
   keyword?: string;
-  startDateFrom?: string; // ISO string
-  startDateTo?: string; // ISO string
+  startDateFrom?: Date; // ISO string
+  startDateTo?: Date; // ISO string
+  endDateFrom?: Date; // ISO string
+  endDateTo?: Date; // ISO string
   pickupBranchId?: string;
   returnBranchId?: string;
   status?: string;
