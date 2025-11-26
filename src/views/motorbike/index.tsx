@@ -36,6 +36,7 @@ import { CarSearchDTO, CarDTO } from "@/service/business/carMng/carMng.type";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 import TModal from "@/component/common/modal/TModal";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+import { useAlert } from "@/plugins/global";
 // Status color mapping for motorbike status
 const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
   "Hoạt động": { bg: "#D6F5E6", color: "#22A06B" },
@@ -248,7 +249,7 @@ const MotorbikeList = () => {
       setLoading(false);
     }
   };
-
+  const { alert } = useAlert() || {};
   // Xử lý xóa xe
   const handleDelete = async (id: string) => {
     setLoading(true);
@@ -257,6 +258,8 @@ const MotorbikeList = () => {
       try {
         await deleteCar(id);
         fetchMotorbikes(filter);
+      } catch (err: any) {
+        alert(err?.response?.data?.message || "Xóa xe thất bại. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }

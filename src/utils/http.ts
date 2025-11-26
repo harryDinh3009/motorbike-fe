@@ -62,6 +62,8 @@ class Http {
           case 403:
             history.push(SCREEN.login.path);
             break;
+          case 400:
+            throw error;
           default:
             break;
         }

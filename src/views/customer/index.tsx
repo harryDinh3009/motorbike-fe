@@ -23,6 +23,7 @@ import {
 } from "@/service/business/customerMng/customerMng.type";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import dayjs from "dayjs";
+import { useAlert } from "@/plugins/global";
 
 const CustomerList = () => {
   const [filter, setFilter] = useState("");
@@ -34,7 +35,7 @@ const CustomerList = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
-
+  const { alert } = useAlert() || {};
   const fetchCustomers = async () => {
     setLoading(true);
     setError(null);
@@ -82,8 +83,12 @@ const CustomerList = () => {
     try {
       await apiDeleteCustomer(customerId);
       fetchCustomers();
-    } catch (err) {
-      setError("Xóa khách hàng thất bại");
+    } catch (err: any) {
+      if (alert) {
+        alert(err?.response?.data?.message);
+      } else {
+        setError(err?.response?.data?.message || "Xóa khách hàng thất bại");
+      }
     } finally {
       setLoading(false);
     }
@@ -102,8 +107,10 @@ const CustomerList = () => {
         country: customer.country,
         address: customer.address,
         citizenId: customer.cccd || customer.citizenId,
-        citizenIdFrontImageUrl: customer.cccdFrontImg || customer.citizenIdFrontImageUrl,
-        citizenIdBackImageUrl: customer.cccdBackImg || customer.citizenIdBackImageUrl,
+        citizenIdFrontImageUrl:
+          customer.cccdFrontImg || customer.citizenIdFrontImageUrl,
+        citizenIdBackImageUrl:
+          customer.cccdBackImg || customer.citizenIdBackImageUrl,
         driverLicense: customer.license || customer.driverLicense,
         driverLicenseImageUrl:
           customer.licenseImg || customer.driverLicenseImageUrl,

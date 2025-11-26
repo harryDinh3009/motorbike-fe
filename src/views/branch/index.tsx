@@ -23,6 +23,8 @@ import {
   BranchSaveDTO,
 } from "@/service/business/branchMng/branchMng.type";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
+import { useAlert } from "@/plugins/global";
 
 const statusOptions = [
   { value: "", label: "Trạng thái" },
@@ -91,14 +93,14 @@ const BranchList = () => {
       setLoading(false);
     }
   };
-
+  const { alert } = useAlert() || {};
   const handleDelete = async (branchId: string) => {
     setLoading(true);
     try {
       await apiDeleteBranch(branchId);
       fetchBranches();
-    } catch (err) {
-      setError("Xóa chi nhánh thất bại");
+    } catch (err: any) {
+      alert(err?.response?.data?.message);
     } finally {
       setLoading(false);
     }

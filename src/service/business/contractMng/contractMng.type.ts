@@ -120,6 +120,9 @@ export interface ContractDTO {
   email?: string;
   country?: string;
   citizenId?: string;
+  customerAddress?: string;
+  customerDateOfBirth?: string; // ISO string
+  citizenIdIssuedDate?: string; // ISO string
   totalContracts?: number;
 
   // Contract Info
@@ -135,6 +138,7 @@ export interface ContractDTO {
   needPickupDelivery?: boolean;
   needReturnDelivery?: boolean;
   notes?: string;
+  createdDate?: string;
 
   // Financial Info
   totalRentalAmount?: number;
@@ -159,7 +163,6 @@ export interface ContractDTO {
   returnUserName?: string;
   returnTime?: string;
   completedDate?: string;
-  createdDate?: string; // Thêm dòng này nếu chưa có
 
   // Relationships
   cars?: ContractCarDTO[];

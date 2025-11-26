@@ -17,9 +17,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <Provider store={store}>
     <I18nextProvider i18n={i18n}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <AlertProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AlertProvider>
     </I18nextProvider>
   </Provider>
 );

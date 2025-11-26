@@ -665,11 +665,31 @@ const ContractDetailComponent = () => {
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Địa điểm giao xe</td>
-                        <td>{contract.pickupAddress}</td>
+                        <td>
+                          {contract.pickupAddress
+                            ? contract.pickupAddress
+                            : "-"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ color: "#888" }}>Thời gian giao xe</td>
+                        <td>
+                          {contract.deliveryTime
+                            ? formatDateDMY(contract.deliveryTime)
+                            : "-"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ color: "#888" }}>Người giao xe</td>
+                        <td>
+                          {contract.deliveryUserName
+                            ? contract.deliveryUserName
+                            : "-"}
+                        </td>
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Ghi chú</td>
-                        <td>{contract.notes}</td>
+                        <td>{contract.notes ? contract.notes : "-"}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -726,11 +746,27 @@ const ContractDetailComponent = () => {
                       </tr>
                       <tr>
                         <td style={{ color: "#888" }}>Địa điểm trả xe</td>
-                        <td>{contract.returnAddress}</td>
+                        <td>
+                          {contract.returnAddress
+                            ? contract.returnAddress
+                            : "-"}
+                        </td>
                       </tr>
                       <tr>
-                        <td style={{ color: "#888" }}></td>
-                        <td></td>
+                        <td style={{ color: "#888" }}>Thời gian nhận xe</td>
+                        <td>
+                          {contract.returnTime
+                            ? formatDateDMY(contract.returnTime)
+                            : "-"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ color: "#888" }}>Người nhận xe</td>
+                        <td>
+                          {contract.returnUserName
+                            ? contract.returnUserName
+                            : "-"}
+                        </td>
                       </tr>
                     </tbody>
                   </table>

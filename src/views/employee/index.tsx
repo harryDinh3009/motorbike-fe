@@ -26,6 +26,7 @@ import {
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
+import { useAlert } from "@/plugins/global";
 
 const roleOptions = [
   { value: "", label: "Chức vụ" },
@@ -133,7 +134,7 @@ const EmployeeList = () => {
       setLoading(false);
     }
   };
-
+  const { alert } = useAlert() || {};
   const handleDelete = async (employeeId: string) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa nhân viên này?")) {
       return;
@@ -145,9 +146,7 @@ const EmployeeList = () => {
       message.success("Xóa nhân viên thành công!");
       fetchEmployees();
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.message || "Xóa nhân viên thất bại";
-      setError(errorMsg);
-      message.error(errorMsg);
+      alert(err?.response?.data?.message);
     } finally {
       setLoading(false);
     }

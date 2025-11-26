@@ -9,6 +9,7 @@ import {
   CarModelDTO,
   CarModelSaveDTO,
 } from "@/service/business/carMng/carModelMng.type";
+import { useAlert } from "@/plugins/global";
 
 export function useCarModelList() {
   const [loading, setLoading] = useState(false);
@@ -51,12 +52,14 @@ export function useCarModelList() {
       setLoading(false);
     }
   };
-
+  const { alert } = useAlert() || {};
   const handleDelete = async (id: string) => {
     setLoading(true);
     try {
       await deleteCarModel(id);
       await fetchModels();
+    } catch (err: any) {
+      alert(err?.response?.data?.message);
     } finally {
       setLoading(false);
     }
