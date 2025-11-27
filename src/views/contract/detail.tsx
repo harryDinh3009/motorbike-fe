@@ -70,33 +70,37 @@ function calcRentalInfo(
   let durationText = "";
 
   if (dailyPrice) {
-    days = Math.floor(totalHours / 24);
-    extraHours = totalHours % 24;
-    // Nếu chỉ thuê vài tiếng trong ngày đầu tiên, vẫn tính là 1 ngày
-    if (days === 0) {
+    if (totalHours < 24) {
+      // Nếu thuê dưới 24h thì tính là 1 ngày
       days = 1;
       extraHours = 0;
+      total = dailyPrice;
+      durationText = "1 ngày";
     } else {
-      // Nếu giờ phát sinh > 8h thì làm tròn thành 1 ngày
-      if (extraHours > 8) {
-        days += 1;
+      days = Math.floor(totalHours / 24);
+      extraHours = totalHours % 24;
+      if (days === 0) {
+        days = 1;
         extraHours = 0;
+      } else {
+        if (extraHours > 8) {
+          days += 1;
+          extraHours = 0;
+        }
       }
-    }
-    // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
-    const msMod = ms % (1000 * 60 * 60);
-    // Sửa: chỉ trừ 1 giờ nếu msMod > 0 (tức là có phút lẻ), tránh trừ ở các mức tròn giờ
-    if (days > 0 && msMod > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
-      extraHours -= 1;
-      if (extraHours < 0) extraHours = 0;
-    }
-    total = dailyPrice * days + (hourlyPrice || 0) * extraHours;
-    if (days > 0 && extraHours > 0) {
-      durationText = `${days} ngày ${extraHours} giờ`;
-    } else if (days > 0) {
-      durationText = `${days} ngày`;
-    } else {
-      durationText = `${extraHours} giờ`;
+      const msMod = ms % (1000 * 60 * 60);
+      if (days > 0 && msMod > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
+        extraHours -= 1;
+        if (extraHours < 0) extraHours = 0;
+      }
+      total = dailyPrice * days + (hourlyPrice || 0) * extraHours;
+      if (days > 0 && extraHours > 0) {
+        durationText = `${days} ngày ${extraHours} giờ`;
+      } else if (days > 0) {
+        durationText = `${days} ngày`;
+      } else {
+        durationText = `${extraHours} giờ`;
+      }
     }
   } else if (hourlyPrice) {
     // Nếu chỉ có giá giờ

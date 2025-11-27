@@ -98,11 +98,11 @@ function calcRentalInfo(
 
   if (dailyPrice) {
     if (totalHours < 24) {
-      // Nếu chưa đủ 1 ngày thì chỉ tính số giờ
-      days = 0;
-      extraHours = totalHours;
-      total = (hourlyPrice || 0) * extraHours;
-      durationText = `${extraHours} giờ`;
+      // Nếu thuê dưới 24h thì tính là 1 ngày
+      days = 1;
+      extraHours = 0;
+      total = dailyPrice;
+      durationText = "1 ngày";
     } else {
       days = Math.floor(totalHours / 24);
       extraHours = totalHours % 24;
@@ -161,11 +161,7 @@ const ContractCreateComponent = () => {
     { value: "", label: "Chi nhánh" },
   ]);
   const [surchargeTypeOptions, setSurchargeTypeOptions] = useState<
-    {
-      value: string;
-      label: string;
-      price: number;
-    }[]
+    { value: string; label: string; price: number }[]
   >([]);
   const [currentBranchId, setCurrentBranchId] = useState<string>("");
 
@@ -991,15 +987,24 @@ const ContractCreateComponent = () => {
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
                     <td>
                       <select
-                        value={fee.desc}
+                        value={fee.type || ""}
                         onChange={(e) => {
                           const newFeeList = [...feeList];
-                          newFeeList[idx].desc = e.target.value;
+                          newFeeList[idx].type = e.target.value;
+                          // Update desc and price based on selected type
+                          const found = surchargeTypeOptions.find(
+                            (s) => s.value === e.target.value
+                          );
+                          newFeeList[idx].desc = found?.label || "";
+                          newFeeList[idx].unitPrice = found?.price || 0;
+                          // Recalculate amount if quantity exists
+                          newFeeList[idx].amount =
+                            (newFeeList[idx].quantity || 1) * (found?.price || 0);
                           setFeeList(newFeeList);
                           if (isEditMode && fee.id) {
                             debouncedUpdateFee(fee.id, {
-                              description: e.target.value,
-                              amount: fee.amount,
+                              description: found?.label || "",
+                              amount: newFeeList[idx].amount,
                               notes: fee.note,
                             });
                           }
@@ -1013,16 +1018,11 @@ const ContractCreateComponent = () => {
                         }}
                       >
                         <option value="">Chọn lý do thu</option>
-                        <option value="Phí vận chuyển giao/nhận xe tận nơi">
-                          Phí vận chuyển giao/nhận xe tận nơi
-                        </option>
-                        <option value="Phí trả xe tại khu vực khác">
-                          Phí trả xe tại khu vực khác
-                        </option>
-                        <option value="Phí phụ chuyển giao/nhận xe">
-                          Phí phụ chuyển giao/nhận xe
-                        </option>
-                        <option value="Phí khác">Phí khác</option>
+                        {surchargeTypeOptions.map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
+                        ))}
                       </select>
                     </td>
                     <td>

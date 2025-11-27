@@ -62,8 +62,8 @@ export const saveContract = async (
 export const deleteContract = async (
   id: string
 ): Promise<ApiResponse<boolean>> => {
-  const res = await http.delete<ApiResponse<boolean>>(
-    `/a/contract-mng/delete/${id}`
+  const res = await http.put<ApiResponse<boolean>>(
+    `/a/contract-mng/cancel/${id}`
   );
   return res.data;
 };
