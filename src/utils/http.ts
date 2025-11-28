@@ -47,7 +47,6 @@ class Http {
       },
       async (error) => {
         const status = error.response?.status;
-        await removeUserInfo();
 
         switch (status) {
           case 404:
@@ -58,9 +57,11 @@ class Http {
             break;
           case 401:
             history.push(SCREEN.login.path);
+            await removeUserInfo();
             break;
           case 403:
             history.push(SCREEN.login.path);
+            await removeUserInfo();
             break;
           case 400:
             throw error;
