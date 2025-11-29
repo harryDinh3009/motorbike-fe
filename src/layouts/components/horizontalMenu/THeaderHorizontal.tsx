@@ -2,9 +2,10 @@ import Logo from "@/assets/images/motorbike_logo.png";
 import { gnbOneDepth, headerStyle, mobileGnb } from "@/assets/js/common";
 import { SCREEN } from "@/router/screen";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getUserInfo, removeUserInfo } from "@/utils/storage";
 import { getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
+import { formatDateDMYOnly } from "@/utils/common";
 
 type MenuItem = {
   name: string;
@@ -27,7 +28,7 @@ const THeaderHorizontal = () => {
 
   useEffect(() => {
     const today = new Date();
-    const formattedDate = today.toLocaleDateString("vi-VN");
+    const formattedDate = formatDateDMYOnly(today);
     setCurrentDate(formattedDate);
     headerStyle();
     mobileGnb();
@@ -71,22 +72,6 @@ const THeaderHorizontal = () => {
       subMenus: [],
     },
     {
-      name: "Báo cáo",
-      path: "#",
-      subMenus: [
-        {
-          name: "Báo cáo xe khả dụng",
-          path: SCREEN.carAvailableReport?.path || "#",
-          subMenus: [],
-        },
-        {
-          name: "Báo cáo doanh thu",
-          path: SCREEN.revenueReport?.path || "#",
-          subMenus: [],
-        },
-      ],
-    },
-    {
       name: "Quản lý xe",
       path: "#",
       subMenus: [
@@ -103,8 +88,13 @@ const THeaderHorizontal = () => {
       ],
     },
     {
-      name: "Hợp đồng thuê xe",
+      name: "Quản lý thuê xe",
       path: SCREEN.contractMng.path,
+      subMenus: [],
+    },
+    {
+      name: "Khách hàng",
+      path: SCREEN.customer?.path || "#",
       subMenus: [],
     },
     {
@@ -117,14 +107,43 @@ const THeaderHorizontal = () => {
       path: SCREEN.employee?.path || "#",
       subMenus: [],
     },
-    {
-      name: "Khách hàng",
-      path: SCREEN.customer?.path || "#",
-      subMenus: [],
-    },
   ];
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Hàm kiểm tra menu item có đang active không
+  const isMenuActive = (menuPath: string): boolean => {
+    if (!menuPath || menuPath === "#") return false;
+    const currentPath = location.pathname;
+    // Nếu path chính xác khớp
+    if (currentPath === menuPath) return true;
+    // Nếu currentPath bắt đầu bằng menuPath (cho các sub-routes)
+    // Ví dụ: /contract/detail/123 sẽ match với /contract
+    if (menuPath !== "/" && currentPath.startsWith(menuPath + "/")) return true;
+    // Xử lý trường hợp đặc biệt: "/" chỉ match chính xác
+    if (menuPath === "/" && currentPath === "/") return true;
+    return false;
+  };
+
+  // Hàm kiểm tra menu item hoặc submenu có active không
+  const isMenuOrSubMenuActive = (menu: MenuItem): boolean => {
+    if (isMenuActive(menu.path)) return true;
+    // Kiểm tra các submenu
+    if (menu.subMenus) {
+      return menu.subMenus.some((subMenu) => {
+        if (isMenuActive(subMenu.path)) return true;
+        // Kiểm tra submenu của submenu
+        if (subMenu.subMenus) {
+          return subMenu.subMenus.some((subSubMenu) =>
+            isMenuActive(subSubMenu.path)
+          );
+        }
+        return false;
+      });
+    }
+    return false;
+  };
 
   return (
     <div className="header_wrap">
@@ -193,23 +212,9 @@ const THeaderHorizontal = () => {
               </div>
             )}
             <p className="login_info">
-              {userInfo.avatar && (
-                <img
-                  src={userInfo.avatar}
-                  alt="avatar"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    marginRight: 8,
-                    verticalAlign: "middle",
-                  }}
-                />
-              )}
               {userInfo.userName}{" "}
-              {userInfo.lastLoginDate && `[${userInfo.lastLoginDate}]`} [
-              {currentDate}]
+              {userInfo.lastLoginDate && `[${formatDateDMYOnly(userInfo.lastLoginDate)}]`}{" "}
+              [{currentDate}]
             </p>{" "}
             <button
               type="button"
@@ -236,9 +241,21 @@ const THeaderHorizontal = () => {
                 paddingLeft: 24,
               }}
             >
-              {subMenus.map((subMenu1, indexMenu1) => (
-                <li key={indexMenu1}>
-                  <Link to={subMenu1.path}>{subMenu1.name}</Link>
+              {subMenus.map((subMenu1, indexMenu1) => {
+                const isActive = isMenuOrSubMenuActive(subMenu1);
+                return (
+                  <li key={indexMenu1}>
+                    <Link
+                      to={subMenu1.path}
+                      style={{
+                        color: isActive ? "#1677ff" : undefined,
+                        borderBottom: isActive ? "2px solid #1677ff" : "none",
+                        paddingBottom: isActive ? "2px" : undefined,
+                        fontWeight: isActive ? 500 : undefined,
+                      }}
+                    >
+                      {subMenu1.name}
+                    </Link>
                   <ul className="gnb_2depth">
                     {subMenu1.subMenus?.map((subMenu2, indexMenu2) => (
                       <li key={indexMenu2}>
@@ -260,8 +277,9 @@ const THeaderHorizontal = () => {
                       </li>
                     ))}
                   </ul>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           </nav>
         </div>

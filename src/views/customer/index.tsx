@@ -9,6 +9,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import ModalSaveInfoCustomer from "./ModalSaveInfoCustomer";
 import {
@@ -26,7 +27,8 @@ import dayjs from "dayjs";
 import { useAlert } from "@/plugins/global";
 
 const CustomerList = () => {
-  const [filter, setFilter] = useState("");
+  const [filterInput, setFilterInput] = useState("");
+  const [appliedFilter, setAppliedFilter] = useState("");
   const [customers, setCustomers] = useState<CustomerDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ const CustomerList = () => {
     setError(null);
     try {
       const params = {
-        keyword: filter || undefined,
+        keyword: appliedFilter || undefined,
         page: page,
         size: pageSize,
       };
@@ -57,10 +59,24 @@ const CustomerList = () => {
     }
   };
 
+  // Chỉ gọi API khi appliedFilter, page, hoặc pageSize thay đổi
   useEffect(() => {
     fetchCustomers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, page, pageSize]);
+  }, [appliedFilter, page, pageSize]);
+
+  // Hàm tìm kiếm: áp dụng filterInput vào appliedFilter
+  const handleSearch = () => {
+    setAppliedFilter(filterInput);
+    setPage(1); // Reset về trang 1 khi tìm kiếm
+  };
+
+  // Reset filter
+  const handleResetFilter = () => {
+    setFilterInput("");
+    setAppliedFilter("");
+    setPage(1);
+  };
 
   const handleEdit = async (customer: CustomerDTO) => {
     setLoading(true);
@@ -141,23 +157,32 @@ const CustomerList = () => {
         />
         <ContainerBase>
           <div className="box_section" style={{ paddingBottom: 0 }}>
-            <div className="dp_flex" style={{ gap: 16, alignItems: "center" }}>
+            <div className="dp_flex" style={{ gap: 12, alignItems: "flex-end" }}>
               <InputBase
-                modelValue={filter}
+                modelValue={filterInput}
                 placeholder="Tìm theo tên, SĐT, email..."
                 prefixIcon="search"
                 style={{ minWidth: 320, flex: 1 }}
-                onChange={(val) => setFilter(val as string)}
+                onChange={(val) => setFilterInput(val as string)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+                  }
+                }}
               />
               <ButtonBase
-                label="Thêm khách hàng"
+                label="Tìm kiếm"
                 className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{ minWidth: 180, marginLeft: "auto" }}
-                onClick={() => {
-                  setEditCustomer(null);
-                  setShowModal(true);
-                }}
+                icon={<SearchOutlined />}
+                style={{ minWidth: 120, whiteSpace: "nowrap" }}
+                onClick={handleSearch}
+                loading={loading}
+              />
+              <ButtonBase
+                label="Đặt lại"
+                className="btn_lightgray"
+                style={{ minWidth: 100, whiteSpace: "nowrap" }}
+                onClick={handleResetFilter}
               />
             </div>
           </div>
@@ -168,6 +193,28 @@ const CustomerList = () => {
             {error && (
               <div style={{ color: "red", marginBottom: 8 }}>{error}</div>
             )}
+            <div
+              className="dp_flex"
+              style={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+              }}
+            >
+              <p className="box_title_sm" style={{ marginBottom: 0 }}>
+                Danh sách khách hàng
+              </p>
+              <ButtonBase
+                label="Thêm khách hàng"
+                className="btn_primary"
+                icon={<PlusOutlined />}
+                style={{ minWidth: 180, whiteSpace: "nowrap" }}
+                onClick={() => {
+                  setEditCustomer(null);
+                  setShowModal(true);
+                }}
+              />
+            </div>
             <TableBase
               data={customers.map((c, idx) => ({
                 ...c,

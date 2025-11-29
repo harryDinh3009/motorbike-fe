@@ -312,7 +312,7 @@ Props) => {
           </div>
           <DatePickerBase
             value={time ? new Date(time) : undefined}
-            placeholder="mm/dd/yyyy --:--"
+            placeholder="dd/mm/yyyy HH:mm:ss"
             showTime
             onChange={(val: any) => {
               if (!val) return setTime("");

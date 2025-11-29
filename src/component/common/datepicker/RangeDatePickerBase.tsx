@@ -80,7 +80,7 @@ const RangeDatePickerBase: React.FC<RangePickerBaseProps> = ({
         onChange={handleChange}
         className={isError ? "error-validate" : ""}
         style={isError ? { borderColor: "red" } : {}}
-        format="YYYY-MM-DD"
+        format="DD/MM/YYYY"
       />
       <input
         type="hidden"

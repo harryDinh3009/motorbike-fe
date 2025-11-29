@@ -14,6 +14,7 @@ import {
   FileExcelOutlined,
   ImportOutlined,
   EyeOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import ModalSaveMotorbike from "./ModalSaveMotorbike";
 import {
@@ -44,6 +45,33 @@ const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
   "Không sẵn sàng": { bg: "#FFE066", color: "#B38600" },
   "Bị mất": { bg: "#FFD6D6", color: "#E14D4D" },
 };
+
+// Component hiển thị thông tin dạng label-value
+const InfoRow: React.FC<{ label: string; value: string | number | null | undefined }> = ({ label, value }) => (
+  <div style={{ 
+    display: "flex", 
+    alignItems: "flex-start",
+    gap: 8,
+    padding: "4px 0"
+  }}>
+    <span style={{ 
+      minWidth: 140, 
+      fontSize: 13, 
+      color: "#666",
+      fontWeight: 500
+    }}>
+      {label}:
+    </span>
+    <span style={{ 
+      flex: 1, 
+      fontSize: 13, 
+      color: "#333",
+      wordBreak: "break-word"
+    }}>
+      {value || "-"}
+    </span>
+  </div>
+);
 
 function getStatusStyle(status: string): React.CSSProperties {
   const s = STATUS_COLOR_MAP[status?.trim() || ""];
@@ -76,7 +104,7 @@ function getStatusStyle(status: string): React.CSSProperties {
   };
 }
 const MotorbikeList = () => {
-  const [filter, setFilter] = useState<any>({
+  const defaultFilter = {
     keyword: "",
     branchId: "",
     carType: "",
@@ -84,7 +112,11 @@ const MotorbikeList = () => {
     status: undefined,
     page: 1,
     size: 10,
-  });
+  };
+  // Filter input (chưa áp dụng) - để người dùng nhập/chọn
+  const [filterInput, setFilterInput] = useState<any>(defaultFilter);
+  // Applied filter (đang áp dụng) - để gọi API
+  const [appliedFilter, setAppliedFilter] = useState<any>(defaultFilter);
   const [loading, setLoading] = useState(false);
   const [motorbikes, setMotorbikes] = useState<CarDTO[]>([]);
   const [total, setTotal] = useState(0);
@@ -177,17 +209,32 @@ const MotorbikeList = () => {
     }
   };
 
+  // Chỉ gọi API khi appliedFilter thay đổi
   useEffect(() => {
-    fetchMotorbikes(filter);
-  }, [filter]);
+    fetchMotorbikes(appliedFilter);
+  }, [appliedFilter]);
 
   // Table pagination
   const handleTableChange = (page: number, pageSize: number) => {
-    setFilter((prev: typeof filter) => ({
+    setAppliedFilter((prev: typeof appliedFilter) => ({
       ...prev,
       page,
       size: pageSize,
     }));
+  };
+
+  // Hàm tìm kiếm: áp dụng filterInput vào appliedFilter
+  const handleSearch = () => {
+    setAppliedFilter({
+      ...filterInput,
+      page: 1, // Reset về trang 1 khi tìm kiếm
+    });
+  };
+
+  // Reset all filters
+  const handleResetFilter = () => {
+    setFilterInput(defaultFilter);
+    setAppliedFilter(defaultFilter);
   };
 
   // Xử lý nhập Excel
@@ -200,7 +247,7 @@ const MotorbikeList = () => {
     try {
       const res = await importCarExcel(file);
       setImportResult(res.data);
-      fetchMotorbikes(filter);
+      fetchMotorbikes(appliedFilter);
       alert(`Nhập xe thành công!\n${res.data.message || ""}`);
     } catch (err: any) {
       alert(
@@ -218,7 +265,7 @@ const MotorbikeList = () => {
   const handleExportExcel = async () => {
     setLoading(true);
     try {
-      const blob = await exportCarExcel(filter);
+      const blob = await exportCarExcel(appliedFilter);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -257,7 +304,7 @@ const MotorbikeList = () => {
       setLoading(true);
       try {
         await deleteCar(id);
-        fetchMotorbikes(filter);
+        fetchMotorbikes(appliedFilter);
       } catch (err: any) {
         alert(err?.response?.data?.message || "Xóa xe thất bại. Vui lòng thử lại.");
       } finally {
@@ -326,84 +373,90 @@ const MotorbikeList = () => {
             <div
               className="dp_flex"
               style={{
-                gap: 16,
-                alignItems: "center",
-                flexWrap: "wrap",
+                gap: 12,
+                alignItems: "flex-end",
+                flexWrap: "nowrap",
                 position: "relative",
-                minHeight: 80,
+                overflowX: "auto",
               }}
             >
-              <InputBase
-                modelValue={filter.keyword}
-                placeholder="Tìm theo tên xe, biển số"
-                prefixIcon="search"
-                style={{ minWidth: 320, flex: 1 }}
-                onChange={(val) =>
-                  setFilter({ ...filter, keyword: val as string, page: 1 })
-                }
-              />
+              <div style={{ minWidth: 200, flex: 1, flexShrink: 0 }}>
+                <InputBase
+                  modelValue={filterInput.keyword}
+                  placeholder="Tìm theo tên xe, biển số"
+                  prefixIcon="search"
+                  style={{ width: "100%" }}
+                  onChange={(val) =>
+                    setFilterInput({ ...filterInput, keyword: val as string })
+                  }
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearch();
+                    }
+                  }}
+                />
+              </div>
               <SelectboxBase
-                value={filter.branchId}
+                label="Chi nhánh"
+                value={filterInput.branchId}
                 options={branchOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) =>
-                  setFilter({
-                    ...filter,
+                  setFilterInput({
+                    ...filterInput,
                     branchId: typeof val === "string" ? val : val[0] || "",
-                    page: 1,
                   })
                 }
               />
               <SelectboxBase
-                value={filter.carType}
+                label="Loại xe"
+                value={filterInput.carType}
                 options={typeOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) =>
-                  setFilter({
-                    ...filter,
+                  setFilterInput({
+                    ...filterInput,
                     carType: typeof val === "string" ? val : val[0] || "",
-                    page: 1,
                   })
                 }
               />
               <SelectboxBase
-                value={filter.condition}
+                label="Tình trạng xe"
+                value={filterInput.condition}
                 options={conditionOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) =>
-                  setFilter({
-                    ...filter,
+                  setFilterInput({
+                    ...filterInput,
                     condition: typeof val === "string" ? val : val[0] || "",
-                    page: 1,
                   })
                 }
               />
               <SelectboxBase
-                value={filter.status || ""}
+                label="Trạng thái"
+                value={filterInput.status || ""}
                 options={statusOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) =>
-                  setFilter({
-                    ...filter,
+                  setFilterInput({
+                    ...filterInput,
                     status: val === "" ? undefined : val,
-                    page: 1,
                   })
                 }
               />
               <ButtonBase
-                label="Thêm xe"
+                label="Tìm kiếm"
                 className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{
-                  minWidth: 140,
-                  position: "absolute",
-                  right: 0,
-                  bottom: -50,
-                }}
-                onClick={() => {
-                  setEditMotorbike(null);
-                  setShowModal(true);
-                }}
+                icon={<SearchOutlined />}
+                style={{ minWidth: 120, whiteSpace: "nowrap", flexShrink: 0 }}
+                onClick={handleSearch}
+                loading={loading}
+              />
+              <ButtonBase
+                label="Đặt lại"
+                className="btn_lightgray"
+                style={{ minWidth: 100, whiteSpace: "nowrap", flexShrink: 0 }}
+                onClick={handleResetFilter}
               />
             </div>
             <div
@@ -414,7 +467,12 @@ const MotorbikeList = () => {
                 label="Xuất Excel"
                 className="btn_yellow"
                 icon={<FileExcelOutlined />}
-                style={{ minWidth: 140 }}
+                style={{ 
+                  minWidth: 140,
+                  backgroundColor: "#52c41a",
+                  borderColor: "#52c41a",
+                  color: "#fff"
+                }}
                 onClick={handleExportExcel}
               />
               <ButtonBase
@@ -444,7 +502,12 @@ const MotorbikeList = () => {
                     label={importing ? "Đang nhập..." : "Chọn file Excel"}
                     className="btn_yellow"
                     icon={<ImportOutlined />}
-                    style={{ minWidth: 140 }}
+                    style={{ 
+                      minWidth: 140,
+                      backgroundColor: "#52c41a",
+                      borderColor: "#52c41a",
+                      color: "#fff"
+                    }}
                     onClick={() => {
                       const input = document.getElementById(
                         "import-excel-input"
@@ -474,7 +537,28 @@ const MotorbikeList = () => {
         </ContainerBase>
         <ContainerBase>
           <div className="box_section" style={{ position: "relative" }}>
-            {/* Đã chuyển nút Thêm xe lên filter */}
+            <div
+              className="dp_flex"
+              style={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+              }}
+            >
+              <p className="box_title_sm" style={{ marginBottom: 0 }}>
+                Danh sách xe
+              </p>
+              <ButtonBase
+                label="Thêm xe"
+                className="btn_primary"
+                icon={<PlusOutlined />}
+                style={{ minWidth: 120, whiteSpace: "nowrap" }}
+                onClick={() => {
+                  setEditMotorbike(null);
+                  setShowModal(true);
+                }}
+              />
+            </div>
             <TableBase
               data={motorbikes}
               columns={[
@@ -484,8 +568,8 @@ const MotorbikeList = () => {
                   key: "id",
                   width: 60,
                   render: (_: any, __: any, idx: number) =>
-                    filter.page
-                      ? (filter.page - 1) * (filter.size || 10) + idx + 1
+                    appliedFilter.page
+                      ? (appliedFilter.page - 1) * (appliedFilter.size || 10) + idx + 1
                       : idx + 1,
                 },
                 {
@@ -578,7 +662,7 @@ const MotorbikeList = () => {
                   ),
                 },
               ]}
-              pageSize={filter.size || 10}
+              pageSize={appliedFilter.size || 10}
               totalPages={total}
               onPageChange={handleTableChange}
             />
@@ -678,96 +762,174 @@ const MotorbikeList = () => {
               />
             }
           >
-            <div style={{ padding: 16 }}>
-              <div>
-                <b>Mẫu xe:</b> {detailMotorbike.model}
-              </div>
-              <div>
-                <b>Biển số:</b> {detailMotorbike.licensePlate}
-              </div>
-              <div>
-                <b>Loại xe:</b> {detailMotorbike.carType}
-              </div>
-              <div>
-                <b>Chi nhánh sở hữu:</b> {detailMotorbike.branchName}
-              </div>
-              <div>
-                <b>Giá ngày:</b> {detailMotorbike.dailyPrice?.toLocaleString()}
-              </div>
-              <div>
-                <b>Giá giờ:</b> {detailMotorbike.hourlyPrice?.toLocaleString()}
-              </div>
-              <div>
-                <b>Tình trạng xe:</b> {detailMotorbike.condition}
-              </div>
-              <div>
-                <b>Odo hiện tại:</b>{" "}
-                {detailMotorbike.currentOdometer?.toLocaleString()}
-              </div>
-              <div>
-                <b>Năm sản xuất:</b> {detailMotorbike.yearOfManufacture}
-              </div>
-              <div>
-                <b>Xuất xứ:</b> {detailMotorbike.origin}
-              </div>
-              <div>
-                <b>Giá trị xe:</b> {detailMotorbike.value?.toLocaleString()}
-              </div>
-              <div>
-                <b>Số khung:</b> {detailMotorbike.frameNumber}
-              </div>
-              <div>
-                <b>Số máy:</b> {detailMotorbike.engineNumber}
-              </div>
-              <div>
-                <b>Màu sắc:</b> {detailMotorbike.color}
-              </div>
-              <div>
-                <b>Số giấy đăng ký:</b> {detailMotorbike.registrationNumber}
-              </div>
-              <div>
-                <b>Chủ đăng ký:</b> {detailMotorbike.registeredOwnerName}
-              </div>
-              <div>
-                <b>Nơi đăng ký:</b> {detailMotorbike.registrationPlace}
-              </div>
-              <div>
-                <b>Số HĐ bảo hiểm:</b> {detailMotorbike.insuranceContractNumber}
-              </div>
-              <div>
-                <b>Hạn bảo hiểm:</b> {detailMotorbike.insuranceExpiryDate}
-              </div>
-              <div>
-                <b>Ghi chú:</b> {detailMotorbike.note}
-              </div>
-              <div>
-                <b>Ảnh xe:</b>{" "}
-                {detailMotorbike.imageUrl ? (
-                  <img
-                    src={detailMotorbike.imageUrl}
-                    alt="Ảnh xe"
-                    style={{
-                      width: 120,
-                      height: 80,
-                      objectFit: "cover",
-                      borderRadius: 4,
-                    }}
-                  />
-                ) : (
-                  <span style={{ color: "#bbb" }}>Không có</span>
-                )}
-              </div>
-              <div>
-                <b>Trạng thái:</b>{" "}
-                <span
-                  style={getStatusStyle(
-                    (detailMotorbike.statusNm || detailMotorbike.status || "") +
-                      ""
+            <div style={{ padding: "20px 24px" }}>
+              {/* Ảnh xe và thông tin cơ bản */}
+              <div style={{ 
+                display: "flex", 
+                gap: 24, 
+                marginBottom: 24,
+                paddingBottom: 24,
+                borderBottom: "1px solid #f0f0f0"
+              }}>
+                <div style={{ flexShrink: 0 }}>
+                  {detailMotorbike.imageUrl ? (
+                    <img
+                      src={detailMotorbike.imageUrl}
+                      alt="Ảnh xe"
+                      style={{
+                        width: 200,
+                        height: 150,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #e8e8e8",
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 200,
+                      height: 150,
+                      borderRadius: 8,
+                      border: "1px solid #e8e8e8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#f5f5f5",
+                      color: "#999"
+                    }}>
+                      Không có ảnh
+                    </div>
                   )}
-                >
-                  {detailMotorbike.statusNm || detailMotorbike.status}
-                </span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: "#1677ff", marginBottom: 4 }}>
+                      {detailMotorbike.model || "-"}
+                    </div>
+                    <div style={{ fontSize: 16, color: "#666", marginBottom: 12 }}>
+                      {detailMotorbike.licensePlate || "-"}
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                      <span
+                        style={getStatusStyle(
+                          (detailMotorbike.statusNm || detailMotorbike.status || "") + ""
+                        )}
+                      >
+                        {detailMotorbike.statusNm || detailMotorbike.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Thông tin chi tiết - Layout 2 cột */}
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "1fr 1fr", 
+                gap: "16px 32px"
+              }}>
+                {/* Cột 1 */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ 
+                    fontSize: 14, 
+                    fontWeight: 600, 
+                    color: "#333",
+                    marginBottom: 8,
+                    paddingBottom: 8,
+                    borderBottom: "1px solid #f0f0f0"
+                  }}>
+                    Thông tin cơ bản
+                  </div>
+                  <InfoRow label="Loại xe" value={detailMotorbike.carType} />
+                  <InfoRow label="Chi nhánh sở hữu" value={detailMotorbike.branchName} />
+                  <InfoRow label="Tình trạng xe" value={detailMotorbike.condition} />
+                  <InfoRow label="Màu sắc" value={detailMotorbike.color} />
+                  <InfoRow label="Năm sản xuất" value={detailMotorbike.yearOfManufacture} />
+                  <InfoRow label="Xuất xứ" value={detailMotorbike.origin} />
+                  <InfoRow label="Odo hiện tại" value={detailMotorbike.currentOdometer?.toLocaleString("vi-VN")} />
+                </div>
+
+                {/* Cột 2 */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ 
+                    fontSize: 14, 
+                    fontWeight: 600, 
+                    color: "#333",
+                    marginBottom: 8,
+                    paddingBottom: 8,
+                    borderBottom: "1px solid #f0f0f0"
+                  }}>
+                    Giá và thông tin tài chính
+                  </div>
+                  <InfoRow 
+                    label="Giá ngày" 
+                    value={detailMotorbike.dailyPrice ? `${detailMotorbike.dailyPrice.toLocaleString("vi-VN")} đ` : "-"} 
+                  />
+                  <InfoRow 
+                    label="Giá giờ" 
+                    value={detailMotorbike.hourlyPrice ? `${detailMotorbike.hourlyPrice.toLocaleString("vi-VN")} đ` : "-"} 
+                  />
+                  <InfoRow 
+                    label="Giá trị xe" 
+                    value={detailMotorbike.value ? `${detailMotorbike.value.toLocaleString("vi-VN")} đ` : "-"} 
+                  />
+                </div>
+              </div>
+
+              {/* Thông tin đăng ký và bảo hiểm */}
+              <div style={{ 
+                marginTop: 24,
+                paddingTop: 24,
+                borderTop: "1px solid #f0f0f0"
+              }}>
+                <div style={{ 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  color: "#333",
+                  marginBottom: 16
+                }}>
+                  Thông tin đăng ký và bảo hiểm
+                </div>
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "1fr 1fr", 
+                  gap: "16px 32px"
+                }}>
+                  <InfoRow label="Số khung" value={detailMotorbike.frameNumber} />
+                  <InfoRow label="Số máy" value={detailMotorbike.engineNumber} />
+                  <InfoRow label="Số giấy đăng ký" value={detailMotorbike.registrationNumber} />
+                  <InfoRow label="Chủ đăng ký" value={detailMotorbike.registeredOwnerName} />
+                  <InfoRow label="Nơi đăng ký" value={detailMotorbike.registrationPlace} />
+                  <InfoRow label="Số HĐ bảo hiểm" value={detailMotorbike.insuranceContractNumber} />
+                  <InfoRow label="Hạn bảo hiểm" value={detailMotorbike.insuranceExpiryDate} />
+                </div>
+              </div>
+
+              {/* Ghi chú */}
+              {detailMotorbike.note && (
+                <div style={{ 
+                  marginTop: 24,
+                  paddingTop: 24,
+                  borderTop: "1px solid #f0f0f0"
+                }}>
+                  <div style={{ 
+                    fontSize: 14, 
+                    fontWeight: 600, 
+                    color: "#333",
+                    marginBottom: 8
+                  }}>
+                    Ghi chú
+                  </div>
+                  <div style={{ 
+                    padding: 12,
+                    backgroundColor: "#fafafa",
+                    borderRadius: 6,
+                    color: "#666",
+                    lineHeight: 1.6
+                  }}>
+                    {detailMotorbike.note}
+                  </div>
+                </div>
+              )}
             </div>
           </TModal>
         )}

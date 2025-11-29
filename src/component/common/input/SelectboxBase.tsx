@@ -61,8 +61,21 @@ const SelectboxBase: React.FC<SelectboxBaseProps> = ({
   }, [dispatch, id, required]);
 
   return (
-    <div>
-      {label && <label htmlFor={id}>{label}</label>}
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      {label && (
+        <label
+          htmlFor={id}
+          style={{
+            fontSize: 13,
+            color: "#666",
+            fontWeight: 500,
+            marginBottom: 0,
+            lineHeight: 1.4,
+          }}
+        >
+          {label}
+        </label>
+      )}
       <Select
         mode={multiSelect ? "multiple" : undefined}
         defaultValue={defaultValue}

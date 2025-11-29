@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
-import { HomeOutlined, CarOutlined } from "@ant-design/icons";
+import { HomeOutlined, CarOutlined, SearchOutlined } from "@ant-design/icons";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
@@ -51,7 +51,10 @@ const ContractComponent = () => {
     endDateFrom: null,
     endDateTo: null,
   };
-  const [filter, setFilter] = useState<ContractSearchDTO>(defaultFilter);
+  // Filter input (chưa áp dụng) - để người dùng nhập/chọn
+  const [filterInput, setFilterInput] = useState<ContractSearchDTO>(defaultFilter);
+  // Applied filter (đang áp dụng) - để gọi API
+  const [appliedFilter, setAppliedFilter] = useState<ContractSearchDTO>(defaultFilter);
   const [loading, setLoading] = useState(false);
   const [contracts, setContracts] = useState<ContractDTO[]>([]);
   const [total, setTotal] = useState(0);
@@ -67,7 +70,7 @@ const ContractComponent = () => {
     { value: "", label: "Trạng thái" },
   ]);
 
-  // Thêm state cho ngày thuê và ngày trả
+  // Thêm state cho ngày thuê và ngày trả (input)
   const [startDateFrom, setStartDateFrom] = useState<string | null>(null);
   const [startDateTo, setStartDateTo] = useState<string | null>(null);
   const [endDateFrom, setEndDateFrom] = useState<string | null>(null);
@@ -99,9 +102,10 @@ const ContractComponent = () => {
     }
   };
 
+  // Chỉ gọi API khi appliedFilter thay đổi
   useEffect(() => {
-    fetchContracts(filter);
-  }, [filter]);
+    fetchContracts(appliedFilter);
+  }, [appliedFilter]);
 
   // Fetch branches and statuses for filters
   useEffect(() => {
@@ -130,25 +134,25 @@ const ContractComponent = () => {
     });
   }, []);
 
-  useEffect(() => {
-    setFilter((prev) => ({
-      ...prev,
-      startDateFrom: startDateFrom || null,
-      startDateTo: startDateTo || null,
-      endDateFrom: endDateFrom || null,
-      endDateTo: endDateTo || null,
-      page: 1,
-    }));
-    // eslint-disable-next-line
-  }, [startDateFrom, startDateTo, endDateFrom, endDateTo]);
-
   // Table pagination
   const handleTableChange = (page: number, pageSize: number) => {
-    setFilter((prev) => ({
+    setAppliedFilter((prev) => ({
       ...prev,
       page,
       size: pageSize,
     }));
+  };
+
+  // Hàm tìm kiếm: áp dụng filterInput vào appliedFilter
+  const handleSearch = () => {
+    setAppliedFilter({
+      ...filterInput,
+      startDateFrom: startDateFrom || null,
+      startDateTo: startDateTo || null,
+      endDateFrom: endDateFrom || null,
+      endDateTo: endDateTo || null,
+      page: 1, // Reset về trang 1 khi tìm kiếm
+    });
   };
 
   // Xuất Excel
@@ -157,18 +161,18 @@ const ContractComponent = () => {
     try {
       // Chuyển các filter rỗng/undefined về null
       const exportParams = {
-        ...filter,
-        keyword: filter.keyword ? filter.keyword : null,
-        status: filter.status ? filter.status : null,
-        source: filter.source ? filter.source : null,
-        startDateFrom: filter.startDateFrom ? filter.startDateFrom : null,
-        startDateTo: filter.startDateTo ? filter.startDateTo : null,
-        endDateFrom: filter.endDateFrom ? filter.endDateFrom : null,
-        endDateTo: filter.endDateTo ? filter.endDateTo : null,
-        pickupBranchId: filter.pickupBranchId ? filter.pickupBranchId : null,
-        returnBranchId: filter.returnBranchId ? filter.returnBranchId : null,
-        page: filter.page || 1,
-        size: filter.size || 10,
+        ...appliedFilter,
+        keyword: appliedFilter.keyword ? appliedFilter.keyword : null,
+        status: appliedFilter.status ? appliedFilter.status : null,
+        source: appliedFilter.source ? appliedFilter.source : null,
+        startDateFrom: appliedFilter.startDateFrom ? appliedFilter.startDateFrom : null,
+        startDateTo: appliedFilter.startDateTo ? appliedFilter.startDateTo : null,
+        endDateFrom: appliedFilter.endDateFrom ? appliedFilter.endDateFrom : null,
+        endDateTo: appliedFilter.endDateTo ? appliedFilter.endDateTo : null,
+        pickupBranchId: appliedFilter.pickupBranchId ? appliedFilter.pickupBranchId : null,
+        returnBranchId: appliedFilter.returnBranchId ? appliedFilter.returnBranchId : null,
+        page: appliedFilter.page || 1,
+        size: appliedFilter.size || 10,
       };
       const blob = await exportContractsToExcel(exportParams);
       const url = window.URL.createObjectURL(blob);
@@ -190,7 +194,7 @@ const ContractComponent = () => {
       setLoading(true);
       try {
         await deleteContract(id);
-        fetchContracts(filter);
+        fetchContracts(appliedFilter);
       } finally {
         setLoading(false);
       }
@@ -217,11 +221,12 @@ const ContractComponent = () => {
 
   // Reset all filters
   const handleResetFilter = () => {
-    setFilter(defaultFilter);
+    setFilterInput(defaultFilter);
     setStartDateFrom(null);
     setStartDateTo(null);
     setEndDateFrom(null);
     setEndDateTo(null);
+    setAppliedFilter(defaultFilter);
   };
 
   return (
@@ -231,124 +236,169 @@ const ContractComponent = () => {
         <BreadcrumbBase title={pageTitle} items={breadcrumbItems} />
         <ContainerBase>
           <div className="box_section" style={{ paddingBottom: 0 }}>
-            <div
-              className="dp_flex"
-              style={{
-                alignItems: "flex-end",
-                flexWrap: "wrap",
-                gap: 16,
-              }}
-            >
-              <InputBase
-                modelValue={filter.keyword}
-                placeholder="Tìm theo tên khách, SDT, số hợp đồng, biển số xe"
-                prefixIcon="search"
-                style={{ minWidth: 320, flex: 1 }}
-                onChange={(val) =>
-                  setFilter((prev) => ({
-                    ...prev,
-                    keyword: val as string,
-                    page: 1,
-                  }))
-                }
-              />
-              {/* Chọn ngày thuê từ */}
-              <DatePickerBase
-                label="Ngày thuê từ"
-                value={startDateFrom}
-                placeholder="Ngày thuê từ"
-                style={{ minWidth: 140 }}
-                picker="date"
-                showTime={false}
-                dateOnly={true}
-                onChange={(val) => setStartDateFrom(val)}
-              />
-              {/* Chọn ngày thuê đến */}
-              <DatePickerBase
-                label="Ngày thuê đến"
-                value={startDateTo}
-                placeholder="Ngày thuê đến"
-                style={{ minWidth: 140 }}
-                picker="date"
-                showTime={false}
-                dateOnly={true}
-                onChange={(val) => setStartDateTo(val)}
-              />
-              {/* Chọn ngày trả từ */}
-              <DatePickerBase
-                label="Ngày trả từ"
-                value={endDateFrom}
-                placeholder="Ngày trả từ"
-                style={{ minWidth: 140 }}
-                picker="date"
-                showTime={false}
-                dateOnly={true}
-                onChange={(val) => setEndDateFrom(val)}
-              />
-              {/* Chọn ngày trả đến */}
-              <DatePickerBase
-                label="Ngày trả đến"
-                value={endDateTo}
-                placeholder="Ngày trả đến"
-                style={{ minWidth: 140 }}
-                picker="date"
-                showTime={false}
-                dateOnly={true}
-                onChange={(val) => setEndDateTo(val)}
-              />
-              <SelectboxBase
-                value={filter.pickupBranchId}
-                options={pickupBranchOptions}
-                style={{ minWidth: 140 }}
-                onChange={(val) =>
-                  setFilter((prev) => ({
-                    ...prev,
-                    pickupBranchId:
-                      typeof val === "string" ? val : val[0] || "",
-                    page: 1,
-                  }))
-                }
-              />
-              <SelectboxBase
-                value={filter.returnBranchId}
-                options={returnBranchOptions}
-                style={{ minWidth: 140 }}
-                onChange={(val) =>
-                  setFilter((prev) => ({
-                    ...prev,
-                    returnBranchId:
-                      typeof val === "string" ? val : val[0] || "",
-                    page: 1,
-                  }))
-                }
-              />
-              <SelectboxBase
-                value={filter.status}
-                options={statusOptions}
-                style={{ minWidth: 120 }}
-                onChange={(val) =>
-                  setFilter((prev) => ({
-                    ...prev,
-                    status: typeof val === "string" ? val : val[0] || "",
-                    page: 1,
-                  }))
-                }
-              />
-              <ButtonBase
-                label="Xuất Excel"
-                className="btn_yellow"
-                icon={<CarOutlined />}
-                style={{ marginLeft: 8, minWidth: 120 }}
-                onClick={handleExportExcel}
-                loading={loading}
-              />
-              <ButtonBase
-                label="Đặt lại bộ lọc"
-                className="btn_gray"
-                style={{ minWidth: 120 }}
-                onClick={handleResetFilter}
-                disabled={loading}
-              />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Hàng 1: Input search và 4 date picker */}
+              <div
+                className="dp_flex"
+                style={{
+                  alignItems: "flex-end",
+                  flexWrap: "nowrap",
+                  gap: 12,
+                  overflowX: "auto",
+                }}
+              >
+                <div style={{ minWidth: 200, flex: 1, flexShrink: 0 }}>
+                  <InputBase
+                    modelValue={filterInput.keyword}
+                    placeholder="Tìm theo tên khách, SDT, số hợp đồng, biển số xe"
+                    prefixIcon="search"
+                    style={{ width: "100%" }}
+                    onChange={(val) =>
+                      setFilterInput((prev) => ({
+                        ...prev,
+                        keyword: val as string,
+                      }))
+                    }
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearch();
+                      }
+                    }}
+                  />
+                </div>
+                {/* Chọn ngày thuê từ */}
+                <DatePickerBase
+                  label="Ngày thuê từ"
+                  value={startDateFrom}
+                  placeholder="Ngày thuê từ"
+                  style={{ minWidth: 140, flexShrink: 0 }}
+                  picker="date"
+                  showTime={false}
+                  dateOnly={true}
+                  onChange={(val) => setStartDateFrom(val)}
+                />
+                {/* Chọn ngày thuê đến */}
+                <DatePickerBase
+                  label="Ngày thuê đến"
+                  value={startDateTo}
+                  placeholder="Ngày thuê đến"
+                  style={{ minWidth: 140, flexShrink: 0 }}
+                  picker="date"
+                  showTime={false}
+                  dateOnly={true}
+                  onChange={(val) => setStartDateTo(val)}
+                />
+                {/* Chọn ngày trả từ */}
+                <DatePickerBase
+                  label="Ngày trả từ"
+                  value={endDateFrom}
+                  placeholder="Ngày trả từ"
+                  style={{ minWidth: 140, flexShrink: 0 }}
+                  picker="date"
+                  showTime={false}
+                  dateOnly={true}
+                  onChange={(val) => setEndDateFrom(val)}
+                />
+                {/* Chọn ngày trả đến */}
+                <DatePickerBase
+                  label="Ngày trả đến"
+                  value={endDateTo}
+                  placeholder="Ngày trả đến"
+                  style={{ minWidth: 140, flexShrink: 0 }}
+                  picker="date"
+                  showTime={false}
+                  dateOnly={true}
+                  onChange={(val) => setEndDateTo(val)}
+                />
+              </div>
+              {/* Hàng 2: 3 dropdown và 2 button */}
+              <div
+                className="dp_flex"
+                style={{
+                  alignItems: "flex-end",
+                  flexWrap: "nowrap",
+                  gap: 12,
+                  overflowX: "auto",
+                }}
+              >
+                <SelectboxBase
+                  label="Chi nhánh thuê"
+                  value={filterInput.pickupBranchId}
+                  options={pickupBranchOptions}
+                  style={{ minWidth: 140, flexShrink: 0 }}
+                  onChange={(val) =>
+                    setFilterInput((prev) => ({
+                      ...prev,
+                      pickupBranchId:
+                        typeof val === "string" ? val : val[0] || "",
+                    }))
+                  }
+                />
+                <SelectboxBase
+                  label="Chi nhánh trả"
+                  value={filterInput.returnBranchId}
+                  options={returnBranchOptions}
+                  style={{ minWidth: 140, flexShrink: 0 }}
+                  onChange={(val) =>
+                    setFilterInput((prev) => ({
+                      ...prev,
+                      returnBranchId:
+                        typeof val === "string" ? val : val[0] || "",
+                    }))
+                  }
+                />
+                <SelectboxBase
+                  label="Trạng thái"
+                  value={filterInput.status}
+                  options={statusOptions}
+                  style={{ minWidth: 140, flexShrink: 0 }}
+                  onChange={(val) =>
+                    setFilterInput((prev) => ({
+                      ...prev,
+                      status: typeof val === "string" ? val : val[0] || "",
+                    }))
+                  }
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "flex-end",
+                    marginLeft: "auto",
+                    flexShrink: 0,
+                  }}
+                >
+                  <ButtonBase
+                    label="Tìm kiếm"
+                    className="btn_primary"
+                    icon={<SearchOutlined />}
+                    style={{ minWidth: 120, whiteSpace: "nowrap" }}
+                    onClick={handleSearch}
+                    loading={loading}
+                  />
+                  <ButtonBase
+                    label="Xuất Excel"
+                    className="btn_yellow"
+                    icon={<CarOutlined />}
+                    style={{ 
+                      minWidth: 120, 
+                      whiteSpace: "nowrap",
+                      backgroundColor: "#52c41a",
+                      borderColor: "#52c41a",
+                      color: "#fff"
+                    }}
+                    onClick={handleExportExcel}
+                    loading={loading}
+                  />
+                  <ButtonBase
+                    label="Đặt lại bộ lọc"
+                    className="btn_gray"
+                    style={{ minWidth: 120, whiteSpace: "nowrap" }}
+                    onClick={handleResetFilter}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </ContainerBase>
@@ -368,8 +418,17 @@ const ContractComponent = () => {
                 style={{ marginLeft: "auto" }}
               />
             </div>
-            {/* Thêm scroll ngang cho table */}
-            <div style={{ overflowX: "auto" }}>
+            {/* Thêm scroll ngang cho table - scroll bar luôn hiển thị ở đầu */}
+            <div 
+              style={{ 
+                overflowX: "scroll",
+                overflowY: "auto",
+                position: "relative",
+                width: "100%",
+                maxHeight: "calc(100vh - 300px)",
+                minHeight: 380
+              }}
+            >
               <TableBase
                 data={contracts}
                 columns={[
@@ -423,18 +482,46 @@ const ContractComponent = () => {
                     title: "Xe thuê",
                     dataIndex: "cars",
                     key: "cars",
-                    width: "13%",
-                    render: (cars: any) =>
-                      Array.isArray(cars)
-                        ? cars
-                            .map(
-                              (c: any) =>
-                                `${c.carModel || "-"} (${
-                                  c.licensePlate || "-"
-                                })`
-                            )
-                            .join("; ")
-                        : "-",
+                    width: "15%",
+                    render: (cars: any) => {
+                      if (!Array.isArray(cars) || cars.length === 0) {
+                        return "-";
+                      }
+                      const maxDisplay = 3;
+                      const displayCars = cars.slice(0, maxDisplay);
+                      const remainingCount = cars.length - maxDisplay;
+                      
+                      return (
+                        <div style={{ 
+                          display: "flex", 
+                          flexDirection: "column",
+                          gap: 2,
+                          lineHeight: 1.5
+                        }}>
+                          {displayCars.map((c: any, idx: number) => (
+                            <div 
+                              key={idx} 
+                              style={{ 
+                                display: "block",
+                                whiteSpace: "nowrap"
+                              }}
+                            >
+                              {c.carModel || "-"} ({c.licensePlate || "-"}){idx < displayCars.length - 1 ? ";" : ""}
+                            </div>
+                          ))}
+                          {remainingCount > 0 && (
+                            <div style={{ 
+                              color: "#1677ff", 
+                              fontWeight: 500, 
+                              marginTop: 4,
+                              whiteSpace: "nowrap"
+                            }}>
+                              +{remainingCount} xe
+                            </div>
+                          )}
+                        </div>
+                      );
+                    },
                   },
                   {
                     title: "Ngày thuê",
@@ -475,7 +562,8 @@ const ContractComponent = () => {
                   {
                     title: "Tổng tiền",
                     key: "finalAmount",
-                    width: "9%",
+                    width: "12%",
+                    align: "right" as const,
                     render: (_: any, record: any) => {
                       // Tính tổng tiền thuê xe giống detail
                       const rentalStart = record.startDate;
@@ -546,13 +634,18 @@ const ContractComponent = () => {
                       const discount = record.discountAmount || 0;
                       // Tổng tiền = Tiền thuê xe + Tiền phụ thu - Giảm giá
                       const total = totalCar + totalSurcharge - discount;
-                      return total.toLocaleString() + " đ";
+                      return (
+                        <span style={{ whiteSpace: "nowrap", fontWeight: 500 }}>
+                          {total.toLocaleString("vi-VN")} đ
+                        </span>
+                      );
                     },
                   },
                   {
                     title: "Đã trả",
                     key: "paidAmount",
-                    width: "9%",
+                    width: "12%",
+                    align: "right" as const,
                     render: (_: any, record: any) => {
                       // Tổng các lần thanh toán (nếu có)
                       let paid = 0;
@@ -567,13 +660,18 @@ const ContractComponent = () => {
                       } else {
                         paid = record.paidAmount || 0;
                       }
-                      return paid.toLocaleString() + " đ";
+                      return (
+                        <span style={{ whiteSpace: "nowrap" }}>
+                          {paid.toLocaleString("vi-VN")} đ
+                        </span>
+                      );
                     },
                   },
                   {
                     title: "Còn lại",
                     key: "remainingAmount",
-                    width: "9%",
+                    width: "12%",
+                    align: "right" as const,
                     render: (_: any, record: any) => {
                       // Tính lại giống detail: Còn lại = Tổng tiền - Đã trả
                       const rentalStart = record.startDate;
@@ -656,7 +754,11 @@ const ContractComponent = () => {
                         paid = record.paidAmount || 0;
                       }
                       const remain = total - paid;
-                      return remain.toLocaleString() + " đ";
+                      return (
+                        <span style={{ whiteSpace: "nowrap", fontWeight: 500 }}>
+                          {remain.toLocaleString("vi-VN")} đ
+                        </span>
+                      );
                     },
                   },
                   {
@@ -672,7 +774,7 @@ const ContractComponent = () => {
                       > = {
                         "Đã xác nhận": { bg: "#FFD600", color: "#222" }, // yellow
                         "Đã giao xe": { bg: "#345FCE", color: "#fff" }, // blue
-                        "Đã trả xe": { bg: "#EA0963", color: "#fff" }, // magenta
+                        "Đã trả xe": { bg: "#FF8C00", color: "#fff" }, // orange
                         "Hoàn thành": { bg: "#26D02E", color: "#fff" }, // green
                         "Đã hủy": { bg: "#F33232", color: "#fff" }, // red
                       };
@@ -720,7 +822,7 @@ const ContractComponent = () => {
                     ),
                   },
                 ]}
-                pageSize={filter.size || 10}
+                pageSize={appliedFilter.size || 10}
                 // currentPage removed to fix lint error
                 totalPages={total}
                 paginationType="BE"

@@ -200,20 +200,31 @@ const EmployeeList = () => {
         />
         <ContainerBase>
           <div className="box_section" style={{ paddingBottom: 0 }}>
-            <div className="dp_flex" style={{ gap: 16, alignItems: "center" }}>
-              <InputBase
-                modelValue={filter.search}
-                placeholder="Tìm theo tên, SĐT, email..."
-                prefixIcon="search"
-                style={{ minWidth: 320, flex: 1 }}
-                onChange={(val) =>
-                  setFilter({ ...filter, search: val as string })
-                }
-              />
+            <div
+              className="dp_flex"
+              style={{
+                gap: 12,
+                alignItems: "flex-end",
+                flexWrap: "nowrap",
+                overflowX: "auto",
+              }}
+            >
+              <div style={{ minWidth: 200, flex: 1, flexShrink: 0 }}>
+                <InputBase
+                  modelValue={filter.search}
+                  placeholder="Tìm theo tên, SĐT, email..."
+                  prefixIcon="search"
+                  style={{ width: "100%" }}
+                  onChange={(val) =>
+                    setFilter({ ...filter, search: val as string })
+                  }
+                />
+              </div>
               <SelectboxBase
+                label="Chi nhánh"
                 value={filter.branch}
                 options={branchOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) => {
                   let v: string = "";
                   if (Array.isArray(val)) {
@@ -225,9 +236,10 @@ const EmployeeList = () => {
                 }}
               />
               <SelectboxBase
+                label="Chức vụ"
                 value={filter.role}
                 options={roleOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) => {
                   let v: string = "";
                   if (Array.isArray(val)) {
@@ -239,9 +251,10 @@ const EmployeeList = () => {
                 }}
               />
               <SelectboxBase
+                label="Trạng thái"
                 value={filter.status}
                 options={statusOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) => {
                   let v: string = "";
                   if (Array.isArray(val)) {
@@ -250,16 +263,6 @@ const EmployeeList = () => {
                     v = val;
                   }
                   setFilter({ ...filter, status: v });
-                }}
-              />
-              <ButtonBase
-                label="Thêm nhân viên"
-                className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{ minWidth: 180, marginLeft: "auto" }}
-                onClick={() => {
-                  setEditEmployee(null);
-                  setShowModal(true);
                 }}
               />
             </div>
@@ -271,6 +274,28 @@ const EmployeeList = () => {
             {error && (
               <div style={{ color: "red", marginBottom: 8 }}>{error}</div>
             )}
+            <div
+              className="dp_flex"
+              style={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+              }}
+            >
+              <p className="box_title_sm" style={{ marginBottom: 0 }}>
+                Danh sách nhân viên
+              </p>
+              <ButtonBase
+                label="Thêm nhân viên"
+                className="btn_primary"
+                icon={<PlusOutlined />}
+                style={{ minWidth: 140, whiteSpace: "nowrap" }}
+                onClick={() => {
+                  setEditEmployee(null);
+                  setShowModal(true);
+                }}
+              />
+            </div>
             <TableBase
               data={employees.map((e, idx) => ({
                 ...e,

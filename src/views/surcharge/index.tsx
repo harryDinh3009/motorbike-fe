@@ -93,20 +93,31 @@ const SurchargeList = () => {
         />
         <ContainerBase>
           <div className="box_section" style={{ paddingBottom: 0 }}>
-            <div className="dp_flex" style={{ gap: 16, alignItems: "center" }}>
-              <InputBase
-                modelValue={filter.search}
-                placeholder="Tìm theo tên phụ thu, đơn giá"
-                prefixIcon="search"
-                style={{ minWidth: 320, flex: 1 }}
-                onChange={(val) =>
-                  setFilter({ ...filter, search: val as string })
-                }
-              />
+            <div
+              className="dp_flex"
+              style={{
+                gap: 12,
+                alignItems: "flex-end",
+                flexWrap: "nowrap",
+                overflowX: "auto",
+              }}
+            >
+              <div style={{ minWidth: 200, flex: 1, flexShrink: 0 }}>
+                <InputBase
+                  modelValue={filter.search}
+                  placeholder="Tìm theo tên phụ thu, đơn giá"
+                  prefixIcon="search"
+                  style={{ width: "100%" }}
+                  onChange={(val) =>
+                    setFilter({ ...filter, search: val as string })
+                  }
+                />
+              </div>
               <SelectboxBase
+                label="Trạng thái"
                 value={filter.status}
                 options={statusOptions}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130, flexShrink: 0 }}
                 onChange={(val) =>
                   setFilter({
                     ...filter,
@@ -118,7 +129,7 @@ const SurchargeList = () => {
                 label="Thêm phụ thu"
                 className="btn_primary"
                 icon={<PlusOutlined />}
-                style={{ minWidth: 160, marginLeft: "auto" }}
+                style={{ minWidth: 140, whiteSpace: "nowrap", flexShrink: 0 }}
                 onClick={() => {
                   setEditSurcharge(null);
                   setShowModal(true);

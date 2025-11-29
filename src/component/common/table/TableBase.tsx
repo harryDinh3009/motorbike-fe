@@ -49,13 +49,15 @@ const TableBase = <T extends object>({
     }
   };
 
-  const rowSelection: TableRowSelection<T> = {
-    selectedRowKeys,
-    onChange: (selectedKeys, selectedRows) => {
-      setSelectedRowKeys(selectedKeys);
-      onRowSelect && onRowSelect(selectedKeys, selectedRows);
-    },
-  };
+  const rowSelection: TableRowSelection<T> | undefined = onRowSelect
+    ? {
+        selectedRowKeys,
+        onChange: (selectedKeys, selectedRows) => {
+          setSelectedRowKeys(selectedKeys);
+          onRowSelect(selectedKeys, selectedRows);
+        },
+      }
+    : undefined;
 
   const paginatedData =
     paginationType === "FE"

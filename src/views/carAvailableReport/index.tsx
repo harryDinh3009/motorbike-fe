@@ -59,10 +59,10 @@ const CarAvailableReport: React.FC = () => {
         modelName: values.modelName,
         carType: values.carType,
         startDate: values.dateRange?.[0]
-          ? dayjs(values.dateRange[0]).format("YYYY-MM-DD")
+          ? dayjs(values.dateRange[0]).format("YYYY-MM-DDTHH:mm:ss")
           : undefined,
         endDate: values.dateRange?.[1]
-          ? dayjs(values.dateRange[1]).format("YYYY-MM-DD")
+          ? dayjs(values.dateRange[1]).format("YYYY-MM-DDTHH:mm:ss")
           : undefined,
       };
       const blob = await exportAvailableCarsReport(params);
@@ -136,7 +136,7 @@ const CarAvailableReport: React.FC = () => {
                 ]}
               >
                 <RangePicker
-                  format="YYYY-MM-DD HH:mm"
+                  format="DD/MM/YYYY HH:mm"
                   style={{ width: "100%" }}
                   showTime={{ format: "HH:mm" }}
                   placeholder={["Từ ngày giờ", "Đến ngày giờ"]}

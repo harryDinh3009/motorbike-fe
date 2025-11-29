@@ -11,6 +11,7 @@ import {
 
 interface DatePickerBaseProps extends DatePickerProps {
   id?: string;
+  label?: React.ReactNode;
   required?: boolean;
   value?: string;
   onChange?: (date: string | null, dateString: string) => void;
@@ -19,6 +20,7 @@ interface DatePickerBaseProps extends DatePickerProps {
 
 const DatePickerBase: React.FC<DatePickerBaseProps> = ({
   id,
+  label,
   required = false,
   value,
   onChange,
@@ -62,14 +64,28 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
   };
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      {label && (
+        <label
+          htmlFor={id}
+          style={{
+            fontSize: 13,
+            color: "#666",
+            fontWeight: 500,
+            marginBottom: 0,
+            lineHeight: 1.4,
+          }}
+        >
+          {label}
+        </label>
+      )}
       <DatePicker
         {...props}
         value={dayjsValue}
         onChange={handleChange}
         // Nếu dateOnly thì không showTime, format ngày thôi
         showTime={dateOnly ? false : { format: "HH:mm:ss" }}
-        format={dateOnly ? "YYYY-MM-DD" : "YYYY-MM-DD HH:mm:ss"}
+        format={dateOnly ? "DD/MM/YYYY" : "DD/MM/YYYY HH:mm:ss"}
         picker={dateOnly ? "date" : undefined}
         className={isError ? "error-validate" : ""}
         style={isError ? { borderColor: "red" } : {}}
@@ -80,7 +96,7 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
         value={value || ""} 
         required={required}
       />
-    </>
+    </div>
   );
 };
 

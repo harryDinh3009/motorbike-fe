@@ -546,57 +546,59 @@ const ContractDetailComponent = () => {
               </>
             );
           })()}
-          {/* Thanh toán: chỉ user thuộc chi nhánh thuê hoặc trả */}
-          <ButtonBase
-            label="Thanh toán"
-            className="btn_primary"
-            icon={<DollarOutlined />}
-            onClick={() => {
-              if (!canEditOrCancelOrPay) return handleNoPermission();
-              handleShowPaymentModal();
-            }}
-          />
-          {/* Đóng HĐ: chỉ user thuộc chi nhánh thuê hoặc trả */}
-          <ButtonBase
-            label="Đóng HĐ"
-            className="btn_primary"
-            icon={<FileDoneOutlined />}
-            onClick={() => {
-              if (!canEditOrCancelOrPay) return handleNoPermission();
-              setShowModalClose(true);
-            }}
-          />
-          {/* In hợp đồng: All user */}
-          <Dropdown
-            overlay={
-              <Menu>
-                <Menu.Item key="print" onClick={handlePrintContract}>
-                  In hợp đồng
-                </Menu.Item>
-                <Menu.Item key="export_receipt" onClick={handleExportReceipt}>
-                  In biên nhận
-                </Menu.Item>
-                {/* Hủy hợp đồng: chỉ user thuộc chi nhánh thuê hoặc trả */}
-                <Menu.Item
-                  key="cancel"
-                  onClick={() => {
-                    if (!canEditOrCancelOrPay) return handleNoPermission();
-                    handleCancelContract();
-                  }}
-                >
-                  Hủy hợp đồng
-                </Menu.Item>
-              </Menu>
-            }
-            trigger={["click"]}
-          >
-            <ButtonBase
-              label="Khác"
-              className="btn_lightgray"
-              icon={<MoreOutlined />}
-              onClick={(e) => e.preventDefault()}
-            />
-          </Dropdown>
+          {/* Ẩn các nút sau nếu trạng thái là "Đã hủy" */}
+          {contract?.statusNm !== "Đã hủy" && (
+            <>
+              <ButtonBase
+                label="Thanh toán"
+                className="btn_primary"
+                icon={<DollarOutlined />}
+                onClick={() => {
+                  if (!canEditOrCancelOrPay) return handleNoPermission();
+                  handleShowPaymentModal();
+                }}
+              />
+              <ButtonBase
+                label="Đóng HĐ"
+                className="btn_primary"
+                icon={<FileDoneOutlined />}
+                onClick={() => {
+                  if (!canEditOrCancelOrPay) return handleNoPermission();
+                  setShowModalClose(true);
+                }}
+              />
+              <Dropdown
+                overlay={
+                  <Menu>
+                    <Menu.Item key="print" onClick={handlePrintContract}>
+                      In hợp đồng
+                    </Menu.Item>
+                    <Menu.Item key="export_receipt" onClick={handleExportReceipt}>
+                      In biên nhận
+                    </Menu.Item>
+                    {/* Hủy hợp đồng: chỉ user thuộc chi nhánh thuê hoặc trả */}
+                    <Menu.Item
+                      key="cancel"
+                      onClick={() => {
+                        if (!canEditOrCancelOrPay) return handleNoPermission();
+                        handleCancelContract();
+                      }}
+                    >
+                      Hủy hợp đồng
+                    </Menu.Item>
+                  </Menu>
+                }
+                trigger={["click"]}
+              >
+                <ButtonBase
+                  label="Khác"
+                  className="btn_lightgray"
+                  icon={<MoreOutlined />}
+                  onClick={(e) => e.preventDefault()}
+                />
+              </Dropdown>
+            </>
+          )}
         </div>
 
         <div
@@ -713,27 +715,41 @@ const ContractDetailComponent = () => {
                           Trạng thái
                         </td>
                         <td>
-                          <span
-                            style={{
-                              background:
-                                contract.statusNm === "Hoàn thành"
-                                  ? "#26D02E"
-                                  : "#FFF6D8",
-                              color:
-                                contract.statusNm === "Hoàn thành"
-                                  ? "#fff"
-                                  : "#E6A100",
-                              borderRadius: 8,
-                              padding: "2px 12px",
-                              fontWeight: 500,
-                              fontSize: 14,
-                              display: "inline-flex",
-                              alignItems: "center",
-                            }}
-                          >
-                            {statusIcon}
-                            {contract.statusNm}
-                          </span>
+                          {(() => {
+                            // Status color mapping - đồng bộ với màn danh sách
+                            const STATUS_COLOR_MAP: Record<
+                              string,
+                              { bg: string; color: string }
+                            > = {
+                              "Đã xác nhận": { bg: "#FFD600", color: "#222" }, // yellow
+                              "Đã giao xe": { bg: "#345FCE", color: "#fff" }, // blue
+                              "Đã trả xe": { bg: "#FF8C00", color: "#fff" }, // orange
+                              "Hoàn thành": { bg: "#26D02E", color: "#fff" }, // green
+                              "Đã hủy": { bg: "#F33232", color: "#fff" }, // red
+                            };
+                            const label = contract.statusNm || "-";
+                            const colorObj = STATUS_COLOR_MAP[label] || {
+                              bg: "#E0E0E0",
+                              color: "#222",
+                            };
+                            return (
+                              <span
+                                style={{
+                                  background: colorObj.bg,
+                                  color: colorObj.color,
+                                  borderRadius: 8,
+                                  padding: "2px 12px",
+                                  fontWeight: 500,
+                                  fontSize: 14,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                {statusIcon}
+                                {label}
+                              </span>
+                            );
+                          })()}
                         </td>
                       </tr>
                       <tr>

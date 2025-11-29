@@ -17,6 +17,7 @@ import {
 } from "@/service/business/dashboard/dashboard.type";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
+import { formatDateDMYOnly } from "@/utils/common";
 
 const tableColumns: ColumnsType<{
   stt: number;
@@ -110,12 +111,7 @@ const Dashboard: React.FC = () => {
   // Chart data
   const chartData = {
     labels: (dashboard?.dailyRevenue || []).map((d) =>
-      d.date
-        ? new Date(d.date).toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-          })
-        : ""
+      d.date ? formatDateDMYOnly(d.date) : ""
     ),
     datasets: [
       {

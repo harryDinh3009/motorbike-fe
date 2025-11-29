@@ -66,6 +66,7 @@ const DateTimePickerBase: React.FC<DateTimePickerBaseProps> = ({
         showTime
         value={internalValue}
         onChange={handleChange}
+        format="DD/MM/YYYY HH:mm:ss"
         className={isError ? "error-validate" : ""}
         style={isError ? { borderColor: "red" } : {}}
       />

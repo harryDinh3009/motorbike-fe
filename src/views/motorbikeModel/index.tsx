@@ -96,7 +96,22 @@ const CarModelList = () => {
                   setFilter({ ...filter, keyword: val as string, page: 1 })
                 }
               />
-              <div style={{ flex: 1 }} />
+            </div>
+          </div>
+        </ContainerBase>
+        <ContainerBase>
+          <div className="box_section" style={{ position: "relative" }}>
+            <div
+              className="dp_flex"
+              style={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 16,
+              }}
+            >
+              <p className="box_title_sm" style={{ marginBottom: 0 }}>
+                Danh sách mẫu xe
+              </p>
               <ButtonBase
                 label="Thêm mẫu xe"
                 className="btn_primary"
@@ -115,10 +130,6 @@ const CarModelList = () => {
                 }}
               />
             </div>
-          </div>
-        </ContainerBase>
-        <ContainerBase>
-          <div className="box_section" style={{ position: "relative" }}>
             <TableBase
               data={filteredModels}
               columns={[
