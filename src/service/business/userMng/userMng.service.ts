@@ -38,8 +38,8 @@ export const saveUser = async (
  */
 export const detailUser = async (
   id: string
-): Promise<ApiResponse<UserMngSaveDTO>> => {
-  const res = await http.get<ApiResponse<UserMngSaveDTO>>(
+): Promise<ApiResponse<UserMngListDTO>> => {
+  const res = await http.get<ApiResponse<UserMngListDTO>>(
     `/a/user-mng/detail?id=${id}`
   );
   return res.data;

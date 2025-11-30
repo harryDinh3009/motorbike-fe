@@ -112,8 +112,8 @@ const THeaderHorizontal = () => {
       path: "#",
       subMenus: [
         {
-          name: "Báo cáo xe khả dụng",
-          path: SCREEN.carAvailableReport?.path || "#",
+          name: "Thống kê xe khả dụng",
+          path: SCREEN.rentableCarReport?.path || "#",
           subMenus: [],
         },
         {

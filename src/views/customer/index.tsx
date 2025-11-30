@@ -10,8 +10,10 @@ import {
   DeleteOutlined,
   PlusOutlined,
   SearchOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import ModalSaveInfoCustomer from "./ModalSaveInfoCustomer";
+import ModalViewCustomer from "./ModalViewCustomer";
 import {
   searchCustomers,
   saveCustomer as apiSaveCustomer,
@@ -34,6 +36,8 @@ const CustomerList = () => {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editCustomer, setEditCustomer] = useState<CustomerDTO | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewCustomerId, setViewCustomerId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
@@ -89,6 +93,11 @@ const CustomerList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleView = (customerId: string) => {
+    setViewCustomerId(customerId);
+    setShowViewModal(true);
   };
 
   const handleDelete = async (customerId: string) => {
@@ -264,9 +273,16 @@ const CustomerList = () => {
                 {
                   title: "Hành động",
                   key: "actions",
-                  width: 100,
+                  width: 130,
                   render: (_: any, record: any) => (
                     <div className="dp_flex" style={{ gap: 8 }}>
+                      <ButtonBase
+                        icon={<EyeOutlined />}
+                        className="btn_gray"
+                        onClick={() => handleView(record.id)}
+                        title="Xem chi tiết"
+                        label=""
+                      />
                       <ButtonBase
                         icon={<EditOutlined />}
                         className="btn_gray"
@@ -303,6 +319,14 @@ const CustomerList = () => {
             setEditCustomer(null);
           }}
           onSave={handleSave}
+        />
+        <ModalViewCustomer
+          open={showViewModal}
+          customerId={viewCustomerId}
+          onClose={() => {
+            setShowViewModal(false);
+            setViewCustomerId(null);
+          }}
         />
       </div>
     </div>

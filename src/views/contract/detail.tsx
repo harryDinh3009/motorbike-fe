@@ -638,158 +638,135 @@ const ContractDetailComponent = () => {
                 <HomeOutlined style={{ color: "#1677ff", marginRight: 8 }} />
                 Thông tin hợp đồng
               </p>
-              <div className="dp_flex" style={{ gap: 32, flex: 1 }}>
+              <div className="dp_flex" style={{ gap: 24, flex: 1 }}>
                 <div style={{ flex: 1 }}>
-                  <table
-                    className="tbl_row tbl_border"
+                  <div
                     style={{
-                      width: "100%",
-                      background: "#fafbfc",
-                      height: "100%",
+                      background: "#fafafa",
+                      borderRadius: 8,
+                      padding: 20,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
                     }}
                   >
-                    <tbody>
-                      <tr>
-                        <td style={{ width: 120, color: "#888" }}>
-                          Mã hợp đồng
-                        </td>
-                        <td style={{ fontWeight: 500 }}>
-                          {contract.contractCode}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Nguồn</td>
-                        <td>{contract.source}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Ngày thuê</td>
-                        <td>{formatDateDMY(contract.startDate)}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Chi nhánh thuê</td>
-                        <td>{contract.pickupBranchName}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Địa điểm giao xe</td>
-                        <td>
-                          {contract.pickupAddress
-                            ? contract.pickupAddress
-                            : "-"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Thời gian giao xe</td>
-                        <td>
-                          {contract.deliveryTime
-                            ? formatDateDMY(contract.deliveryTime)
-                            : "-"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Người giao xe</td>
-                        <td>
-                          {contract.deliveryUserName
-                            ? contract.deliveryUserName
-                            : "-"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Ghi chú</td>
-                        <td>{contract.notes ? contract.notes : "-"}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                    {[
+                      { label: "Mã hợp đồng", value: contract.contractCode, bold: true },
+                      { label: "Nguồn", value: contract.source },
+                      { label: "Ngày thuê", value: formatDateDMY(contract.startDate) },
+                      { label: "Chi nhánh thuê", value: contract.pickupBranchName },
+                      { label: "Địa điểm giao xe", value: contract.pickupAddress || "-" },
+                      { label: "Thời gian giao xe", value: contract.deliveryTime ? formatDateDMY(contract.deliveryTime) : "-" },
+                      { label: "Người giao xe", value: contract.deliveryUserName || "-" },
+                      { label: "Ghi chú", value: contract.notes || "-" },
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          paddingBottom: idx < 7 ? 12 : 0,
+                          borderBottom: idx < 7 ? "1px solid #e8e8e8" : "none",
+                        }}
+                      >
+                        <div style={{ minWidth: 150, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                          {item.label}:
+                        </div>
+                        <div
+                          style={{
+                            flex: 1,
+                            color: "#222",
+                            fontSize: 14,
+                            fontWeight: item.bold ? 600 : 400,
+                          }}
+                        >
+                          {item.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <table
-                    className="tbl_row tbl_border"
+                  <div
                     style={{
-                      width: "100%",
-                      background: "#fafbfc",
-                      height: "100%",
+                      background: "#fafafa",
+                      borderRadius: 8,
+                      padding: 20,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
                     }}
                   >
-                    <tbody>
-                      <tr>
-                        <td style={{ width: 120, color: "#888" }}>
-                          Trạng thái
-                        </td>
-                        <td>
-                          {(() => {
-                            // Status color mapping - đồng bộ với màn danh sách
-                            const STATUS_COLOR_MAP: Record<
-                              string,
-                              { bg: string; color: string }
-                            > = {
-                              "Đã xác nhận": { bg: "#FFD600", color: "#222" }, // yellow
-                              "Đã giao xe": { bg: "#345FCE", color: "#fff" }, // blue
-                              "Đã trả xe": { bg: "#FF8C00", color: "#fff" }, // orange
-                              "Hoàn thành": { bg: "#26D02E", color: "#fff" }, // green
-                              "Đã hủy": { bg: "#F33232", color: "#fff" }, // red
-                            };
-                            const label = contract.statusNm || "-";
-                            const colorObj = STATUS_COLOR_MAP[label] || {
-                              bg: "#E0E0E0",
-                              color: "#222",
-                            };
-                            return (
-                              <span
-                                style={{
-                                  background: colorObj.bg,
-                                  color: colorObj.color,
-                                  borderRadius: 8,
-                                  padding: "2px 12px",
-                                  fontWeight: 500,
-                                  fontSize: 14,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                }}
-                              >
-                                {statusIcon}
-                                {label}
-                              </span>
-                            );
-                          })()}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Ngày đặt</td>
-                        <td>{formatDateDMY(contract.createdDate)}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Ngày trả</td>
-                        <td>{formatDateDMY(contract.endDate)}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Chi nhánh trả</td>
-                        <td>{contract.returnBranchName}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Địa điểm trả xe</td>
-                        <td>
-                          {contract.returnAddress
-                            ? contract.returnAddress
-                            : "-"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Thời gian nhận xe</td>
-                        <td>
-                          {contract.returnTime
-                            ? formatDateDMY(contract.returnTime)
-                            : "-"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style={{ color: "#888" }}>Người nhận xe</td>
-                        <td>
-                          {contract.returnUserName
-                            ? contract.returnUserName
-                            : "-"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                    {[
+                      {
+                        label: "Trạng thái",
+                        value: (() => {
+                          const STATUS_COLOR_MAP: Record<
+                            string,
+                            { bg: string; color: string }
+                          > = {
+                            "Đã xác nhận": { bg: "#FFD600", color: "#222" },
+                            "Đã giao xe": { bg: "#345FCE", color: "#fff" },
+                            "Đã trả xe": { bg: "#FF8C00", color: "#fff" },
+                            "Hoàn thành": { bg: "#26D02E", color: "#fff" },
+                            "Đã hủy": { bg: "#F33232", color: "#fff" },
+                          };
+                          const label = contract.statusNm || "-";
+                          const colorObj = STATUS_COLOR_MAP[label] || {
+                            bg: "#E0E0E0",
+                            color: "#222",
+                          };
+                          return (
+                            <span
+                              style={{
+                                background: colorObj.bg,
+                                color: colorObj.color,
+                                borderRadius: 8,
+                                padding: "2px 12px",
+                                fontWeight: 500,
+                                fontSize: 14,
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              {statusIcon}
+                              {label}
+                            </span>
+                          );
+                        })(),
+                        isCustom: true,
+                      },
+                      { label: "Ngày đặt", value: formatDateDMY(contract.createdDate) },
+                      { label: "Ngày trả", value: formatDateDMY(contract.endDate) },
+                      { label: "Chi nhánh trả", value: contract.returnBranchName },
+                      { label: "Địa điểm trả xe", value: contract.returnAddress || "-" },
+                      { label: "Thời gian nhận xe", value: contract.returnTime ? formatDateDMY(contract.returnTime) : "-" },
+                      { label: "Người nhận xe", value: contract.returnUserName || "-" },
+                      { label: "Tiền đặt cọc", value: `${(contract.depositAmount || 0).toLocaleString("vi-VN")} đ`, bold: true },
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          paddingBottom: idx < 7 ? 12 : 0,
+                          borderBottom: idx < 7 ? "1px solid #e8e8e8" : "none",
+                        }}
+                      >
+                        <div style={{ minWidth: 150, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                          {item.label}:
+                        </div>
+                        <div
+                          style={{
+                            flex: 1,
+                            color: "#222",
+                            fontSize: 14,
+                            fontWeight: item.bold ? 600 : 400,
+                          }}
+                        >
+                          {item.isCustom ? item.value : item.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -822,37 +799,47 @@ const ContractDetailComponent = () => {
                 </span>
                 Khách hàng
               </p>
-              <table
-                className="tbl_row tbl_border"
+              <div
                 style={{
-                  width: "100%",
-                  background: "#fafbfc",
-                  height: "100%",
+                  background: "#fafafa",
+                  borderRadius: 8,
+                  padding: 20,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
                 }}
               >
-                <tbody>
-                  <tr>
-                    <td style={{ width: 110, color: "#888" }}>Họ tên</td>
-                    <td style={{ fontWeight: 500 }}>{contract.customerName}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ color: "#888" }}>Số điện thoại</td>
-                    <td>{contract.phoneNumber}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ color: "#888" }}>Email</td>
-                    <td>{contract.email || "-"}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ color: "#888" }}>Quốc gia</td>
-                    <td>{contract.country || "-"}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ color: "#888" }}>Căn cước công dân</td>
-                    <td>{contract.citizenId || "-"}</td>
-                  </tr>
-                </tbody>
-              </table>
+                {[
+                  { label: "Họ tên", value: contract.customerName, bold: true },
+                  { label: "Số điện thoại", value: contract.phoneNumber },
+                  { label: "Email", value: contract.email || "-" },
+                  { label: "Quốc gia", value: contract.country || "-" },
+                  { label: "Căn cước công dân", value: contract.citizenId || "-" },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: "flex",
+                      paddingBottom: idx < 4 ? 12 : 0,
+                      borderBottom: idx < 4 ? "1px solid #e8e8e8" : "none",
+                    }}
+                  >
+                    <div style={{ minWidth: 140, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                      {item.label}:
+                    </div>
+                    <div
+                      style={{
+                        flex: 1,
+                        color: "#222",
+                        fontSize: 14,
+                        fontWeight: item.bold ? 600 : 400,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </ContainerBase>
         </div>

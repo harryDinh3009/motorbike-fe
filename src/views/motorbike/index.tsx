@@ -319,16 +319,35 @@ const MotorbikeList = () => {
     }
   };
   const { alert } = useAlert() || {};
+  const [currentBranchId, setCurrentBranchId] = useState<string>("");
+
+  // Lấy chi nhánh hiện tại của user
+  useEffect(() => {
+    getBranchByCurrentUser()
+      .then((res) => {
+        setCurrentBranchId(res.data?.id || "");
+      })
+      .catch(() => {
+        setCurrentBranchId("");
+      });
+  }, []);
+
   // Xử lý xóa xe
-  const handleDelete = async (id: string) => {
-    setLoading(true);
+  const handleDelete = async (id: string, carBranchId: string) => {
+    // Kiểm tra chi nhánh: không cho phép xóa xe của chi nhánh khác
+    if (currentBranchId && carBranchId && currentBranchId !== carBranchId) {
+      message.error("Bạn không thể xóa xe thuộc chi nhánh khác");
+      return;
+    }
+
     if (window.confirm("Bạn có chắc chắn muốn xóa xe này?")) {
       setLoading(true);
       try {
         await deleteCar(id);
+        message.success("Đã xóa xe thành công!");
         fetchMotorbikes(appliedFilter);
       } catch (err: any) {
-        alert(err?.response?.data?.message || "Xóa xe thất bại. Vui lòng thử lại.");
+        message.error(err?.response?.data?.message || "Xóa xe thất bại. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }
@@ -641,12 +660,6 @@ const MotorbikeList = () => {
                       : idx + 1,
                 },
                 {
-                  title: "Mẫu xe",
-                  dataIndex: "model",
-                  key: "model",
-                  render: (val: string) => (val ? val : "-"),
-                },
-                {
                   title: "Biển số",
                   dataIndex: "licensePlate",
                   key: "licensePlate",
@@ -655,6 +668,12 @@ const MotorbikeList = () => {
                       {val ? val : "-"}
                     </span>
                   ),
+                },
+                {
+                  title: "Mẫu xe",
+                  dataIndex: "model",
+                  key: "model",
+                  render: (val: string) => (val ? val : "-"),
                 },
                 {
                   title: "Loại xe",
@@ -765,7 +784,7 @@ const MotorbikeList = () => {
                         label=""
                         icon={<DeleteOutlined />}
                         className="btn_gray"
-                        onClick={() => handleDelete(record.id)}
+                        onClick={() => handleDelete(record.id, record.branchId)}
                         title="Xóa"
                       />
                       <ButtonBase

@@ -63,4 +63,8 @@ export const SCREEN = {
     path: "/revenue-report",
     name: "revenueReport",
   },
+  rentableCarReport: {
+    path: "/rentable-car-report",
+    name: "rentableCarReport",
+  },
 };

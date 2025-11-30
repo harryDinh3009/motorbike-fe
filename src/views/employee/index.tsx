@@ -10,9 +10,11 @@ import {
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { message } from "antd";
 import ModalSaveEmployee from "./ModalSaveEmployee";
+import ModalViewEmployee from "./ModalViewEmployee";
 import {
   getPageUser,
   saveUser as apiSaveUser,
@@ -59,6 +61,8 @@ const EmployeeList = () => {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, setEditEmployee] = useState<UserMngListDTO | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewEmployeeId, setViewEmployeeId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
@@ -133,6 +137,11 @@ const EmployeeList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleView = (employeeId: string) => {
+    setViewEmployeeId(employeeId);
+    setShowViewModal(true);
   };
   const { alert } = useAlert() || {};
   const handleDelete = async (employeeId: string) => {
@@ -367,9 +376,16 @@ const EmployeeList = () => {
                 {
                   title: "Hành động",
                   key: "actions",
-                  width: 100,
+                  width: 130,
                   render: (_: any, record: any) => (
                     <div className="dp_flex" style={{ gap: 8 }}>
+                      <ButtonBase
+                        icon={<EyeOutlined />}
+                        className="btn_gray"
+                        onClick={() => handleView(record.id)}
+                        title="Xem chi tiết"
+                        label=""
+                      />
                       <ButtonBase
                         icon={<EditOutlined />}
                         className="btn_gray"
@@ -406,6 +422,14 @@ const EmployeeList = () => {
             setEditEmployee(null);
           }}
           onSave={handleSave}
+        />
+        <ModalViewEmployee
+          open={showViewModal}
+          employeeId={viewEmployeeId}
+          onClose={() => {
+            setShowViewModal(false);
+            setViewEmployeeId(null);
+          }}
         />
       </div>
     </div>

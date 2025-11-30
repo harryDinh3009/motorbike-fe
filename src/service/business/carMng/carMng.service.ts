@@ -191,3 +191,24 @@ export const exportAvailableCarsReport = async (
   });
   return res.data;
 };
+
+/**
+ * Export báo cáo xe có thể thuê (PDF)
+ * Sử dụng cùng logic như màn tạo hợp đồng - chọn xe
+ */
+export interface RentableCarReportRequestDTO {
+  startDate?: string;
+  endDate?: string;
+  branchId?: string;
+  modelName?: string;
+  carType?: string;
+}
+
+export const exportRentableCarsReport = async (
+  params: RentableCarReportRequestDTO
+): Promise<Blob> => {
+  const res = await http.post("/a/car-mng/report/rentable-cars", params, {
+    responseType: "blob",
+  });
+  return res.data;
+};

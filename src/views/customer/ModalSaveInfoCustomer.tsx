@@ -188,7 +188,7 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
 
   return (
     <TModal
-      title="Thông tin khách hàng"
+      title={customer ? "Cập nhật thông tin khách hàng" : "Thêm khách hàng"}
       visible={open}
       onCancel={onClose}
       width={900}
