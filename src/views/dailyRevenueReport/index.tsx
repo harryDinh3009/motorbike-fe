@@ -3,35 +3,32 @@ import { Button, DatePicker, Select, Table, message } from "antd";
 import { SearchOutlined, FilePdfOutlined } from "@ant-design/icons";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import dayjs from "dayjs";
-import { searchAvailableCars, exportRentableCarsReport } from "@/service/business/carMng/carMng.service";
+import {
+  getDailyRevenueData,
+  exportDailyRevenueReport,
+  DailyRevenueRowDTO,
+} from "@/service/business/contractMng/contractMng.service";
 import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
-import { getCarModels } from "@/service/business/carMng/carModelMng.service";
-import { getCarTypes } from "@/service/business/carMng/carMng.service";
-import { CarDTO } from "@/service/business/carMng/carMng.type";
 
 const { RangePicker } = DatePicker;
 
-const RentableCarReport: React.FC = () => {
-  // Default date range: today 0:00 to 23:59
+const DailyRevenueReport: React.FC = () => {
+  // Default date range: from first day of current month to today
   const getDefaultDateRange = (): [dayjs.Dayjs, dayjs.Dayjs] => {
-    const startOfToday = dayjs().startOf("day"); // 0:00 hôm nay
-    const endOfToday = dayjs().endOf("day"); // 23:59:59 hôm nay
-    return [startOfToday, endOfToday];
+    const startOfMonth = dayjs().startOf("month");
+    const today = dayjs();
+    return [startOfMonth, today];
   };
 
   // Filter states
   const [branchId, setBranchId] = useState<string>("");
-  const [modelName, setModelName] = useState<string>("");
-  const [carType, setCarType] = useState<string>("");
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(getDefaultDateRange());
 
   // Options
   const [branchOptions, setBranchOptions] = useState<{ label: string; value: string }[]>([]);
-  const [carTypeOptions, setCarTypeOptions] = useState<{ label: string; value: string }[]>([]);
-  const [modelOptions, setModelOptions] = useState<{ label: string; value: string }[]>([]);
 
   // Data states
-  const [carList, setCarList] = useState<CarDTO[]>([]);
+  const [revenueData, setRevenueData] = useState<DailyRevenueRowDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -41,18 +38,6 @@ const RentableCarReport: React.FC = () => {
       setBranchOptions([
         { label: "Tất cả", value: "" },
         ...(res.data || []).map((b: any) => ({ label: b.name, value: b.id })),
-      ]);
-    });
-    getCarTypes().then((res) => {
-      setCarTypeOptions([
-        { label: "Tất cả", value: "" },
-        ...(res.data || []).map((t: string) => ({ label: t, value: t })),
-      ]);
-    });
-    getCarModels().then((res) => {
-      setModelOptions([
-        { label: "Tất cả", value: "" },
-        ...(res.data || []).map((m: string) => ({ label: m, value: m })),
       ]);
     });
     // Lấy chi nhánh hiện tại của user và set mặc định
@@ -69,29 +54,22 @@ const RentableCarReport: React.FC = () => {
   // Handle search
   const handleSearch = async () => {
     if (!dateRange[0] || !dateRange[1]) {
-      message.warning("Vui lòng chọn thời gian thuê!");
+      message.warning("Vui lòng chọn khoảng thời gian!");
       return;
     }
 
     setLoading(true);
     try {
       // startDate: 00:00:00, endDate: 23:59:59
-      const res = await searchAvailableCars({
+      const res = await getDailyRevenueData({
         branchId: branchId || undefined,
-        modelName: modelName || undefined,
-        carType: carType || undefined,
-        startDate: dateRange[0].startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        endDate: dateRange[1].endOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        page: 1,
-        size: 10000,
+        startDate: dateRange[0].startOf("day").format("YYYY-MM-DD"),
+        endDate: dateRange[1].endOf("day").format("YYYY-MM-DD"),
       });
 
-      const allCars = res.data.data || [];
-      // Filter only AVAILABLE cars (not struck through in contract modal)
-      const availableCars = allCars.filter((car) => car.status === "AVAILABLE");
-      setCarList(availableCars);
+      setRevenueData(res.data || []);
       setSearched(true);
-      message.success(`Đã tìm thấy ${availableCars.length} xe có thể thuê`);
+      message.success("Đã tải dữ liệu báo cáo");
     } catch (err) {
       message.error("Lỗi khi tải dữ liệu!");
     } finally {
@@ -101,91 +79,110 @@ const RentableCarReport: React.FC = () => {
 
   // Format currency
   const formatCurrency = (value: number | undefined) => {
-    if (value === undefined || value === null) return "";
+    if (value === undefined || value === null) return "0 đ";
     return value.toLocaleString("vi-VN") + " đ";
   };
+
+  // Calculate totals
+  const totals = revenueData.reduce(
+    (acc, row) => ({
+      contractCount: acc.contractCount + row.contractCount,
+      rentalAmount: acc.rentalAmount + row.rentalAmount,
+      surchargeAmount: acc.surchargeAmount + row.surchargeAmount,
+      discountAmount: acc.discountAmount + row.discountAmount,
+      revenue: acc.revenue + row.revenue,
+    }),
+    {
+      contractCount: 0,
+      rentalAmount: 0,
+      surchargeAmount: 0,
+      discountAmount: 0,
+      revenue: 0,
+    }
+  );
 
   // Table columns
   const columns = [
     {
-      title: "STT",
-      key: "stt",
-      width: 60,
-      render: (_: any, __: any, index: number) => index + 1,
+      title: "Ngày",
+      dataIndex: "date",
+      key: "date",
+      width: 120,
+      render: (val: string) => {
+        if (!val) return "-";
+        return dayjs(val).format("DD/MM/YYYY");
+      },
     },
     {
-      title: "Mẫu xe",
-      dataIndex: "model",
-      key: "model",
+      title: "Số HĐ hoàn thành",
+      dataIndex: "contractCount",
+      key: "contractCount",
+      width: 130,
+      align: "center" as const,
+    },
+    {
+      title: "Tiền thuê xe",
+      dataIndex: "rentalAmount",
+      key: "rentalAmount",
       width: 150,
-    },
-    {
-      title: "Biển số",
-      dataIndex: "licensePlate",
-      key: "licensePlate",
-      width: 120,
-    },
-    {
-      title: "Chi nhánh",
-      dataIndex: "branchName",
-      key: "branchName",
-      width: 150,
-    },
-    {
-      title: "Loại xe",
-      dataIndex: "carType",
-      key: "carType",
-      width: 100,
-    },
-    {
-      title: "Tình trạng",
-      dataIndex: "condition",
-      key: "condition",
-      width: 120,
-    },
-    {
-      title: "Giá ngày",
-      dataIndex: "dailyPrice",
-      key: "dailyPrice",
-      width: 120,
+      align: "right" as const,
       render: (val: number) => formatCurrency(val),
     },
     {
-      title: "Giá giờ",
-      dataIndex: "hourlyPrice",
-      key: "hourlyPrice",
-      width: 120,
+      title: "Tiền phụ thu",
+      dataIndex: "surchargeAmount",
+      key: "surchargeAmount",
+      width: 150,
+      align: "right" as const,
       render: (val: number) => formatCurrency(val),
+    },
+    {
+      title: "Giảm giá",
+      dataIndex: "discountAmount",
+      key: "discountAmount",
+      width: 130,
+      align: "right" as const,
+      render: (val: number) => formatCurrency(val),
+    },
+    {
+      title: "Tổng doanh thu",
+      dataIndex: "revenue",
+      key: "revenue",
+      width: 150,
+      align: "right" as const,
+      render: (val: number) => (
+        <span style={{ fontWeight: 600, color: "#52c41a" }}>
+          {formatCurrency(val)}
+        </span>
+      ),
     },
   ];
 
   // Export PDF using BE API
   const handleExportPdf = async () => {
-    if (carList.length === 0) {
+    if (revenueData.length === 0) {
       message.warning("Không có dữ liệu để xuất!");
       return;
     }
 
     if (!dateRange[0] || !dateRange[1]) {
-      message.warning("Vui lòng chọn thời gian thuê!");
+      message.warning("Vui lòng chọn khoảng thời gian!");
       return;
     }
 
     setLoading(true);
     try {
       // startDate: 00:00:00, endDate: 23:59:59
-      const blob = await exportRentableCarsReport({
+      const blob = await exportDailyRevenueReport({
         branchId: branchId || undefined,
-        modelName: modelName || undefined,
-        carType: carType || undefined,
-        startDate: dateRange[0].startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        endDate: dateRange[1].endOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+        startDate: dateRange[0].startOf("day").format("YYYY-MM-DD"),
+        endDate: dateRange[1].endOf("day").format("YYYY-MM-DD"),
       });
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Bao_cao_xe_co_the_thue_${dayjs().format("DDMMYYYY_HHmmss")}.pdf`;
+      a.download = `Bao_cao_doanh_thu_theo_ngay_${dayjs().format("DDMMYYYY_HHmmss")}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
       message.success("Xuất PDF thành công!");
@@ -199,9 +196,9 @@ const RentableCarReport: React.FC = () => {
   return (
     <div className="content_wrap">
       <div id="content" className="grid_content">
-        <ContainerBase id="rentable-car-report">
+        <ContainerBase id="daily-revenue-report">
           <h2 style={{ marginBottom: 24, fontSize: 20, fontWeight: 600 }}>
-            Thống kê xe khả dụng
+            Báo cáo doanh thu theo ngày
           </h2>
 
           {/* Filters */}
@@ -218,41 +215,16 @@ const RentableCarReport: React.FC = () => {
                 allowClear
               />
             </div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Tên mẫu xe</label>
-              <Select
-                value={modelName}
-                onChange={setModelName}
-                options={modelOptions}
-                style={{ width: "100%" }}
-                placeholder="Tất cả"
-                showSearch
-                allowClear
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Loại xe</label>
-              <Select
-                value={carType}
-                onChange={setCarType}
-                options={carTypeOptions}
-                style={{ width: "100%" }}
-                placeholder="Tất cả"
-                showSearch
-                allowClear
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 280 }}>
+            <div style={{ flex: 2, minWidth: 280 }}>
               <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
-                Thời gian thuê <span style={{ color: "#ff4d4f" }}>*</span>
+                Từ ngày - Đến ngày <span style={{ color: "#ff4d4f" }}>*</span>
               </label>
               <RangePicker
                 value={dateRange}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null])}
-                format="DD/MM/YYYY HH:mm"
+                format="DD/MM/YYYY"
                 style={{ width: "100%" }}
-                showTime={{ format: "HH:mm" }}
-                placeholder={["Từ ngày giờ", "Đến ngày giờ"]}
+                placeholder={["Từ ngày", "Đến ngày"]}
               />
             </div>
           </div>
@@ -268,7 +240,7 @@ const RentableCarReport: React.FC = () => {
             >
               Xem báo cáo
             </Button>
-            {searched && carList.length > 0 && (
+            {searched && revenueData.length > 0 && (
               <Button
                 type="default"
                 icon={<FilePdfOutlined />}
@@ -286,16 +258,16 @@ const RentableCarReport: React.FC = () => {
             <div
               style={{
                 padding: "12px 16px",
-                background: carList.length > 0 ? "#f6ffed" : "#fff7e6",
-                border: `1px solid ${carList.length > 0 ? "#b7eb8f" : "#ffd591"}`,
+                background: revenueData.some((r) => r.contractCount > 0) ? "#f6ffed" : "#fff7e6",
+                border: `1px solid ${revenueData.some((r) => r.contractCount > 0) ? "#b7eb8f" : "#ffd591"}`,
                 borderRadius: 8,
                 marginBottom: 16,
                 fontWeight: 500,
               }}
             >
-              {carList.length > 0
-                ? `✅ Đã tìm thấy ${carList.length} xe khả dụng`
-                : "⚠️ Không tìm thấy xe nào khả dụng trong khoảng thời gian này"}
+              {revenueData.some((r) => r.contractCount > 0)
+                ? `✅ Tổng ${totals.contractCount} hợp đồng hoàn thành | Doanh thu: ${formatCurrency(totals.revenue)}`
+                : "⚠️ Không có hợp đồng hoàn thành trong khoảng thời gian này"}
             </div>
           )}
 
@@ -303,12 +275,36 @@ const RentableCarReport: React.FC = () => {
           {searched && (
             <Table
               columns={columns}
-              dataSource={carList}
-              rowKey="id"
+              dataSource={revenueData}
+              rowKey="date"
               loading={loading}
               pagination={false}
-              scroll={{ x: 1000 }}
+              scroll={{ x: 900 }}
               bordered
+              summary={() =>
+                revenueData.length > 0 ? (
+                  <Table.Summary fixed>
+                    <Table.Summary.Row style={{ background: "#fafafa", fontWeight: 600 }}>
+                      <Table.Summary.Cell index={0}>Tổng cộng</Table.Summary.Cell>
+                      <Table.Summary.Cell index={1} align="center">
+                        {totals.contractCount}
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={2} align="right">
+                        {formatCurrency(totals.rentalAmount)}
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={3} align="right">
+                        {formatCurrency(totals.surchargeAmount)}
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={4} align="right">
+                        {formatCurrency(totals.discountAmount)}
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={5} align="right">
+                        <span style={{ color: "#52c41a" }}>{formatCurrency(totals.revenue)}</span>
+                      </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                  </Table.Summary>
+                ) : null
+              }
             />
           )}
         </ContainerBase>
@@ -317,5 +313,5 @@ const RentableCarReport: React.FC = () => {
   );
 };
 
-export default RentableCarReport;
+export default DailyRevenueReport;
 

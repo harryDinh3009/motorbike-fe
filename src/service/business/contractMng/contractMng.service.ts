@@ -314,12 +314,31 @@ export const deleteContractCar = async (
   return res.data;
 };
 /**
- * Export báo cáo doanh thu theo tháng (PDF)
+ * Báo cáo doanh thu theo tháng
  */
 export interface MonthlyRevenueReportRequestDTO {
   year: number;
   branchId?: string;
 }
+
+export interface MonthlyRevenueRowDTO {
+  month: number;
+  contractCount: number;
+  rentalAmount: number;
+  surchargeAmount: number;
+  discountAmount: number;
+  revenue: number;
+}
+
+export const getMonthlyRevenueData = async (
+  params: MonthlyRevenueReportRequestDTO
+): Promise<ApiResponse<MonthlyRevenueRowDTO[]>> => {
+  const res = await http.post<ApiResponse<MonthlyRevenueRowDTO[]>>(
+    "/a/contract-mng/revenue/monthly-data",
+    params
+  );
+  return res.data;
+};
 
 export const exportMonthlyRevenueReport = async (
   params: MonthlyRevenueReportRequestDTO
@@ -345,6 +364,78 @@ export const exportContractReceipt = async (
   params: ContractReceiptRequestDTO
 ): Promise<Blob> => {
   const res = await http.post("/a/contract-mng/receipt/export", params, {
+    responseType: "blob",
+  });
+  return res.data;
+};
+
+/**
+ * Báo cáo doanh thu theo ngày
+ */
+export interface DailyRevenueReportRequestDTO {
+  branchId?: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+}
+
+export interface DailyRevenueRowDTO {
+  date: string;
+  contractCount: number;
+  rentalAmount: number;
+  surchargeAmount: number;
+  discountAmount: number;
+  revenue: number;
+}
+
+export const getDailyRevenueData = async (
+  params: DailyRevenueReportRequestDTO
+): Promise<ApiResponse<DailyRevenueRowDTO[]>> => {
+  const res = await http.post<ApiResponse<DailyRevenueRowDTO[]>>(
+    "/a/contract-mng/revenue/daily-data",
+    params
+  );
+  return res.data;
+};
+
+export const exportDailyRevenueReport = async (
+  params: DailyRevenueReportRequestDTO
+): Promise<Blob> => {
+  const res = await http.post("/a/contract-mng/revenue/daily-report", params, {
+    responseType: "blob",
+  });
+  return res.data;
+};
+
+/**
+ * Thống kê lượt thuê theo mẫu xe
+ */
+export interface ModelRentalReportRequestDTO {
+  branchId?: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+}
+
+export interface ModelRentalRowDTO {
+  stt: number;
+  modelName: string;
+  rentalCount: number;
+  rentalAmount: number;
+}
+
+export const getModelRentalData = async (
+  params: ModelRentalReportRequestDTO
+): Promise<ApiResponse<ModelRentalRowDTO[]>> => {
+  const res = await http.post<ApiResponse<ModelRentalRowDTO[]>>(
+    "/a/contract-mng/rental/model-data",
+    params
+  );
+  return res.data;
+};
+
+export const exportModelRentalReport = async (
+  params: ModelRentalReportRequestDTO
+): Promise<Blob> => {
+  const res = await http.post("/a/contract-mng/rental/model-report", params, {
     responseType: "blob",
   });
   return res.data;

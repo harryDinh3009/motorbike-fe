@@ -117,7 +117,17 @@ const THeaderHorizontal = () => {
           subMenus: [],
         },
         {
-          name: "Báo cáo doanh thu",
+          name: "Thống kê lượt thuê theo mẫu xe",
+          path: SCREEN.modelRentalReport?.path || "#",
+          subMenus: [],
+        },
+        {
+          name: "Doanh thu theo ngày",
+          path: SCREEN.dailyRevenueReport?.path || "#",
+          subMenus: [],
+        },
+        {
+          name: "Doanh thu theo tháng",
           path: SCREEN.revenueReport?.path || "#",
           subMenus: [],
         },

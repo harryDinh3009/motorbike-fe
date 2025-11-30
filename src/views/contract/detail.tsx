@@ -549,24 +549,29 @@ const ContractDetailComponent = () => {
           {/* Ẩn các nút sau nếu trạng thái là "Đã hủy" */}
           {contract?.statusNm !== "Đã hủy" && (
             <>
-              <ButtonBase
-                label="Thanh toán"
-                className="btn_primary"
-                icon={<DollarOutlined />}
-                onClick={() => {
-                  if (!canEditOrCancelOrPay) return handleNoPermission();
-                  handleShowPaymentModal();
-                }}
-              />
-              <ButtonBase
-                label="Đóng HĐ"
-                className="btn_primary"
-                icon={<FileDoneOutlined />}
-                onClick={() => {
-                  if (!canEditOrCancelOrPay) return handleNoPermission();
-                  setShowModalClose(true);
-                }}
-              />
+              {/* Ẩn button Thanh toán và Đóng HĐ khi trạng thái là "Hoàn thành" */}
+              {contract?.statusNm !== "Hoàn thành" && (
+                <>
+                  <ButtonBase
+                    label="Thanh toán"
+                    className="btn_primary"
+                    icon={<DollarOutlined />}
+                    onClick={() => {
+                      if (!canEditOrCancelOrPay) return handleNoPermission();
+                      handleShowPaymentModal();
+                    }}
+                  />
+                  <ButtonBase
+                    label="Đóng HĐ"
+                    className="btn_primary"
+                    icon={<FileDoneOutlined />}
+                    onClick={() => {
+                      if (!canEditOrCancelOrPay) return handleNoPermission();
+                      setShowModalClose(true);
+                    }}
+                  />
+                </>
+              )}
               <Dropdown
                 overlay={
                   <Menu>
@@ -742,13 +747,15 @@ const ContractDetailComponent = () => {
                       { label: "Thời gian nhận xe", value: contract.returnTime ? formatDateDMY(contract.returnTime) : "-" },
                       { label: "Người nhận xe", value: contract.returnUserName || "-" },
                       { label: "Tiền đặt cọc", value: `${(contract.depositAmount || 0).toLocaleString("vi-VN")} đ`, bold: true },
-                    ].map((item, idx) => (
+                      // Hiển thị "Ngày hoàn thành" khi trạng thái là "Hoàn thành"
+                      ...(contract.statusNm === "Hoàn thành" ? [{ label: "Ngày hoàn thành", value: contract.completedDate ? formatDateDMY(contract.completedDate) : "-", bold: true }] : []),
+                    ].map((item, idx, arr) => (
                       <div
                         key={idx}
                         style={{
                           display: "flex",
-                          paddingBottom: idx < 7 ? 12 : 0,
-                          borderBottom: idx < 7 ? "1px solid #e8e8e8" : "none",
+                          paddingBottom: idx < arr.length - 1 ? 12 : 0,
+                          borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
                         }}
                       >
                         <div style={{ minWidth: 150, color: "#666", fontSize: 14, fontWeight: 500 }}>

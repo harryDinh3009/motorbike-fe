@@ -4,22 +4,31 @@ import { SearchOutlined, FilePdfOutlined } from "@ant-design/icons";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import dayjs from "dayjs";
 import {
-  getMonthlyRevenueData,
-  exportMonthlyRevenueReport,
-  MonthlyRevenueRowDTO,
+  getModelRentalData,
+  exportModelRentalReport,
+  ModelRentalRowDTO,
 } from "@/service/business/contractMng/contractMng.service";
 import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 
-const MonthlyRevenueReport: React.FC = () => {
+const { RangePicker } = DatePicker;
+
+const ModelRentalReport: React.FC = () => {
+  // Default date range: from first day of current month to today
+  const getDefaultDateRange = (): [dayjs.Dayjs, dayjs.Dayjs] => {
+    const startOfMonth = dayjs().startOf("month");
+    const today = dayjs();
+    return [startOfMonth, today];
+  };
+
   // Filter states
   const [branchId, setBranchId] = useState<string>("");
-  const [year, setYear] = useState<dayjs.Dayjs | null>(dayjs());
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>(getDefaultDateRange());
 
   // Options
   const [branchOptions, setBranchOptions] = useState<{ label: string; value: string }[]>([]);
 
   // Data states
-  const [revenueData, setRevenueData] = useState<MonthlyRevenueRowDTO[]>([]);
+  const [rentalData, setRentalData] = useState<ModelRentalRowDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -44,21 +53,23 @@ const MonthlyRevenueReport: React.FC = () => {
 
   // Handle search
   const handleSearch = async () => {
-    if (!year) {
-      message.warning("Vui lòng chọn năm!");
+    if (!dateRange[0] || !dateRange[1]) {
+      message.warning("Vui lòng chọn khoảng thời gian!");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await getMonthlyRevenueData({
-        year: year.year(),
+      // startDate: 00:00:00, endDate: 23:59:59
+      const res = await getModelRentalData({
         branchId: branchId || undefined,
+        startDate: dateRange[0].startOf("day").format("YYYY-MM-DD"),
+        endDate: dateRange[1].endOf("day").format("YYYY-MM-DD"),
       });
 
-      setRevenueData(res.data || []);
+      setRentalData(res.data || []);
       setSearched(true);
-      message.success("Đã tải dữ liệu báo cáo");
+      message.success("Đã tải dữ liệu thống kê");
     } catch (err) {
       message.error("Lỗi khi tải dữ liệu!");
     } finally {
@@ -73,37 +84,36 @@ const MonthlyRevenueReport: React.FC = () => {
   };
 
   // Calculate totals
-  const totals = revenueData.reduce(
+  const totals = rentalData.reduce(
     (acc, row) => ({
-      contractCount: acc.contractCount + row.contractCount,
+      rentalCount: acc.rentalCount + row.rentalCount,
       rentalAmount: acc.rentalAmount + row.rentalAmount,
-      surchargeAmount: acc.surchargeAmount + row.surchargeAmount,
-      discountAmount: acc.discountAmount + row.discountAmount,
-      revenue: acc.revenue + row.revenue,
     }),
     {
-      contractCount: 0,
+      rentalCount: 0,
       rentalAmount: 0,
-      surchargeAmount: 0,
-      discountAmount: 0,
-      revenue: 0,
     }
   );
 
   // Table columns
   const columns = [
     {
-      title: "Tháng",
-      dataIndex: "month",
-      key: "month",
-      width: 80,
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
+      width: 70,
       align: "center" as const,
-      render: (val: number) => `Tháng ${val}`,
     },
     {
-      title: "Số HĐ hoàn thành",
-      dataIndex: "contractCount",
-      key: "contractCount",
+      title: "Mẫu xe",
+      dataIndex: "modelName",
+      key: "modelName",
+      width: 250,
+    },
+    {
+      title: "Số lượt thuê",
+      dataIndex: "rentalCount",
+      key: "rentalCount",
       width: 130,
       align: "center" as const,
     },
@@ -111,31 +121,7 @@ const MonthlyRevenueReport: React.FC = () => {
       title: "Tiền thuê xe",
       dataIndex: "rentalAmount",
       key: "rentalAmount",
-      width: 150,
-      align: "right" as const,
-      render: (val: number) => formatCurrency(val),
-    },
-    {
-      title: "Tiền phụ thu",
-      dataIndex: "surchargeAmount",
-      key: "surchargeAmount",
-      width: 150,
-      align: "right" as const,
-      render: (val: number) => formatCurrency(val),
-    },
-    {
-      title: "Giảm giá",
-      dataIndex: "discountAmount",
-      key: "discountAmount",
-      width: 130,
-      align: "right" as const,
-      render: (val: number) => formatCurrency(val),
-    },
-    {
-      title: "Tổng doanh thu",
-      dataIndex: "revenue",
-      key: "revenue",
-      width: 150,
+      width: 180,
       align: "right" as const,
       render: (val: number) => (
         <span style={{ fontWeight: 600, color: "#52c41a" }}>
@@ -147,27 +133,29 @@ const MonthlyRevenueReport: React.FC = () => {
 
   // Export PDF using BE API
   const handleExportPdf = async () => {
-    if (revenueData.length === 0) {
+    if (rentalData.length === 0) {
       message.warning("Không có dữ liệu để xuất!");
       return;
     }
 
-    if (!year) {
-      message.warning("Vui lòng chọn năm!");
+    if (!dateRange[0] || !dateRange[1]) {
+      message.warning("Vui lòng chọn khoảng thời gian!");
       return;
     }
 
     setLoading(true);
     try {
-      const blob = await exportMonthlyRevenueReport({
-        year: year.year(),
+      // startDate: 00:00:00, endDate: 23:59:59
+      const blob = await exportModelRentalReport({
         branchId: branchId || undefined,
+        startDate: dateRange[0].startOf("day").format("YYYY-MM-DD"),
+        endDate: dateRange[1].endOf("day").format("YYYY-MM-DD"),
       });
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Bao_cao_doanh_thu_thang_${year.year()}_${dayjs().format("DDMMYYYY_HHmmss")}.pdf`;
+      a.download = `Thong_ke_luot_thue_theo_mau_xe_${dayjs().format("DDMMYYYY_HHmmss")}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
       message.success("Xuất PDF thành công!");
@@ -181,9 +169,9 @@ const MonthlyRevenueReport: React.FC = () => {
   return (
     <div className="content_wrap">
       <div id="content" className="grid_content">
-        <ContainerBase id="monthly-revenue-report">
+        <ContainerBase id="model-rental-report">
           <h2 style={{ marginBottom: 24, fontSize: 20, fontWeight: 600 }}>
-            Báo cáo doanh thu theo tháng
+            Thống kê lượt thuê theo mẫu xe
           </h2>
 
           {/* Filters */}
@@ -200,16 +188,16 @@ const MonthlyRevenueReport: React.FC = () => {
                 allowClear
               />
             </div>
-            <div style={{ flex: 1, minWidth: 150 }}>
+            <div style={{ flex: 2, minWidth: 280 }}>
               <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
-                Năm <span style={{ color: "#ff4d4f" }}>*</span>
+                Từ ngày - Đến ngày <span style={{ color: "#ff4d4f" }}>*</span>
               </label>
-              <DatePicker
-                picker="year"
-                value={year}
-                onChange={setYear}
+              <RangePicker
+                value={dateRange}
+                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null])}
+                format="DD/MM/YYYY"
                 style={{ width: "100%" }}
-                placeholder="Chọn năm"
+                placeholder={["Từ ngày", "Đến ngày"]}
               />
             </div>
           </div>
@@ -223,9 +211,9 @@ const MonthlyRevenueReport: React.FC = () => {
               loading={loading}
               size="large"
             >
-              Xem báo cáo
+              Xem thống kê
             </Button>
-            {searched && revenueData.length > 0 && (
+            {searched && rentalData.length > 0 && (
               <Button
                 type="default"
                 icon={<FilePdfOutlined />}
@@ -243,16 +231,16 @@ const MonthlyRevenueReport: React.FC = () => {
             <div
               style={{
                 padding: "12px 16px",
-                background: revenueData.some((r) => r.contractCount > 0) ? "#f6ffed" : "#fff7e6",
-                border: `1px solid ${revenueData.some((r) => r.contractCount > 0) ? "#b7eb8f" : "#ffd591"}`,
+                background: rentalData.length > 0 ? "#f6ffed" : "#fff7e6",
+                border: `1px solid ${rentalData.length > 0 ? "#b7eb8f" : "#ffd591"}`,
                 borderRadius: 8,
                 marginBottom: 16,
                 fontWeight: 500,
               }}
             >
-              {revenueData.some((r) => r.contractCount > 0)
-                ? `✅ Tổng ${totals.contractCount} hợp đồng hoàn thành | Doanh thu: ${formatCurrency(totals.revenue)}`
-                : "⚠️ Không có hợp đồng hoàn thành trong năm này"}
+              {rentalData.length > 0
+                ? `✅ Tìm thấy ${rentalData.length} mẫu xe được thuê | Tổng ${totals.rentalCount} lượt thuê | Tiền thuê: ${formatCurrency(totals.rentalAmount)}`
+                : "⚠️ Không có dữ liệu lượt thuê trong khoảng thời gian này"}
             </div>
           )}
 
@@ -260,31 +248,24 @@ const MonthlyRevenueReport: React.FC = () => {
           {searched && (
             <Table
               columns={columns}
-              dataSource={revenueData}
-              rowKey="month"
+              dataSource={rentalData}
+              rowKey="stt"
               loading={loading}
               pagination={false}
-              scroll={{ x: 900 }}
+              scroll={{ x: 700 }}
               bordered
               summary={() =>
-                revenueData.length > 0 ? (
+                rentalData.length > 0 ? (
                   <Table.Summary fixed>
                     <Table.Summary.Row style={{ background: "#fafafa", fontWeight: 600 }}>
-                      <Table.Summary.Cell index={0}>Tổng cộng</Table.Summary.Cell>
-                      <Table.Summary.Cell index={1} align="center">
-                        {totals.contractCount}
+                      <Table.Summary.Cell index={0} colSpan={2} align="center">
+                        Tổng cộng
                       </Table.Summary.Cell>
-                      <Table.Summary.Cell index={2} align="right">
-                        {formatCurrency(totals.rentalAmount)}
+                      <Table.Summary.Cell index={2} align="center">
+                        {totals.rentalCount}
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={3} align="right">
-                        {formatCurrency(totals.surchargeAmount)}
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={4} align="right">
-                        {formatCurrency(totals.discountAmount)}
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={5} align="right">
-                        <span style={{ color: "#52c41a" }}>{formatCurrency(totals.revenue)}</span>
+                        <span style={{ color: "#52c41a" }}>{formatCurrency(totals.rentalAmount)}</span>
                       </Table.Summary.Cell>
                     </Table.Summary.Row>
                   </Table.Summary>
@@ -298,4 +279,5 @@ const MonthlyRevenueReport: React.FC = () => {
   );
 };
 
-export default MonthlyRevenueReport;
+export default ModelRentalReport;
+
