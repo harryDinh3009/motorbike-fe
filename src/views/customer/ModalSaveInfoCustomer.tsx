@@ -396,10 +396,10 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               <label
                 style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}
               >
-                CCCD/CMND (Mặt trước)
+                Căn cước/CCCD/CMND
               </label>
               <InputBase
-                placeholder="Nhập số CCCD/CMND"
+                placeholder="Nhập số Căn cước/CCCD/CMND"
                 modelValue={form.cccd}
                 onChange={(val) => handleChange("cccd", val)}
                 style={{ width: "100%", marginBottom: 10, maxWidth: 180 }}
@@ -431,8 +431,8 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               </label>
               <div
                 style={{
-                  width: 110,
-                  height: 82,
+                  width: 160,
+                  height: 120,
                   background: "#fff",
                   border: "1.5px dashed #bbb",
                   borderRadius: 10,
@@ -485,12 +485,7 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
                 alignItems: "center",
               }}
             >
-              <label
-                style={{ fontWeight: 600, marginBottom: 10, fontSize: 15 }}
-              >
-                CCCD/CMND (Mặt sau)
-              </label>
-              <div style={{ height: 38, marginBottom: 10 }} />
+              <div style={{ height: 82, marginBottom: 10 }} />
               <label
                 style={{
                   fontWeight: 500,
@@ -518,8 +513,8 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               </label>
               <div
                 style={{
-                  width: 110,
-                  height: 82,
+                  width: 160,
+                  height: 120,
                   background: "#fff",
                   border: "1.5px dashed #bbb",
                   borderRadius: 10,
@@ -606,8 +601,8 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               </label>
               <div
                 style={{
-                  width: 110,
-                  height: 82,
+                  width: 160,
+                  height: 120,
                   background: "#fff",
                   border: "1.5px dashed #bbb",
                   borderRadius: 10,
@@ -691,8 +686,8 @@ const ModalSaveInfoCustomer = ({ open, customer, onClose, onSave }: Props) => {
               </label>
               <div
                 style={{
-                  width: 110,
-                  height: 82,
+                  width: 160,
+                  height: 120,
                   background: "#fff",
                   border: "1.5px dashed #bbb",
                   borderRadius: 10,

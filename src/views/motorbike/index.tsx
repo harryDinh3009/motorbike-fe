@@ -15,7 +15,9 @@ import {
   ImportOutlined,
   EyeOutlined,
   SearchOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
+import { Dropdown, Menu } from "antd";
 import ModalSaveMotorbike from "./ModalSaveMotorbike";
 import {
   searchCars,
@@ -32,12 +34,13 @@ import {
   getAllCars,
   uploadCarImage,
 } from "@/service/business/carMng/carMng.service";
-import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 import { CarSearchDTO, CarDTO } from "@/service/business/carMng/carMng.type";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 import TModal from "@/component/common/modal/TModal";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import { useAlert } from "@/plugins/global";
+import { message } from "antd";
 // Status color mapping for motorbike status
 const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
   "Hoạt động": { bg: "#D6F5E6", color: "#22A06B" },
@@ -159,6 +162,25 @@ const MotorbikeList = () => {
         })),
       ]);
     });
+    
+    // Lấy chi nhánh của user hiện tại và set vào filter
+    getBranchByCurrentUser()
+      .then((res) => {
+        const currentBranchId = res.data?.id || "";
+        if (currentBranchId) {
+          setFilterInput((prev) => ({
+            ...prev,
+            branchId: currentBranchId,
+          }));
+          setAppliedFilter((prev) => ({
+            ...prev,
+            branchId: currentBranchId,
+          }));
+        }
+      })
+      .catch(() => {
+        // Nếu không lấy được chi nhánh thì giữ nguyên filter mặc định
+      });
     getCarTypes().then((res) => {
       setTypeOptions([
         { value: "", label: "Loại xe" },
@@ -348,6 +370,52 @@ const MotorbikeList = () => {
       setLoading(false);
     }
   };
+
+  // Cập nhật trạng thái xe ngay trên danh sách
+  const handleUpdateStatus = async (carId: string, newStatus: string) => {
+    try {
+      // Lấy thông tin xe hiện tại
+      const car = motorbikes.find((m) => m.id === carId);
+      if (!car) return;
+
+      // Tạo payload chỉ cập nhật status, giữ nguyên các thông tin khác
+      const payload = {
+        id: carId,
+        model: car.model,
+        licensePlate: car.licensePlate,
+        carType: car.carType,
+        branchId: car.branchId,
+        dailyPrice: car.dailyPrice,
+        hourlyPrice: car.hourlyPrice,
+        condition: car.condition,
+        currentOdometer: car.currentOdometer,
+        status: newStatus as any,
+        imageUrl: car.imageUrl,
+        note: car.note,
+        yearOfManufacture: car.yearOfManufacture,
+        origin: car.origin,
+        value: car.value,
+        frameNumber: car.frameNumber,
+        engineNumber: car.engineNumber,
+        color: car.color,
+        registrationNumber: car.registrationNumber,
+        registeredOwnerName: car.registeredOwnerName,
+        registrationPlace: car.registrationPlace,
+        insuranceContractNumber: car.insuranceContractNumber,
+        insuranceExpiryDate: car.insuranceExpiryDate,
+      };
+
+      await saveCar(payload);
+      message.success("Đã cập nhật trạng thái xe thành công!");
+      // Reload danh sách để cập nhật UI
+      fetchMotorbikes(appliedFilter);
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Cập nhật trạng thái thất bại!");
+    }
+  };
+
+  // Tạo options cho dropdown trạng thái (loại bỏ option "Trạng thái" placeholder)
+  const statusDropdownOptions = statusOptions.filter((opt) => opt.value !== "");
 
   // Đóng modal chi tiết
   const handleCloseDetail = () => {
@@ -582,7 +650,11 @@ const MotorbikeList = () => {
                   title: "Biển số",
                   dataIndex: "licensePlate",
                   key: "licensePlate",
-                  render: (val: string) => (val ? val : "-"),
+                  render: (val: string) => (
+                    <span style={{ whiteSpace: "nowrap", display: "block" }}>
+                      {val ? val : "-"}
+                    </span>
+                  ),
                 },
                 {
                   title: "Loại xe",
@@ -620,16 +692,61 @@ const MotorbikeList = () => {
                   title: "Trạng thái",
                   dataIndex: "status",
                   key: "status",
-                  width: 120,
-                  render: (_: string, record: any) => (
-                    <span
-                      style={getStatusStyle(
-                        (record.statusNm || record.status || "") + ""
-                      )}
-                    >
-                      {record.statusNm || record.status || "-"}
-                    </span>
-                  ),
+                  width: 180,
+                  render: (_: string, record: any) => {
+                    const currentStatus = record.status || "";
+                    const currentStatusName = record.statusNm || record.status || "";
+                    const statusStyle = getStatusStyle(currentStatusName);
+                    
+                    // Tạo menu cho dropdown
+                    const menu = (
+                      <Menu>
+                        {statusDropdownOptions.map((opt) => (
+                          <Menu.Item
+                            key={opt.value}
+                            onClick={() => {
+                              if (opt.value !== currentStatus) {
+                                handleUpdateStatus(record.id, opt.value);
+                              }
+                            }}
+                            style={{
+                              color: opt.value === currentStatus ? "#1677ff" : "#333",
+                              fontWeight: opt.value === currentStatus ? 500 : 400,
+                            }}
+                          >
+                            {opt.label}
+                          </Menu.Item>
+                        ))}
+                      </Menu>
+                    );
+
+                    return (
+                      <Dropdown overlay={menu} trigger={["click"]} placement="bottomLeft">
+                        <span
+                          style={{
+                            ...statusStyle,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            cursor: "pointer",
+                            userSelect: "none",
+                            paddingRight: "12px",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {currentStatusName}
+                          <DownOutlined
+                            style={{
+                              fontSize: 10,
+                              color: statusStyle.color,
+                              transition: "transform 0.2s",
+                              marginLeft: 2,
+                            }}
+                          />
+                        </span>
+                      </Dropdown>
+                    );
+                  },
                 },
                 {
                   title: "Hành động",

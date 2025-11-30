@@ -16,7 +16,7 @@ import {
   exportContractsToExcel,
   getContractStatuses,
 } from "@/service/business/contractMng/contractMng.service";
-import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 import {
   ContractSearchDTO,
   ContractDTO,
@@ -132,6 +132,25 @@ const ContractComponent = () => {
         })),
       ]);
     });
+    
+    // Lấy chi nhánh của user hiện tại và set vào filter "Chi nhánh thuê"
+    getBranchByCurrentUser()
+      .then((res) => {
+        const currentBranchId = res.data?.id || "";
+        if (currentBranchId) {
+          setFilterInput((prev) => ({
+            ...prev,
+            pickupBranchId: currentBranchId,
+          }));
+          setAppliedFilter((prev) => ({
+            ...prev,
+            pickupBranchId: currentBranchId,
+          }));
+        }
+      })
+      .catch(() => {
+        // Nếu không lấy được chi nhánh thì giữ nguyên filter mặc định
+      });
   }, []);
 
   // Table pagination

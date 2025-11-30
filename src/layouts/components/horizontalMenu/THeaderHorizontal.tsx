@@ -107,6 +107,22 @@ const THeaderHorizontal = () => {
       path: SCREEN.employee?.path || "#",
       subMenus: [],
     },
+    {
+      name: "Báo cáo",
+      path: "#",
+      subMenus: [
+        {
+          name: "Báo cáo xe khả dụng",
+          path: SCREEN.carAvailableReport?.path || "#",
+          subMenus: [],
+        },
+        {
+          name: "Báo cáo doanh thu",
+          path: SCREEN.revenueReport?.path || "#",
+          subMenus: [],
+        },
+      ],
+    },
   ];
 
   const navigate = useNavigate();

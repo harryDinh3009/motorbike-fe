@@ -25,9 +25,12 @@ import {
   getBranchByCurrentUser,
 } from "@/service/business/branchMng/branchMng.service";
 import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/surchargeTypeMng.service";
-import { getAllCustomers } from "@/service/business/customerMng/customerMng.service";
+import { getAllCustomers, saveCustomer as apiSaveCustomer } from "@/service/business/customerMng/customerMng.service";
 import { ContractSaveDTO } from "@/service/business/contractMng/contractMng.type";
+import { CustomerSaveDTO } from "@/service/business/customerMng/customerMng.type";
 import { message } from "antd"; // thêm import này
+import ModalSaveInfoCustomer from "@/views/customer/ModalSaveInfoCustomer";
+import { PlusOutlined } from "@ant-design/icons";
 
 const getPageTitle = (isEdit: boolean) =>
   isEdit ? "Cập nhật hợp đồng thuê xe" : "Tạo hợp đồng thuê xe";
@@ -148,6 +151,7 @@ const ContractCreateComponent = () => {
   const [showAddMotor, setShowAddMotor] = useState(false);
   const [showAddSurcharge, setShowAddSurcharge] = useState(false);
   const [editingFee, setEditingFee] = useState<any>(null);
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const contractId = searchParams.get("id");
@@ -165,9 +169,10 @@ const ContractCreateComponent = () => {
   >([]);
   const [currentBranchId, setCurrentBranchId] = useState<string>("");
 
-  // Fetch options
-  useEffect(() => {
-    getAllCustomers().then((res) => {
+  // Fetch customer options
+  const fetchCustomerOptions = async () => {
+    try {
+      const res = await getAllCustomers();
       setCustomerOptions([
         { value: "", label: "Chọn khách hàng" },
         ...(res.data || []).map((c: any) => ({
@@ -175,7 +180,14 @@ const ContractCreateComponent = () => {
           label: c.fullName,
         })),
       ]);
-    });
+    } catch (err) {
+      console.error("Failed to fetch customers:", err);
+    }
+  };
+
+  // Fetch options
+  useEffect(() => {
+    fetchCustomerOptions();
     getAllActiveBranches().then((res) => {
       setBranchOptions([
         { value: "", label: "Chi nhánh" },
@@ -568,6 +580,56 @@ const ContractCreateComponent = () => {
     }
   };
 
+  // Handler thêm khách hàng mới từ modal
+  const handleSaveCustomer = async (customerData: any) => {
+    try {
+      const payload: CustomerSaveDTO = {
+        id: customerData.id,
+        fullName: customerData.name || customerData.fullName,
+        phoneNumber: customerData.phone || customerData.phoneNumber,
+        email: customerData.email,
+        dateOfBirth: customerData.birthday || customerData.dateOfBirth,
+        gender: customerData.gender,
+        country: customerData.country,
+        address: customerData.address,
+        citizenId: customerData.cccd || customerData.citizenId,
+        citizenIdFrontImageUrl: customerData.cccdFrontImg || customerData.citizenIdFrontImageUrl,
+        citizenIdBackImageUrl: customerData.cccdBackImg || customerData.citizenIdBackImageUrl,
+        driverLicense: customerData.license || customerData.driverLicense,
+        driverLicenseImageUrl: customerData.licenseImg || customerData.driverLicenseImageUrl,
+        passport: customerData.passport,
+        passportImageUrl: customerData.passportImg || customerData.passportImageUrl,
+        note: customerData.note,
+      };
+      
+      await apiSaveCustomer(payload);
+      
+      // Reload danh sách khách hàng
+      await fetchCustomerOptions();
+      
+      // Tìm khách hàng vừa tạo để set vào form (dựa vào phoneNumber)
+      const phoneToFind = payload.phoneNumber;
+      const res = await getAllCustomers();
+      const newCustomer = (res.data || []).find(
+        (c: any) => c.phoneNumber === phoneToFind
+      );
+      
+      if (newCustomer) {
+        setForm({
+          ...form,
+          customer: newCustomer.id,
+        });
+        message.success("Đã thêm khách hàng và chọn vào hợp đồng!");
+      } else {
+        message.success("Đã thêm khách hàng thành công!");
+      }
+      
+      setShowAddCustomer(false);
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Lưu khách hàng thất bại!");
+    }
+  };
+
   const pageTitle = getPageTitle(isEditMode);
   const breadcrumbItems = getBreadcrumbItems(isEditMode);
 
@@ -589,17 +651,51 @@ const ContractCreateComponent = () => {
             >
               <div>
                 <label className="form_label">Khách hàng</label>
-                <SelectboxBase
-                  value={form.customer}
-                  options={customerOptions}
-                  onChange={(val: string | string[]) =>
-                    setForm({
-                      ...form,
-                      customer: typeof val === "string" ? val : val[0] || "",
-                    })
-                  }
-                  style={{ width: "100%", minWidth: 200 }}
-                />
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-start", width: "100%" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <SelectboxBase
+                      value={form.customer}
+                      options={customerOptions}
+                      onChange={(val: string | string[]) =>
+                        setForm({
+                          ...form,
+                          customer: typeof val === "string" ? val : val[0] || "",
+                        })
+                      }
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCustomer(true)}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      border: "1px solid #d9d9d9",
+                      background: "#fff",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: 40,
+                      width: 40,
+                      height: 32,
+                      flexShrink: 0,
+                      transition: "all 0.2s",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = "#4096ff";
+                      e.currentTarget.style.color = "#4096ff";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.borderColor = "#d9d9d9";
+                      e.currentTarget.style.color = "#000";
+                    }}
+                    title="Thêm khách hàng mới"
+                  >
+                    <PlusOutlined style={{ fontSize: 16 }} />
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="form_label">Nguồn</label>
@@ -1321,6 +1417,14 @@ const ContractCreateComponent = () => {
           }}
           onSave={handleSaveFee}
           fee={editingFee !== null ? feeList[editingFee] : undefined}
+        />
+
+        {/* Modal thêm khách hàng */}
+        <ModalSaveInfoCustomer
+          open={showAddCustomer}
+          customer={null}
+          onClose={() => setShowAddCustomer(false)}
+          onSave={handleSaveCustomer}
         />
       </div>
     </div>
