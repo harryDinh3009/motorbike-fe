@@ -609,106 +609,52 @@ const ContractDetailComponent = () => {
         <div
           className="dp_flex"
           style={{
-            gap: 24,
+            gap: 16,
             alignItems: "stretch",
             marginBottom: 24,
             width: "100%",
           }}
         >
-          {/* Thông tin hợp đồng */}
-          <ContainerBase
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <div
-              className="box_section"
-              style={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                minWidth: 750,
-              }}
-            >
-              <p
-                className="box_title_sm"
+          {/* 1. Thông tin hợp đồng - chia 2 cột */}
+          <div style={{ flex: 2.5, display: "flex" }}>
+            <ContainerBase>
+              <div
+                className="box_section"
                 style={{
-                  marginBottom: 16,
+                  height: "100%",
                   display: "flex",
-                  alignItems: "center",
+                  flexDirection: "column",
                 }}
               >
-                <HomeOutlined style={{ color: "#1677ff", marginRight: 8 }} />
-                Thông tin hợp đồng
-              </p>
-              <div className="dp_flex" style={{ gap: 24, flex: 1 }}>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      background: "#fafafa",
-                      borderRadius: 8,
-                      padding: 20,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                    }}
-                  >
+                <p
+                  className="box_title_sm"
+                  style={{
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <HomeOutlined style={{ color: "#1677ff", marginRight: 8 }} />
+                  Thông tin hợp đồng
+                </p>
+                <div
+                  style={{
+                    background: "#fafafa",
+                    borderRadius: 8,
+                    padding: 20,
+                    display: "flex",
+                    gap: 24,
+                    flex: 1,
+                  }}
+                >
+                  {/* Cột trái */}
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
                     {[
                       { label: "Mã hợp đồng", value: contract.contractCode, bold: true },
-                      { label: "Nguồn", value: contract.source },
-                      { label: "Ngày thuê", value: formatDateDMY(contract.startDate) },
-                      { label: "Chi nhánh thuê", value: contract.pickupBranchName },
-                      { label: "Địa điểm giao xe", value: contract.pickupAddress || "-" },
-                      { label: "Thời gian giao xe", value: contract.deliveryTime ? formatDateDMY(contract.deliveryTime) : "-" },
-                      { label: "Người giao xe", value: contract.deliveryUserName || "-" },
-                      { label: "Ghi chú", value: contract.notes || "-" },
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          display: "flex",
-                          paddingBottom: idx < 7 ? 12 : 0,
-                          borderBottom: idx < 7 ? "1px solid #e8e8e8" : "none",
-                        }}
-                      >
-                        <div style={{ minWidth: 150, color: "#666", fontSize: 14, fontWeight: 500 }}>
-                          {item.label}:
-                        </div>
-                        <div
-                          style={{
-                            flex: 1,
-                            color: "#222",
-                            fontSize: 14,
-                            fontWeight: item.bold ? 600 : 400,
-                          }}
-                        >
-                          {item.value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      background: "#fafafa",
-                      borderRadius: 8,
-                      padding: 20,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                    }}
-                  >
-                    {[
                       {
                         label: "Trạng thái",
                         value: (() => {
-                          const STATUS_COLOR_MAP: Record<
-                            string,
-                            { bg: string; color: string }
-                          > = {
+                          const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
                             "Đã xác nhận": { bg: "#FFD600", color: "#222" },
                             "Đã giao xe": { bg: "#345FCE", color: "#fff" },
                             "Đã trả xe": { bg: "#FF8C00", color: "#fff" },
@@ -716,10 +662,7 @@ const ContractDetailComponent = () => {
                             "Đã hủy": { bg: "#F33232", color: "#fff" },
                           };
                           const label = contract.statusNm || "-";
-                          const colorObj = STATUS_COLOR_MAP[label] || {
-                            bg: "#E0E0E0",
-                            color: "#222",
-                          };
+                          const colorObj = STATUS_COLOR_MAP[label] || { bg: "#E0E0E0", color: "#222" };
                           return (
                             <span
                               style={{
@@ -740,15 +683,9 @@ const ContractDetailComponent = () => {
                         })(),
                         isCustom: true,
                       },
+                      { label: "Nguồn", value: contract.source || "-" },
                       { label: "Ngày đặt", value: formatDateDMY(contract.createdDate) },
-                      { label: "Ngày trả", value: formatDateDMY(contract.endDate) },
-                      { label: "Chi nhánh trả", value: contract.returnBranchName },
-                      { label: "Địa điểm trả xe", value: contract.returnAddress || "-" },
-                      { label: "Thời gian nhận xe", value: contract.returnTime ? formatDateDMY(contract.returnTime) : "-" },
-                      { label: "Người nhận xe", value: contract.returnUserName || "-" },
-                      { label: "Tiền đặt cọc", value: `${(contract.depositAmount || 0).toLocaleString("vi-VN")} đ`, bold: true },
-                      // Hiển thị "Ngày hoàn thành" khi trạng thái là "Hoàn thành"
-                      ...(contract.statusNm === "Hoàn thành" ? [{ label: "Ngày hoàn thành", value: contract.completedDate ? formatDateDMY(contract.completedDate) : "-", bold: true }] : []),
+                      { label: "Ngày thuê", value: formatDateDMY(contract.startDate) },
                     ].map((item, idx, arr) => (
                       <div
                         key={idx}
@@ -758,7 +695,7 @@ const ContractDetailComponent = () => {
                           borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
                         }}
                       >
-                        <div style={{ minWidth: 150, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        <div style={{ minWidth: 120, color: "#666", fontSize: 14, fontWeight: 500 }}>
                           {item.label}:
                         </div>
                         <div
@@ -774,21 +711,142 @@ const ContractDetailComponent = () => {
                       </div>
                     ))}
                   </div>
+                  {/* Cột phải */}
+                  <div style={{ flex: 1.2, display: "flex", flexDirection: "column", gap: 12 }}>
+                    {[
+                      { label: "Ngày trả", value: formatDateDMY(contract.endDate) },
+                      { label: "Chi nhánh thuê", value: contract.pickupBranchName || "-" },
+                      { label: "Chi nhánh trả", value: contract.returnBranchName || "-" },
+                      { label: "Ghi chú", value: contract.notes || "-" },
+                      { label: "Tiền đặt cọc", value: `${(contract.depositAmount || 0).toLocaleString("vi-VN")} đ`, bold: true },
+                    ].map((item, idx, arr) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          paddingBottom: idx < arr.length - 1 ? 12 : 0,
+                          borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
+                        }}
+                      >
+                        <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500, whiteSpace: "nowrap" }}>
+                          {item.label}:
+                        </div>
+                        <div
+                          style={{
+                            flex: 1,
+                            color: "#222",
+                            fontSize: 14,
+                            fontWeight: item.bold ? 600 : 400,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {item.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          </ContainerBase>
+            </ContainerBase>
+          </div>
 
-          <ContainerBase>
-            <div
-              className="box_section"
-              style={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                minWidth: 350,
-              }}
-            >
+          {/* 2. Thông tin giao-nhận xe - chia 2 cột */}
+          <div style={{ flex: 2.5, display: "flex" }}>
+            <ContainerBase>
+              <div
+                className="box_section"
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <p
+                  className="box_title_sm"
+                  style={{
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <CarOutlined style={{ color: "#1677ff", marginRight: 8 }} />
+                  Thông tin giao - nhận xe
+                </p>
+                <div
+                  style={{
+                    background: "#fafafa",
+                    borderRadius: 8,
+                    padding: 20,
+                    display: "flex",
+                    gap: 24,
+                    flex: 1,
+                  }}
+                >
+                  {/* Cột trái - Giao xe */}
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                    {[
+                      { label: "Địa điểm giao xe", value: contract.pickupAddress || "-" },
+                      { label: "Thời gian giao xe", value: contract.deliveryTime ? formatDateDMY(contract.deliveryTime) : "-" },
+                      { label: "Người giao xe", value: contract.deliveryUserName || "-" },
+                    ].map((item, idx, arr) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          paddingBottom: idx < arr.length - 1 ? 12 : 0,
+                          borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
+                        }}
+                      >
+                        <div style={{ minWidth: 130, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                          {item.label}:
+                        </div>
+                        <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                          {item.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Cột phải - Nhận xe */}
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                    {[
+                      { label: "Địa điểm trả xe", value: contract.returnAddress || "-" },
+                      { label: "Thời gian nhận xe", value: contract.returnTime ? formatDateDMY(contract.returnTime) : "-" },
+                      { label: "Người nhận xe", value: contract.returnUserName || "-" },
+                      ...(contract.statusNm === "Hoàn thành" ? [{ label: "Ngày hoàn thành", value: contract.completedDate ? formatDateDMY(contract.completedDate) : "-", bold: true }] : []),
+                    ].map((item, idx, arr) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex",
+                          paddingBottom: idx < arr.length - 1 ? 12 : 0,
+                          borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
+                        }}
+                      >
+                        <div style={{ minWidth: 130, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                          {item.label}:
+                        </div>
+                        <div style={{ flex: 1, color: "#222", fontSize: 14, fontWeight: item.bold ? 600 : 400 }}>
+                          {item.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </ContainerBase>
+          </div>
+
+          {/* 3. Khách hàng */}
+          <div style={{ flex: 1.2, display: "flex" }}>
+            <ContainerBase>
+              <div
+                className="box_section"
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
               <p
                 className="box_title_sm"
                 style={{
@@ -814,21 +872,24 @@ const ContractDetailComponent = () => {
                   display: "flex",
                   flexDirection: "column",
                   gap: 12,
+                  flex: 1,
                 }}
               >
                 {[
                   { label: "Họ tên", value: contract.customerName, bold: true },
-                  { label: "Số điện thoại", value: contract.phoneNumber },
+                  { label: "Số điện thoại", value: contract.phoneNumber || "-" },
                   { label: "Email", value: contract.email || "-" },
+                  { label: "Ngày sinh", value: contract.customerDateOfBirth ? formatDateDMY(contract.customerDateOfBirth) : "-" },
                   { label: "Quốc gia", value: contract.country || "-" },
                   { label: "Căn cước công dân", value: contract.citizenId || "-" },
-                ].map((item, idx) => (
+                  { label: "Địa chỉ", value: contract.customerAddress || "-" },
+                ].map((item, idx, arr) => (
                   <div
                     key={idx}
                     style={{
                       display: "flex",
-                      paddingBottom: idx < 4 ? 12 : 0,
-                      borderBottom: idx < 4 ? "1px solid #e8e8e8" : "none",
+                      paddingBottom: idx < arr.length - 1 ? 12 : 0,
+                      borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
                     }}
                   >
                     <div style={{ minWidth: 140, color: "#666", fontSize: 14, fontWeight: 500 }}>
@@ -847,8 +908,9 @@ const ContractDetailComponent = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          </ContainerBase>
+              </div>
+            </ContainerBase>
+          </div>
         </div>
 
         {/* Danh sách xe */}

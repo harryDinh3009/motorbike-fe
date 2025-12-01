@@ -8,8 +8,10 @@
 
 .grid_content {
   position: relative;
-	width: 1292px; max-width: 96%;
+	width: 100%; max-width: 98%;
 	margin: 0 auto;
+	padding: 0 16px;
+	box-sizing: border-box;
 }
 
 .grid_row {
@@ -146,7 +148,7 @@
 @media screen and (max-width:1279px) {
 	
 	.grid_content {
-		max-width: 92%;
+		max-width: 98%;
 	}
 	.col_lg_1 {
 		width: 8.33333333333%;
@@ -206,7 +208,7 @@
 	.mobile{ display: none; }
 	
 	.grid_content {
-		max-width: 94%;
+		max-width: 98%;
 	}
 
 	.grid_row_md {

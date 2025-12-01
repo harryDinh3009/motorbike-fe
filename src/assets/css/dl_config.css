@@ -148,9 +148,9 @@ table, caption, tbody, tfoot, thead, tr, th, td,
 article, aside, canvas, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section, summary,
 time, mark, audio, video, a {
-    font-family: "NotoSansKR", "Arial", sans-serif;
-    line-height: 2rem;
-    letter-spacing: -0.03em;
+    font-family: "Be Vietnam Pro", "NotoSansKR", "Arial", sans-serif;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
     font-weight: normal;
     font-style: normal;
     vertical-align: middle;
@@ -312,7 +312,7 @@ button {
 /* 폰트관련 속성 통일 및 상속되지 않는 문제 해결, Firefox 4+, Safari, Chrome 에서 margin이 서로 다른것 초기화 */
 button, input, optgroup, select, textarea {
     margin: 0;
-    font-family: NotoSansKR, 'Arial', sans-serif;
+    font-family: "Be Vietnam Pro", NotoSansKR, 'Arial', sans-serif;
     outline: 0;
 
 }

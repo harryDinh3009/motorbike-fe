@@ -82,28 +82,32 @@ const ModalSaveCarModel = ({ open, onClose, onSave, model, viewOnly }: Props) =>
     >
       <div className="box_section" style={{ padding: 0 }}>
         <div style={{ display: "grid", gap: 20 }}>
-          <InputBase
-            label={
-              <span>
-                Tên mẫu xe <span style={{ color: "red" }}>*</span>
-              </span>
-            }
-            required
-            modelValue={form.name}
-            placeholder="Nhập tên mẫu xe"
-            onChange={(val) => handleChange("name", val)}
-            style={{ width: "100%" }}
-            disabled={!!viewOnly}
-          />
-          <TextAreaBase
-            label="Mô tả"
-            placeholder="Nhập mô tả"
-            value={form.description}
-            onChange={(val) => handleChange("description", val)}
-            rows={3}
-            style={{ width: "100%" }}
-            disabled={!!viewOnly}
-          />
+          <div>
+            <label style={{ display: "block", marginBottom: 8, fontWeight: 500, color: "#333" }}>
+              Tên mẫu xe <span style={{ color: "red" }}>*</span>
+            </label>
+            <InputBase
+              required
+              modelValue={form.name}
+              placeholder="Nhập tên mẫu xe"
+              onChange={(val) => handleChange("name", val)}
+              style={{ width: "100%" }}
+              disabled={!!viewOnly}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", marginBottom: 8, fontWeight: 500, color: "#333" }}>
+              Mô tả
+            </label>
+            <TextAreaBase
+              placeholder="Nhập mô tả"
+              value={form.description}
+              onChange={(val) => handleChange("description", val)}
+              rows={3}
+              style={{ width: "100%" }}
+              disabled={!!viewOnly}
+            />
+          </div>
           {viewOnly && (
             <div>
               <b>Trạng thái:</b>{" "}

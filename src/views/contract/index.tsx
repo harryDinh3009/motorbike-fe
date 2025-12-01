@@ -396,9 +396,28 @@ const ContractComponent = () => {
                     loading={loading}
                   />
                   <ButtonBase
-                    label="Xuất Excel"
+                    label="Reset bộ lọc"
+                    className="btn_gray"
+                    style={{ minWidth: 120, whiteSpace: "nowrap" }}
+                    onClick={handleResetFilter}
+                    disabled={loading}
+                  />
+                  <ButtonBase
+                    label="Tìm xe khả dụng"
                     className="btn_yellow"
                     icon={<CarOutlined />}
+                    style={{ 
+                      minWidth: 140, 
+                      whiteSpace: "nowrap",
+                      backgroundColor: "#1890ff",
+                      borderColor: "#1890ff",
+                      color: "#fff"
+                    }}
+                    onClick={() => navigate("/rentable-car-report")}
+                  />
+                  <ButtonBase
+                    label="Xuất Excel"
+                    className="btn_yellow"
                     style={{ 
                       minWidth: 120, 
                       whiteSpace: "nowrap",
@@ -408,13 +427,6 @@ const ContractComponent = () => {
                     }}
                     onClick={handleExportExcel}
                     loading={loading}
-                  />
-                  <ButtonBase
-                    label="Đặt lại bộ lọc"
-                    className="btn_gray"
-                    style={{ minWidth: 120, whiteSpace: "nowrap" }}
-                    onClick={handleResetFilter}
-                    disabled={loading}
                   />
                 </div>
               </div>

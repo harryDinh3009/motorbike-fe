@@ -524,6 +524,11 @@ table td .btn_tooltip {
   border-radius: 8px;
   box-shadow: var(--shadow);
 }
+/* Box trong flex container sẽ mở rộng 100% */
+.dp_flex > div > .box,
+.dp_flex > .box {
+  width: 100%;
+}
 .box.loading_md {
   min-height: 200px;
 }
@@ -811,11 +816,11 @@ table td .btn_tooltip {
   padding: 0 !important;
 }
 .apexcharts-legend-text, .apexcharts-tooltip-text {
-  font-family: NotoSansKR, sans-serif !important;
+  font-family: "Be Vietnam Pro", NotoSansKR, sans-serif !important;
 }
 .apexcharts-datalabel {
   white-space: normal;
-  font-family: NotoSansKR, sans-serif !important;
+  font-family: "Be Vietnam Pro", NotoSansKR, sans-serif !important;
 }
 
 body.swal2-height-auto {
