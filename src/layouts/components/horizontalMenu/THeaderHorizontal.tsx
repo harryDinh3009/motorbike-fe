@@ -1,4 +1,4 @@
-import Logo from "@/assets/images/motorbike_logo.png";
+import Logo from "@/assets/images/motorbike_logo_new.jpg";
 import { gnbOneDepth, headerStyle, mobileGnb } from "@/assets/js/common";
 import { SCREEN } from "@/router/screen";
 import { useEffect, useState } from "react";

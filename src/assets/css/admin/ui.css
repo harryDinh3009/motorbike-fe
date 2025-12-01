@@ -903,3 +903,63 @@ body.swal2-height-auto {
     margin-bottom: 0;
   }
 }
+
+/* ========== SIDEBAR LAYOUT ========== */
+/* Override content_wrap khi dùng sidebar */
+.ant-layout .content_wrap {
+  padding-top: 0 !important;
+  margin: 0;
+}
+
+/* Menu sidebar styling - Xám đậm theme */
+.ant-layout-sider .ant-menu-dark {
+  background: transparent !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item,
+.ant-layout-sider .ant-menu-dark .ant-menu-submenu-title {
+  color: rgba(255,255,255,0.8) !important;
+  margin: 4px 8px !important;
+  border-radius: 6px !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item .anticon,
+.ant-layout-sider .ant-menu-dark .ant-menu-submenu-title .anticon {
+  color: rgba(255,255,255,0.6) !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item-selected {
+  background: #FFD600 !important;
+  color: #1e272e !important;
+  font-weight: 600;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item-selected .anticon {
+  color: #1e272e !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-item:hover,
+.ant-layout-sider .ant-menu-dark .ant-menu-submenu-title:hover {
+  background: rgba(255, 214, 0, 0.15) !important;
+  color: #FFD600 !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-submenu-open > .ant-menu-submenu-title {
+  color: #FFD600 !important;
+}
+
+.ant-layout-sider .ant-menu-dark .ant-menu-sub {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Sidebar collapsed state - adjust main content margin */
+.ant-layout-sider-collapsed + .main-layout {
+  margin-left: 80px !important;
+}
+
+/* Grid content trong sidebar layout */
+.ant-layout .grid_content {
+  max-width: 100%;
+  width: 100%;
+  padding: 0 24px;
+}

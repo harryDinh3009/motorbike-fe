@@ -1,24 +1,45 @@
 import React, { PropsWithChildren } from "react";
 import { Outlet } from "react-router-dom";
+import { Layout } from "antd";
+import TSidebar from "./components/TSidebar";
+import THeaderTop from "./components/THeaderTop";
 import TFooter from "./components/TFooter";
-import THeaderHorizontal from "./components/horizontalMenu/THeaderHorizontal";
+
+const { Content } = Layout;
 
 const DefaultLayout: React.FC<PropsWithChildren> = () => {
   return (
-    <div className="page_wrap">
-      {/* Header */}
-      <header>
-        <THeaderHorizontal />
-      </header>
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Sidebar bên trái */}
+      <TSidebar />
 
-      {/* Main Content */}
-      <main id="main_content">
-        <Outlet />
-      </main>
+      {/* Main area */}
+      <Layout
+        style={{
+          marginLeft: 260, // Bằng với width của Sider
+          transition: "all 0.2s",
+        }}
+        className="main-layout"
+      >
+        {/* Header nhỏ gọn */}
+        <THeaderTop />
 
-      {/* Footer */}
-      <TFooter />
-    </div>
+        {/* Main Content */}
+        <Content
+          style={{
+            background: "#f0f2f5",
+            minHeight: "calc(100vh - 56px)",
+          }}
+        >
+          <div className="content_wrap" style={{ paddingTop: 24 }}>
+            <Outlet />
+          </div>
+        </Content>
+
+        {/* Footer */}
+        <TFooter />
+      </Layout>
+    </Layout>
   );
 };
 

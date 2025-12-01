@@ -3,7 +3,7 @@ import ContainerBase from "@/component/common/block/container/ContainerBase";
 import InputBase from "@/component/common/input/InputBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import Logo from "@/assets/images/motorbike_logo.png";
+import Logo from "@/assets/images/motorbike_logo_new.jpg";
 import { loginBasicAdmin } from "@/service/common/auth/AuthService";
 import { setUserInfo, setToken } from "@/utils/storage";
 import { jwtDecode } from "jwt-decode";
@@ -73,7 +73,7 @@ const LoginView = () => {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #1e90ff 0%, #6dd5ed 100%)",
+        background: "linear-gradient(135deg, #FFD600 0%, #FFA726 50%, #FF9800 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -89,7 +89,7 @@ const LoginView = () => {
           background: "#fff",
           borderRadius: 32,
           boxShadow:
-            "0 12px 48px 0 rgba(22,119,255,0.18), 0 2px 12px 0 rgba(0,0,0,0.06)",
+            "0 12px 48px 0 rgba(0,0,0,0.15), 0 2px 12px 0 rgba(0,0,0,0.08)",
           padding: "54px 38px 38px 38px",
           position: "relative",
           zIndex: 2,
@@ -102,39 +102,39 @@ const LoginView = () => {
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <img
             src={Logo}
-            alt="BookBike"
+            alt="Motorbike Rental"
             style={{
-              height: 68,
-              marginBottom: 10,
-              filter: "drop-shadow(0 2px 8px #1677ff33)",
+              height: 80,
+              marginBottom: 12,
+              filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.15))",
               objectFit: "contain",
+              borderRadius: 12,
             }}
           />
           <h1
             style={{
-              color: "#1677ff",
-              fontWeight: 900,
-              fontSize: 32,
-              letterSpacing: 1,
+              color: "#2f3542",
+              fontWeight: 800,
+              fontSize: 22,
+              letterSpacing: 0.5,
               marginBottom: 0,
-              textShadow: "0 2px 8px #1677ff22",
-              lineHeight: 1.1,
+              lineHeight: 1.3,
             }}
           >
-            BOOKBIKE
+            MOTORBIKE RENTAL
           </h1>
           <div
             style={{
-              color: "#222",
-              fontWeight: 500,
-              fontSize: 17,
-              letterSpacing: 0.5,
+              color: "#FF9800",
+              fontWeight: 600,
+              fontSize: 14,
+              letterSpacing: 2,
               marginBottom: 0,
-              opacity: 0.85,
-              marginTop: 2,
+              marginTop: 4,
+              textTransform: "uppercase",
             }}
           >
-            Thuê xe máy
+            Management System
           </div>
         </div>
         <div style={{ width: "100%" }}>
@@ -164,10 +164,10 @@ const LoginView = () => {
                 height: 48,
                 borderRadius: 14,
                 border: "1.5px solid #e0e7ef",
-                background: "#f6faff",
+                background: "#fffef5",
                 marginBottom: 10,
                 transition: "border 0.2s",
-                boxShadow: "0 1px 4px #eaf3ff44",
+                boxShadow: "0 1px 4px rgba(255,152,0,0.1)",
               }}
             />
           </div>
@@ -184,10 +184,10 @@ const LoginView = () => {
                 height: 48,
                 borderRadius: 14,
                 border: "1.5px solid #e0e7ef",
-                background: "#f6faff",
+                background: "#fffef5",
                 marginBottom: 2,
                 transition: "border 0.2s",
-                boxShadow: "0 1px 4px #eaf3ff44",
+                boxShadow: "0 1px 4px rgba(255,152,0,0.1)",
               }}
             />
           </div>
@@ -214,7 +214,7 @@ const LoginView = () => {
                   marginRight: 8,
                   width: 18,
                   height: 18,
-                  accentColor: "#1677ff",
+                  accentColor: "#FF9800",
                   borderRadius: 4,
                   border: "1.5px solid #e0e7ef",
                 }}
@@ -233,11 +233,12 @@ const LoginView = () => {
               height: 50,
               borderRadius: 14,
               fontWeight: 700,
-              boxShadow: "0 2px 16px 0 #1677ff22",
-              background: "linear-gradient(90deg, #1677ff 60%, #6dd5ed 100%)",
+              boxShadow: "0 2px 16px 0 rgba(255,152,0,0.3)",
+              background: "linear-gradient(90deg, #FF9800 0%, #FFB74D 50%, #FFC107 100%)",
               border: "none",
               transition: "background 0.2s, box-shadow 0.2s",
               marginBottom: 8,
+              color: "#2f3542",
             }}
             onClick={handleLogin}
             disabled={loading || !form.username || !form.password}
@@ -252,10 +253,10 @@ const LoginView = () => {
           right: 40,
           bottom: 0,
           width: 340,
-          opacity: 0.13,
+          opacity: 0.1,
           zIndex: 1,
           pointerEvents: "none",
-          filter: "drop-shadow(0 2px 12px #1677ff33)",
+          filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.2))",
         }}
       />
     </div>
