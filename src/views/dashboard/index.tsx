@@ -10,7 +10,7 @@ import "./dashboard.css";
 import { HomeOutlined } from "@ant-design/icons";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import { getDashboard } from "@/service/business/dashboard/dashboard.service";
-import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
+import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 import {
   DashboardResponseDTO,
   TopCarDTO,
@@ -29,7 +29,7 @@ const tableColumns: ColumnsType<{
   { title: "Mẫu xe", dataIndex: "model", key: "model" },
   { title: "Số lượt thuê", dataIndex: "count", key: "count", align: "center" },
   {
-    title: "Doanh thu mang lại",
+    title: "Tiền thuê xe",
     dataIndex: "revenue",
     key: "revenue",
     align: "right",
@@ -84,8 +84,12 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getAllActiveBranches().then((res) => {
-      setBranches([
+    // Lấy danh sách chi nhánh và branch của user hiện tại
+    Promise.all([
+      getAllActiveBranches(),
+      getBranchByCurrentUser(),
+    ]).then(([branchesRes, currentBranchRes]) => {
+      const branchesList = [
         {
           id: "",
           name: "Tất cả chi nhánh",
@@ -93,20 +97,52 @@ const Dashboard: React.FC = () => {
           address: "",
           status: 1,
         },
-        ...(res.data || []),
-      ]);
+        ...(branchesRes.data || []),
+      ];
+      setBranches(branchesList);
+      
+      // Set giá trị mặc định là branch của user hiện tại
+      if (currentBranchRes.data?.id) {
+        setBranchId(currentBranchRes.data.id);
+      } else {
+        // Nếu user không có branch, mặc định là "Tất cả chi nhánh"
+        setBranchId("");
+      }
+    }).catch(() => {
+      // Nếu có lỗi, vẫn load danh sách branches và set mặc định "Tất cả chi nhánh"
+      getAllActiveBranches().then((res) => {
+        setBranches([
+          {
+            id: "",
+            name: "Tất cả chi nhánh",
+            phoneNumber: "",
+            address: "",
+            status: 1,
+          },
+          ...(res.data || []),
+        ]);
+        setBranchId("");
+      });
     });
   }, []);
 
   useEffect(() => {
+    // Chỉ gọi API khi đã có danh sách branches (để đảm bảo branchId đã được set)
+    if (branches.length === 0) {
+      return;
+    }
+    
     setLoading(true);
-    getDashboard(branchId)
+    // Khi chọn "Tất cả chi nhánh" (branchId = ""), gửi undefined để backend lấy tất cả
+    // Khi chọn một chi nhánh cụ thể, gửi branchId đó
+    const branchIdToSend = branchId === "" ? undefined : branchId;
+    getDashboard(branchIdToSend)
       .then((res) => {
         setDashboard(res.data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [branchId]);
+  }, [branchId, branches.length]);
 
   // Chart data
   const chartData = {
@@ -129,6 +165,27 @@ const Dashboard: React.FC = () => {
     <div className="content_wrap dashboard-page">
       <div id="content" className="grid_content dashboard-grid">
         <BreadcrumbBase title={pageTitle} items={[]} />
+        {/* Text chào mừng */}
+        <div
+          style={{
+            marginBottom: 24,
+            padding: "16px 20px",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            borderRadius: 12,
+            color: "#fff",
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "2rem",
+              fontWeight: 600,
+              lineHeight: 1.4,
+            }}
+          >
+            Chào mừng quay trở lại! Cùng nhìn lại tình hình kinh doanh tháng này nhé
+          </h2>
+        </div>
         {/* Filter chi nhánh */}
         <div
           style={{
@@ -219,7 +276,7 @@ const Dashboard: React.FC = () => {
                 className="dashboard-performance__label"
                 style={{ marginBottom: "16px", fontSize: "1.7rem" }}
               >
-                Tổng doanh thu
+                Tổng doanh thu ước tính
               </div>
               <div
                 style={{
@@ -241,152 +298,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        {/* ========== Tổng quan doanh thu ========== */}
-        <div className="dashboard-section box_section dashboard-revenue">
-          <div className="dashboard-row">
-            <div className="box_title_custom">Tổng quan doanh thu</div>
-          </div>
-          <div className="dashboard-revenue__grid">
-            {/* Hôm nay */}
-            <div className="dashboard-revenue__col">
-              <div className="dashboard-revenue__title">Hôm nay</div>
-              <ul className="dashboard-revenue__list">
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">
-                    Tiền hợp đồng
-                  </span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.today?.contractAmount || 0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">Tiền thuê xe</span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.today?.rentalAmount || 0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">Tiền phụ thu</span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.today?.surchargeAmount || 0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-              </ul>
-            </div>
-            {/* Tháng này */}
-            <div className="dashboard-revenue__col">
-              <div className="dashboard-revenue__title">Tháng này</div>
-              <ul className="dashboard-revenue__list">
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">
-                    Tiền hợp đồng
-                  </span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.thisMonth?.contractAmount ||
-                        0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">Tiền thuê xe</span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.thisMonth?.rentalAmount || 0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">Tiền phụ thu</span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.thisMonth
-                          ?.surchargeAmount || 0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-              </ul>
-            </div>
-            {/* Tháng trước */}
-            <div className="dashboard-revenue__col">
-              <div className="dashboard-revenue__title">Tháng trước</div>
-              <ul className="dashboard-revenue__list">
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">
-                    Tiền hợp đồng
-                  </span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.lastMonth?.contractAmount ||
-                        0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">Tiền thuê xe</span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.lastMonth?.rentalAmount || 0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-                <li className="dashboard-revenue__item">
-                  <span className="dashboard-revenue__icon">📄</span>
-                  <span className="dashboard-revenue__label">Tiền phụ thu</span>
-                  <span className="dashboard-revenue__value">
-                    <AnimatedCounter
-                      value={
-                        dashboard?.revenueOverview?.lastMonth
-                          ?.surchargeAmount || 0
-                      }
-                      formatAsCurrency
-                    />
-                  </span>
-                </li>
-              </ul>
-            </div>
-            {/* Filter button (placeholder) */}
-            <div className="dashboard-revenue__filter"></div>
-          </div>
-        </div>
         {/* ========== Doanh thu theo ngày ========== */}
         <div className="dashboard-section box_section dashboard-chart">
           <div className="dashboard-row">
@@ -405,7 +316,6 @@ const Dashboard: React.FC = () => {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
               }}
-              width={"100%"}
               height={320}
             />
           </div>

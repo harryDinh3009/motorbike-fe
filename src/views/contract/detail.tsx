@@ -643,17 +643,27 @@ const ContractDetailComponent = () => {
                     borderRadius: 8,
                     padding: 20,
                     display: "flex",
-                    gap: 24,
+                    flexDirection: "column",
+                    gap: 12,
                     flex: 1,
                   }}
                 >
-                  {/* Cột trái */}
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-                    {[
-                      { label: "Mã hợp đồng", value: contract.contractCode, bold: true },
-                      {
-                        label: "Trạng thái",
-                        value: (() => {
+                  {/* Hàng 1: Mã hợp đồng; Trạng thái */}
+                  <div style={{ display: "flex", gap: 24 }}>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 120, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Mã hợp đồng:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14, fontWeight: 600 }}>
+                        {contract.contractCode}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Trạng thái:
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        {(() => {
                           const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
                             "Đã xác nhận": { bg: "#FFD600", color: "#222" },
                             "Đã giao xe": { bg: "#345FCE", color: "#fff" },
@@ -680,70 +690,89 @@ const ContractDetailComponent = () => {
                               {label}
                             </span>
                           );
-                        })(),
-                        isCustom: true,
-                      },
-                      { label: "Nguồn", value: contract.source || "-" },
-                      { label: "Ngày đặt", value: formatDateDMY(contract.createdDate) },
-                      { label: "Ngày thuê", value: formatDateDMY(contract.startDate) },
-                    ].map((item, idx, arr) => (
-                      <div
-                        key={idx}
-                        style={{
-                          display: "flex",
-                          paddingBottom: idx < arr.length - 1 ? 12 : 0,
-                          borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
-                        }}
-                      >
-                        <div style={{ minWidth: 120, color: "#666", fontSize: 14, fontWeight: 500 }}>
-                          {item.label}:
-                        </div>
-                        <div
-                          style={{
-                            flex: 1,
-                            color: "#222",
-                            fontSize: 14,
-                            fontWeight: item.bold ? 600 : 400,
-                          }}
-                        >
-                          {item.isCustom ? item.value : item.value}
-                        </div>
+                        })()}
                       </div>
-                    ))}
+                    </div>
                   </div>
-                  {/* Cột phải */}
-                  <div style={{ flex: 1.2, display: "flex", flexDirection: "column", gap: 12 }}>
-                    {[
-                      { label: "Ngày trả", value: formatDateDMY(contract.endDate) },
-                      { label: "Chi nhánh thuê", value: contract.pickupBranchName || "-" },
-                      { label: "Chi nhánh trả", value: contract.returnBranchName || "-" },
-                      { label: "Ghi chú", value: contract.notes || "-" },
-                      { label: "Tiền đặt cọc", value: `${(contract.depositAmount || 0).toLocaleString("vi-VN")} đ`, bold: true },
-                    ].map((item, idx, arr) => (
-                      <div
-                        key={idx}
-                        style={{
-                          display: "flex",
-                          paddingBottom: idx < arr.length - 1 ? 12 : 0,
-                          borderBottom: idx < arr.length - 1 ? "1px solid #e8e8e8" : "none",
-                        }}
-                      >
-                        <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500, whiteSpace: "nowrap" }}>
-                          {item.label}:
-                        </div>
-                        <div
-                          style={{
-                            flex: 1,
-                            color: "#222",
-                            fontSize: 14,
-                            fontWeight: item.bold ? 600 : 400,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {item.value}
-                        </div>
+                  
+                  {/* Hàng 2: Nguồn; Ngày đặt */}
+                  <div style={{ display: "flex", gap: 24, paddingTop: 12, borderTop: "1px solid #e8e8e8" }}>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 120, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Nguồn:
                       </div>
-                    ))}
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        {contract.source || "-"}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Ngày đặt:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        {formatDateDMY(contract.createdDate)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Hàng 3: Ngày thuê; Ngày trả */}
+                  <div style={{ display: "flex", gap: 24, paddingTop: 12, borderTop: "1px solid #e8e8e8" }}>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 120, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Ngày thuê:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        {formatDateDMY(contract.startDate)}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Ngày trả:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        {formatDateDMY(contract.endDate)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Hàng 4: Chi nhánh thuê; Chi nhánh trả */}
+                  <div style={{ display: "flex", gap: 24, paddingTop: 12, borderTop: "1px solid #e8e8e8" }}>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 120, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Chi nhánh thuê:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        {contract.pickupBranchName || "-"}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Chi nhánh trả:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        {contract.returnBranchName || "-"}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Hàng 5: Ghi chú; Tiền đặt cọc */}
+                  <div style={{ display: "flex", gap: 24, paddingTop: 12, borderTop: "1px solid #e8e8e8" }}>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 120, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Ghi chú:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        {contract.notes || "-"}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, display: "flex" }}>
+                      <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500 }}>
+                        Tiền đặt cọc:
+                      </div>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14, fontWeight: 600 }}>
+                        {(contract.depositAmount || 0).toLocaleString("vi-VN")} đ
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
