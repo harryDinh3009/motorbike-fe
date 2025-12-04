@@ -106,7 +106,8 @@ Props) => {
     }
     setOdoError(null);
     const carsPayload = carStates.map((c, idx) => ({
-      id: c.carId,
+      id: c.id, // contract_car.id (không phải car.id)
+      carId: c.carId, // car.id để update vào car entity
       endOdometer: Number(c.odometer),
       status: c.status,
     }));

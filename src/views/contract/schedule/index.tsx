@@ -14,7 +14,14 @@ import { getContractStatuses } from "@/service/business/contractMng/contractMng.
 import { searchCars } from "@/service/business/carMng/carMng.service";
 import { CarDTO } from "@/service/business/carMng/carMng.type";
 import { getCarModels } from "@/service/business/carMng/carMng.service";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  CheckCircleOutlined,
+  WarningOutlined,
+  ToolOutlined,
+  CloseCircleOutlined,
+  QuestionCircleOutlined,
+} from "@ant-design/icons";
 import { formatDateDMY } from "@/utils/common";
 import "./schedule.css";
 
@@ -58,6 +65,24 @@ const ContractSchedule: React.FC = () => {
   const [selectedContractCars, setSelectedContractCars] = useState<ContractCarDTO[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [loadingContractCars, setLoadingContractCars] = useState(false);
+
+  // Cell selection state for creating contract (multi-car range selection)
+  const [selectionState, setSelectionState] = useState<{
+    carIds: string[];           // Array of carIds (multiple cars)
+    licensePlates: string[];    // Array of license plates
+    models: string[];           // Array of car models
+    startDay: Dayjs;
+    endDay: Dayjs;
+  } | null>(null);
+
+  // Drag state for range selection
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{
+    carId: string;
+    licensePlate: string;
+    model: string;
+    day: Dayjs;
+  } | null>(null);
 
   // Load options on mount
   useEffect(() => {
@@ -268,6 +293,26 @@ const ContractSchedule: React.FC = () => {
     }
   };
 
+  // Get car status icon
+  const getCarStatusIcon = (status?: string) => {
+    if (!status) return null;
+    
+    switch (status) {
+      case "AVAILABLE":
+        return <CheckCircleOutlined style={{ color: "#52c41a", marginLeft: 6 }} title="Hoạt động" />;
+      case "NOT_AVAILABLE":
+        return <WarningOutlined style={{ color: "#faad14", marginLeft: 6 }} title="Không sẵn sàng" />;
+      case "MAINTENANCE":
+        return <ToolOutlined style={{ color: "#1890ff", marginLeft: 6 }} title="Đang bảo dưỡng" />;
+      case "BROKEN":
+        return <CloseCircleOutlined style={{ color: "#ff4d4f", marginLeft: 6 }} title="Hỏng hóc" />;
+      case "LOST":
+        return <QuestionCircleOutlined style={{ color: "#cf1322", marginLeft: 6 }} title="Bị mất" />;
+      default:
+        return null;
+    }
+  };
+
   // Parse datetime string without timezone conversion
   // API returns datetime in Vietnam timezone (GMT+7), we need to parse it as-is
   const parseDateTimeAsLocal = (dateStr: string): Dayjs => {
@@ -346,6 +391,136 @@ const ContractSchedule: React.FC = () => {
     if (selectedContract) {
       setModalVisible(false);
       navigate(`/contract/detail/${selectedContract.contractId}`);
+    }
+  };
+
+  // Check if cell is in selection range (supports multiple cars)
+  const isCellSelected = (day: Dayjs, carId: string): boolean => {
+    if (!selectionState) return false;
+    const dayStr = day.format("YYYY-MM-DD");
+    const startStr = selectionState.startDay.format("YYYY-MM-DD");
+    const endStr = selectionState.endDay.format("YYYY-MM-DD");
+    // Cell is selected if: in day range AND car is in selected cars list
+    return dayStr >= startStr && dayStr <= endStr && selectionState.carIds.includes(carId);
+  };
+
+  // Check if day range matches current selection
+  const isSameDayRange = (day: Dayjs): boolean => {
+    if (!selectionState) return false;
+    const dayStr = day.format("YYYY-MM-DD");
+    const startStr = selectionState.startDay.format("YYYY-MM-DD");
+    const endStr = selectionState.endDay.format("YYYY-MM-DD");
+    return dayStr >= startStr && dayStr <= endStr;
+  };
+
+  // Mouse down - start or extend selection
+  const handleCellMouseDown = (
+    day: Dayjs,
+    carId: string,
+    licensePlate: string,
+    model: string
+  ) => {
+    setIsDragging(true);
+    setDragStart({ carId, licensePlate, model, day });
+
+    if (selectionState && !isDragging) {
+      // Check if clicking within same day range (to add/remove car)
+      if (isSameDayRange(day)) {
+        if (selectionState.carIds.includes(carId)) {
+          // Remove this car from selection
+          const idx = selectionState.carIds.indexOf(carId);
+          const newCarIds = selectionState.carIds.filter((_, i) => i !== idx);
+          const newLicensePlates = selectionState.licensePlates.filter((_, i) => i !== idx);
+          const newModels = selectionState.models.filter((_, i) => i !== idx);
+
+          if (newCarIds.length === 0) {
+            setSelectionState(null);
+          } else {
+            setSelectionState({
+              ...selectionState,
+              carIds: newCarIds,
+              licensePlates: newLicensePlates,
+              models: newModels,
+            });
+          }
+          return;
+        } else {
+          // Add this car to selection (same day range)
+          setSelectionState({
+            ...selectionState,
+            carIds: [...selectionState.carIds, carId],
+            licensePlates: [...selectionState.licensePlates, licensePlate],
+            models: [...selectionState.models, model],
+          });
+          return;
+        }
+      }
+    }
+
+    // Different day range or no selection → start new selection
+    setSelectionState({
+      carIds: [carId],
+      licensePlates: [licensePlate],
+      models: [model],
+      startDay: day,
+      endDay: day,
+    });
+  };
+
+  // Mouse enter - extend day range (only for first car when dragging)
+  const handleCellMouseEnter = (
+    day: Dayjs,
+    carId: string,
+    licensePlate: string,
+    model: string
+  ) => {
+    if (isDragging && dragStart) {
+      // When dragging, extend day range, keep only the first car
+      const startDay = dragStart.day.isBefore(day) ? dragStart.day : day;
+      const endDay = dragStart.day.isAfter(day) ? dragStart.day : day;
+
+      setSelectionState({
+        carIds: [dragStart.carId],
+        licensePlates: [dragStart.licensePlate],
+        models: [dragStart.model],
+        startDay,
+        endDay,
+      });
+    }
+  };
+
+  // Mouse up - end drag
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setDragStart(null);
+  };
+
+  // Global mouseup handler (in case mouse is released outside grid)
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+      setDragStart(null);
+    };
+
+    document.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => document.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, []);
+
+  // Handle create contract with selected range (multiple cars)
+  const handleCreateContractWithSelection = () => {
+    if (selectionState && selectionState.carIds.length > 0) {
+      // Format datetime for datetime-local input (YYYY-MM-DDTHH:mm)
+      const startDate = selectionState.startDay.startOf("day").format("YYYY-MM-DDTHH:mm");
+      const endDate = selectionState.endDay.endOf("day").format("YYYY-MM-DDTHH:mm");
+
+      // Pass multiple carIds as comma-separated
+      const carIds = selectionState.carIds.join(",");
+
+      navigate(
+        `/contract/create?carIds=${carIds}&startDate=${startDate}&endDate=${endDate}`
+      );
+    } else {
+      navigate("/contract/create");
     }
   };
 
@@ -494,9 +669,18 @@ const ContractSchedule: React.FC = () => {
               <Button
                 type="default"
                 icon={<PlusOutlined />}
-                onClick={() => navigate("/contract/create")}
+                onClick={handleCreateContractWithSelection}
               >
                 Tạo hợp đồng
+                {selectionState && (() => {
+                  const isSingleDay = selectionState.startDay.format("DD/MM") === selectionState.endDay.format("DD/MM");
+                  const carsText = selectionState.licensePlates.length > 1
+                    ? `${selectionState.licensePlates.length} xe`
+                    : selectionState.licensePlates[0];
+                  return isSingleDay
+                    ? ` (${carsText})`
+                    : ` (${carsText}: ${selectionState.startDay.format("DD/MM")} - ${selectionState.endDay.format("DD/MM")})`;
+                })()}
               </Button>
             </div>
           </div>
@@ -533,49 +717,74 @@ const ContractSchedule: React.FC = () => {
                 </div>
 
                 {/* Car Rows */}
-                {Object.entries(cars).map(([licensePlate, contracts]) => (
-                  <div key={`${model}-${licensePlate}`} className="schedule-row-car">
-                    <div className="schedule-cell-label">{licensePlate}</div>
-                    {daysInRange.map((day) => (
-                      <div
-                        key={`${model}-${licensePlate}-${day.format("YYYY-MM-DD")}`}
-                        className="schedule-cell schedule-cell-day-content"
-                      >
-                        {contracts
-                          .filter((contract) => {
-                            const barPos = calculateBarPosition(
-                              contract.startDate,
-                              contract.endDate,
-                              day
-                            );
-                            return barPos !== null;
-                          })
-                          .map((contract) => {
-                            const barPos = calculateBarPosition(
-                              contract.startDate,
-                              contract.endDate,
-                              day
-                            );
-                            if (!barPos) return null;
+                {Object.entries(cars).map(([licensePlate, contracts]) => {
+                  // Find carId from allCars based on licensePlate
+                  const carInfo = allCars.find((car) => car.licensePlate === licensePlate);
+                  const carId = carInfo?.id || "";
+                  const carStatus = carInfo?.status;
 
-                            return (
-                              <div
-                                key={`${contract.contractCarId}-${day.format("YYYY-MM-DD")}`}
-                                className="schedule-bar"
-                                style={{
-                                  left: barPos.left,
-                                  width: barPos.width,
-                                  backgroundColor: getStatusColor(contract.status),
-                                }}
-                                onClick={() => handleBarClick(contract)}
-                                title={`${contract.customerName} (${contract.customerPhone})\n${formatDateDMY(contract.startDate)} → ${formatDateDMY(contract.endDate)}\nClick để xem chi tiết`}
-                              />
-                            );
-                          })}
+                  return (
+                    <div key={`${model}-${licensePlate}`} className="schedule-row-car">
+                      <div className="schedule-cell-label">
+                        {licensePlate}
+                        {getCarStatusIcon(carStatus)}
                       </div>
-                    ))}
-                  </div>
-                ))}
+                      {daysInRange.map((day) => {
+                        // Check if this cell is in selection range
+                        const isSelected = isCellSelected(day, carId);
+
+                        return (
+                          <div
+                            key={`${model}-${licensePlate}-${day.format("YYYY-MM-DD")}`}
+                            className={`schedule-cell schedule-cell-day-content ${isSelected ? "schedule-cell-selected" : ""}`}
+                            onMouseDown={() => handleCellMouseDown(day, carId, licensePlate, model)}
+                            onMouseEnter={() => handleCellMouseEnter(day, carId, licensePlate, model)}
+                            onMouseUp={handleMouseUp}
+                            style={{ cursor: "pointer", userSelect: "none" }}
+                          >
+                            {contracts
+                              .filter((contract) => {
+                                const barPos = calculateBarPosition(
+                                  contract.startDate,
+                                  contract.endDate,
+                                  day
+                                );
+                                return barPos !== null;
+                              })
+                              .map((contract) => {
+                                const barPos = calculateBarPosition(
+                                  contract.startDate,
+                                  contract.endDate,
+                                  day
+                                );
+                                if (!barPos) return null;
+
+                                return (
+                                  <div
+                                    key={`${contract.contractCarId}-${day.format("YYYY-MM-DD")}`}
+                                    className="schedule-bar"
+                                    style={{
+                                      left: barPos.left,
+                                      width: barPos.width,
+                                      backgroundColor: getStatusColor(contract.status),
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.stopPropagation(); // Prevent cell selection when clicking bar
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent cell click when clicking bar
+                                      handleBarClick(contract);
+                                    }}
+                                    title={`${contract.customerName} (${contract.customerPhone})\n${formatDateDMY(contract.startDate)} → ${formatDateDMY(contract.endDate)}\nClick để xem chi tiết`}
+                                  />
+                                );
+                              })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </React.Fragment>
             ))}
 

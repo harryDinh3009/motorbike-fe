@@ -26,6 +26,7 @@ import {
 } from "@/service/business/branchMng/branchMng.service";
 import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/surchargeTypeMng.service";
 import { getAllCustomers, saveCustomer as apiSaveCustomer } from "@/service/business/customerMng/customerMng.service";
+import { searchAvailableCars } from "@/service/business/carMng/carMng.service";
 import { ContractSaveDTO } from "@/service/business/contractMng/contractMng.type";
 import { CustomerSaveDTO } from "@/service/business/customerMng/customerMng.type";
 import { message } from "antd"; // thêm import này
@@ -218,6 +219,78 @@ const ContractCreateComponent = () => {
       })
       .catch(() => setCurrentBranchId(""));
   }, []);
+
+  // Handle query params from schedule screen (carIds, startDate, endDate)
+  useEffect(() => {
+    if (isEditMode) return; // Skip if in edit mode
+
+    const carIdsParam = searchParams.get("carIds"); // "id1,id2,id3" (multiple cars)
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
+    if (carIdsParam && startDateParam && endDateParam) {
+      const carIdList = carIdsParam.split(",");
+
+      // Set form dates from params
+      setForm((prev) => ({
+        ...prev,
+        startDate: startDateParam,
+        endDate: endDateParam,
+      }));
+
+      // Check each car availability and auto-add if available
+      const checkAndAddCars = async () => {
+        try {
+          const res = await searchAvailableCars({
+            keyword: "",
+            page: 1,
+            size: 10000,
+            startDate: startDateParam,
+            endDate: endDateParam,
+          });
+
+          const availableCars = res.data.data || [];
+          const carsToAdd: any[] = [];
+
+          // Check each car and show individual message
+          for (const carId of carIdList) {
+            const targetCar = availableCars.find((car) => car.id === carId);
+
+            if (targetCar && targetCar.status === "AVAILABLE") {
+              // Car is available - add to list
+              carsToAdd.push({
+                id: targetCar.id,
+                carId: targetCar.id,
+                type: targetCar.carType || "",
+                name: targetCar.model || "",
+                plate: targetCar.licensePlate || "",
+                priceDay: targetCar.dailyPrice || 0,
+                priceHour: targetCar.hourlyPrice || 0,
+                total: 0,
+                startOdometer: targetCar.currentOdometer ?? null,
+              });
+              message.success(`Xe ${targetCar.licensePlate} khả dụng - đã thêm vào hợp đồng`);
+            } else {
+              // Car is not available - show warning with plate if possible
+              const carInList = availableCars.find((car) => car.id === carId);
+              const plateDisplay = carInList?.licensePlate || carId;
+              message.warning(`Xe ${plateDisplay} không khả dụng trong khoảng thời gian đã chọn`);
+            }
+          }
+
+          // Add all available cars to carList
+          if (carsToAdd.length > 0) {
+            setCarList(carsToAdd);
+          }
+        } catch (err) {
+          console.error("Failed to check car availability:", err);
+          message.error("Lỗi khi kiểm tra xe khả dụng");
+        }
+      };
+
+      checkAndAddCars();
+    }
+  }, [searchParams, isEditMode]);
 
   // Khi ở mode sửa, load dữ liệu hợp đồng và phụ thu
   useEffect(() => {
