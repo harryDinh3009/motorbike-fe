@@ -28,10 +28,10 @@ import "./schedule.css";
 const { RangePicker } = DatePicker;
 
 const ContractSchedule: React.FC = () => {
-  const pageTitle = "Xem lịch đặt xe";
+  const pageTitle = "Xem lịch thuê xe";
   const breadcrumbItems = [
     { label: "Dashboard", path: "/", icon: <HomeOutlined /> },
-    { label: "Xem lịch đặt xe", path: "/contract/schedule" },
+    { label: "Xem lịch thuê xe", path: "/contract/schedule" },
   ];
 
   const navigate = useNavigate();

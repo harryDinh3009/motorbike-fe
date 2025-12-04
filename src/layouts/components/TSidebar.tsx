@@ -53,7 +53,7 @@ const TSidebar: React.FC = () => {
     ]),
     getItem("Quản lý thuê xe", "contract-management", <FileTextOutlined />, [
       getItem("Danh sách hợp đồng", SCREEN.contractMng.path, <FileTextOutlined />),
-      getItem("Xem lịch đặt xe", SCREEN.contractSchedule.path, <CalendarOutlined />),
+      getItem("Xem lịch thuê xe", SCREEN.contractSchedule.path, <CalendarOutlined />),
     ]),
     getItem("Khách hàng", SCREEN.customer?.path || "#", <TeamOutlined />),
     getItem("Chi nhánh", SCREEN.branch?.path || "#", <BankOutlined />),

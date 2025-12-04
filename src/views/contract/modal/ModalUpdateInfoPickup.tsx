@@ -312,15 +312,10 @@ Props) => {
             Thời gian nhận xe
           </div>
           <DatePickerBase
-            value={time ? new Date(time) : undefined}
+            value={time || undefined}
             placeholder="dd/mm/yyyy HH:mm:ss"
-            showTime
-            onChange={(val: any) => {
-              if (!val) return setTime("");
-              if (typeof val === "string") return setTime(val);
-              if (val instanceof Date && !isNaN(val.getTime())) {
-                return setTime(val.toISOString());
-              }
+            onChange={(val: string | null) => {
+              setTime(val || "");
             }}
             style={{ width: "100%" }}
           />

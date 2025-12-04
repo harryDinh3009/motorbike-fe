@@ -50,16 +50,39 @@ const DatePickerBase: React.FC<DatePickerBaseProps> = ({
   }, [value, dispatch, id]);
 
 
-  // Nếu dateOnly thì chỉ lấy ngày, còn lại giữ nguyên logic cũ
-  const dayjsValue: Dayjs | null = value ? dayjs(value) : null;
+  // Parse datetime string as local time (không convert timezone)
+  // Nếu value có format ISO với Z (UTC), parse như local time để tránh lệch -7 giờ
+  const parseValueAsLocal = (val: string): Dayjs | null => {
+    if (!val) return null;
+    
+    // Nếu là dateOnly format (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      return dayjs(val);
+    }
+    
+    // Nếu có timezone Z hoặc +00:00, loại bỏ và parse như local time
+    const normalized = val.replace(/Z$/, "").replace(/[+-]\d{2}:\d{2}$/, "");
+    // Handle format: "2024-12-02T17:12:00" or "2024-12-02 17:12:00"
+    const [datePart, timePart] = normalized.split(/[T ]/);
+    if (!datePart) return null;
+    
+    const [year, month, day] = datePart.split("-").map(Number);
+    const [hour = 0, minute = 0, second = 0] = (timePart || "00:00:00").split(":").map(Number);
+    
+    return dayjs(new Date(year, month - 1, day, hour, minute, second));
+  };
+
+  const dayjsValue: Dayjs | null = value ? parseValueAsLocal(value) : null;
 
   const handleChange = (date: Dayjs | null) => {
     if (dateOnly) {
       const dateString = date ? date.format("YYYY-MM-DD") : "";
       onChange?.(dateString, dateString);
     } else {
-      const isoString = date ? date.toISOString() : null;
-      onChange?.(isoString, isoString || "");
+      // Format local time string thay vì toISOString() để tránh timezone conversion
+      // Format: YYYY-MM-DDTHH:mm:ss (không có Z, không có timezone offset)
+      const localTimeString = date ? date.format("YYYY-MM-DDTHH:mm:ss") : null;
+      onChange?.(localTimeString, localTimeString || "");
     }
   };
 

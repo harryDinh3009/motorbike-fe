@@ -5,6 +5,7 @@ import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import CheckBoxBase from "@/component/common/input/CheckboxBase";
+import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 import { HomeOutlined } from "@ant-design/icons";
 import ModalAddMotor from "./modal/ModalAddMotor";
 import ModalSaveSurcharge from "./modal/ModalSaveSurcharge";
@@ -791,37 +792,27 @@ const ContractCreateComponent = () => {
                 />
               </div>
               <div>
-                <label className="form_label">Ngày thuê</label>
-                <input
-                  type="datetime-local"
+                <DatePickerBase
+                  id="startDate"
+                  label="Ngày thuê"
                   value={form.startDate}
-                  onChange={(e) =>
-                    setForm({ ...form, startDate: e.target.value })
+                  onChange={(date) =>
+                    setForm({ ...form, startDate: date || "" })
                   }
-                  style={{
-                    width: "100%",
-                    minWidth: 180,
-                    padding: "6px 10px",
-                    borderRadius: 6,
-                    border: "1px solid #eee",
-                  }}
+                  required
+                  style={{ width: "100%", minWidth: 180 }}
                 />
               </div>
               <div>
-                <label className="form_label">Ngày trả</label>
-                <input
-                  type="datetime-local"
+                <DatePickerBase
+                  id="endDate"
+                  label="Ngày trả"
                   value={form.endDate}
-                  onChange={(e) =>
-                    setForm({ ...form, endDate: e.target.value })
+                  onChange={(date) =>
+                    setForm({ ...form, endDate: date || "" })
                   }
-                  style={{
-                    width: "100%",
-                    minWidth: 180,
-                    padding: "6px 10px",
-                    borderRadius: 6,
-                    border: "1px solid #eee",
-                  }}
+                  required
+                  style={{ width: "100%", minWidth: 180 }}
                 />
               </div>
               <div>

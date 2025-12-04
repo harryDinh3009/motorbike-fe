@@ -24,6 +24,7 @@ export interface ContractCarDTO {
   totalAmount?: number;
   startOdometer?: number;
   endOdometer?: number;
+  returnStatus?: string; // Trạng thái xe khi trả
   notes?: string;
 }
 

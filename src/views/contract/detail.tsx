@@ -1,5 +1,6 @@
 import { formatDateDMY } from "@/utils/common";
 import React, { useEffect, useState } from "react";
+import dayjs from "dayjs";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import {
@@ -348,14 +349,19 @@ const ContractDetailComponent = () => {
   // Handler cho modal đóng hợp đồng
   const handleCloseContract = async (data: any) => {
     if (!contract) return;
-    await completeContract({
-      contractId: contract.id,
-      completedDate: data.closeDate,
-      finalPaymentAmount: data.paymentAmount,
-      paymentMethod: data.paymentMethod,
-    });
-    setShowModalClose(false);
-    reloadData();
+    try {
+      await completeContract({
+        contractId: contract.id,
+        completedDate: data.closeDate,
+        finalPaymentAmount: data.paymentAmount > 0 ? data.paymentAmount : undefined,
+        paymentMethod: data.paymentMethod,
+      });
+      setShowModalClose(false);
+      reloadData();
+    } catch (error: any) {
+      console.error("Error closing contract:", error);
+      message.error(error?.response?.data?.message || "Đóng hợp đồng thất bại!");
+    }
   };
 
   // Khi bấm nút "Thanh toán", truyền danh sách thanh toán hiện tại vào modal
@@ -375,18 +381,22 @@ const ContractDetailComponent = () => {
 
   // Khi bấm nút "Giao xe"
   const handleShowDeliveryModal = () => {
+    // Sử dụng dayjs để format local time thay vì toISOString() (UTC)
+    const defaultTime = contract?.deliveryTime || dayjs().format("YYYY-MM-DDTHH:mm:ss");
     setDeliveryDefault({
       staff: currentUser?.userCurrent?.id || "",
-      time: contract?.deliveryTime || new Date().toISOString(),
+      time: defaultTime,
     });
     setShowModalDelivery(true);
   };
 
   // Khi bấm nút "Trả xe"
   const handleShowPickupModal = () => {
+    // Sử dụng dayjs để format local time thay vì toISOString() (UTC)
+    const defaultTime = contract?.returnTime || dayjs().format("YYYY-MM-DDTHH:mm:ss");
     setPickupDefault({
       staff: currentUser?.userCurrent?.id || "",
-      time: contract?.returnTime || new Date().toISOString(),
+      time: defaultTime,
     });
     setShowModalPickup(true);
   };
@@ -456,7 +466,10 @@ const ContractDetailComponent = () => {
     currentBranchId && contract?.pickupBranchId === currentBranchId;
 
   const canReturn =
-    currentBranchId && contract?.returnBranchId === currentBranchId;
+    currentBranchId &&
+    // Cho phép trả xe nếu user thuộc chi nhánh trả HOẶC chi nhánh thuê (nếu chi nhánh trả chưa được set)
+    (contract?.returnBranchId === currentBranchId ||
+      (contract?.pickupBranchId === currentBranchId && (!contract?.returnBranchId || contract?.returnBranchId === contract?.pickupBranchId)));
 
   // Handler cho các chức năng bị hạn chế quyền
   const handleNoPermission = () => {
@@ -1023,6 +1036,39 @@ const ContractDetailComponent = () => {
                   align: "right" as const,
                   render: (val: number) => <b>{val?.toLocaleString()}</b>,
                 },
+                // Chỉ hiển thị khi hợp đồng đã trả xe hoặc hoàn thành
+                ...(contract?.status === "RETURNED" || contract?.status === "COMPLETED"
+                  ? [
+                      {
+                        title: "Trạng thái xe trả",
+                        dataIndex: "returnStatus",
+                        key: "returnStatus",
+                        width: 150,
+                        render: (val: string) => {
+                          if (!val) return "-";
+                          // Map status code sang tên tiếng Việt
+                          const statusMap: Record<string, string> = {
+                            AVAILABLE: "Hoạt động",
+                            NOT_AVAILABLE: "Không sẵn sàng",
+                            MAINTENANCE: "Đang bảo dưỡng",
+                            BROKEN: "Hỏng hóc",
+                            LOST: "Bị mất",
+                          };
+                          return statusMap[val] || val;
+                        },
+                      },
+                      {
+                        title: "Odometer khi trả",
+                        dataIndex: "endOdometer",
+                        key: "endOdometer",
+                        width: 150,
+                        align: "right" as const,
+                        render: (val: number) => {
+                          return val ? val.toLocaleString("vi-VN") : "-";
+                        },
+                      },
+                    ]
+                  : []),
               ]}
               dataSource={carRentalList}
               pagination={false}

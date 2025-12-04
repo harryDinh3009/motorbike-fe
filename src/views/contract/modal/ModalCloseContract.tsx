@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import TModal from "@/component/common/modal/TModal";
 import ButtonBase from "@/component/common/button/ButtonBase";
+import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
+import dayjs from "dayjs";
 
 interface Props {
   open: boolean;
@@ -8,6 +10,7 @@ interface Props {
   onSubmit: (data: {
     paymentAmount: number;
     closeDate: string;
+    paymentMethod?: string;
   }) => void;
   customerName: string;
   totalAmount: number;
@@ -31,13 +34,26 @@ const ModalCloseContract = ({
   const [closeDate, setCloseDate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   useEffect(() => {
-    setCloseDate("");
+    // Set default time là thời gian hiện tại (local time)
+    setCloseDate(dayjs().format("YYYY-MM-DDTHH:mm:ss"));
     setPaymentMethod("");
   }, [open, mustPay]);
 
   const remain = mustPay - paid;
 
   const handleSubmit = () => {
+    // Validation: nếu phải thu khách thì phải chọn hình thức thanh toán
+    if (remain >= 0 && !paymentMethod) {
+      alert("Vui lòng chọn hình thức thanh toán");
+      return;
+    }
+    
+    // Validation: phải có ngày đóng hợp đồng
+    if (!closeDate) {
+      alert("Vui lòng chọn ngày đóng hợp đồng");
+      return;
+    }
+    
     onSubmit({
       paymentAmount: remain,
       closeDate,
@@ -160,19 +176,13 @@ const ModalCloseContract = ({
         </>
       )}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontWeight: 500, marginBottom: 6 }}>
-          Ngày đóng hợp đồng
-        </div>
-        <input
-          type="date"
+        <DatePickerBase
+          id="closeDate"
+          label="Ngày đóng hợp đồng"
           value={closeDate}
-          onChange={(e) => setCloseDate(e.target.value)}
-          style={{
-            width: "100%",
-            border: "1px solid #eee",
-            borderRadius: 4,
-            padding: 8,
-          }}
+          onChange={(val) => setCloseDate(val || "")}
+          required
+          style={{ width: "100%" }}
         />
       </div>
     </TModal>
