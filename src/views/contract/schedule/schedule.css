@@ -1,0 +1,216 @@
+.schedule-container {
+  padding: 20px;
+  background: #fff;
+}
+
+.schedule-header {
+  margin-bottom: 20px;
+}
+
+.schedule-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Filter Section */
+.schedule-filters {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-item label {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Grid Section */
+.schedule-grid {
+  overflow-x: auto;
+  overflow-y: visible; /* Cho phép thanh bar hiển thị đầy đủ khi scroll */
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.schedule-grid-header {
+  display: flex;
+  background: #fafafa;
+  border-bottom: 2px solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.schedule-cell-label {
+  min-width: 200px;
+  width: 200px;
+  padding: 12px;
+  font-weight: 600;
+  border-right: 1px solid #e8e8e8;
+  background: #fafafa;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-cell-day {
+  min-width: 120px;
+  width: 120px;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  border-right: 1px solid #e8e8e8;
+  color: #333;
+  background: #fafafa;
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-row-model {
+  display: flex;
+  background: #fffbe6; /* Màu vàng nhạt */
+  border-bottom: 2px solid #ffd600; /* Viền vàng logo */
+  font-weight: 600;
+  color: #ad6800; /* Màu chữ vàng đậm để dễ đọc */
+}
+
+.schedule-row-model .schedule-cell-label {
+  background: #fffbe6; /* Giữ màu vàng cho label của model row */
+  border-right: 1px solid #ffd600;
+}
+
+.schedule-row-car {
+  display: flex;
+  border-bottom: 1px solid #e8e8e8;
+  min-height: 60px;
+  position: relative;
+  overflow: visible; /* Cho phép thanh bar hiển thị đầy đủ */
+}
+
+.schedule-row-car:hover {
+  background: #fafafa;
+}
+
+.schedule-cell {
+  min-width: 120px;
+  width: 120px;
+  padding: 4px;
+  border-right: 1px solid #e8e8e8;
+  position: relative;
+  background: #fff; /* Đảm bảo có background */
+  overflow: visible; /* Cho phép thanh bar hiển thị ra ngoài cell */
+}
+
+.schedule-row-model .schedule-cell {
+  background: #fffbe6; /* Giữ màu vàng cho cell của model row */
+}
+
+.schedule-cell-day-content {
+  min-height: 60px;
+  position: relative;
+  overflow: visible; /* Cho phép thanh bar hiển thị ra ngoài cell */
+}
+
+/* Schedule Bar */
+.schedule-bar {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: visible; /* Cho phép thanh bar hiển thị đầy đủ */
+  z-index: 2; /* Tăng z-index để luôn hiển thị trên */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 40px;
+  white-space: nowrap; /* Không wrap text */
+  pointer-events: auto; /* Đảm bảo có thể click được */
+}
+
+.schedule-bar:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+
+/* Empty State */
+.schedule-empty {
+  padding: 40px;
+  text-align: center;
+  color: #999;
+}
+
+/* Legend Section */
+.schedule-legend {
+  display: flex;
+  gap: 24px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+}
+
+.legend-item span {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedule-cell-label {
+    min-width: 150px;
+    width: 150px;
+  }
+
+  .schedule-cell-day,
+  .schedule-cell {
+    min-width: 100px;
+    width: 100px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-item {
+    width: 100%;
+  }
+}
+

@@ -14,6 +14,7 @@ import {
   MenuUnfoldOutlined,
   UnorderedListOutlined,
   CarryOutOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { SCREEN } from "@/router/screen";
 import Logo from "@/assets/images/motorbike_logo_new.jpg";
@@ -50,7 +51,10 @@ const TSidebar: React.FC = () => {
       getItem("Danh sách mẫu xe", SCREEN.motorbikeModel?.path || "#", <UnorderedListOutlined />),
       getItem("Danh sách xe", SCREEN.motorbike?.path || "#", <CarryOutOutlined />),
     ]),
-    getItem("Quản lý thuê xe", SCREEN.contractMng.path, <FileTextOutlined />),
+    getItem("Quản lý thuê xe", "contract-management", <FileTextOutlined />, [
+      getItem("Danh sách hợp đồng", SCREEN.contractMng.path, <FileTextOutlined />),
+      getItem("Xem lịch đặt xe", SCREEN.contractSchedule.path, <CalendarOutlined />),
+    ]),
     getItem("Khách hàng", SCREEN.customer?.path || "#", <TeamOutlined />),
     getItem("Chi nhánh", SCREEN.branch?.path || "#", <BankOutlined />),
     getItem("Nhân viên", SCREEN.employee?.path || "#", <UserOutlined />),
@@ -70,6 +74,12 @@ const TSidebar: React.FC = () => {
     // Auto open parent menu
     if (currentPath.includes("/motorbike") || currentPath.includes("/car-model")) {
       setOpenKeys((prev) => [...new Set([...prev, "car-management"])]);
+    }
+    if (
+      currentPath.includes("/contract") ||
+      currentPath.includes("/schedule")
+    ) {
+      setOpenKeys((prev) => [...new Set([...prev, "contract-management"])]);
     }
     if (
       currentPath.includes("/report") ||

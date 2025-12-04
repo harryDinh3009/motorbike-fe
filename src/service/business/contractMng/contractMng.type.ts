@@ -250,3 +250,91 @@ export interface ContractCarUpdateDTO {
   endOdometer?: number;
   notes?: string;
 }
+
+/**
+ * Lịch đặt xe - Schedule
+ */
+export interface ContractScheduleRequestDTO {
+  /**
+   * ID chi nhánh thuê xe (null hoặc empty = tất cả chi nhánh)
+   */
+  branchId?: string | null;
+  
+  /**
+   * Trạng thái hợp đồng (null hoặc empty = tất cả trạng thái)
+   * CONFIRMED, DELIVERED, RETURNED, COMPLETED, CANCELLED
+   */
+  status?: string | null;
+  
+  /**
+   * Ngày bắt đầu (đầu tháng) - format: YYYY-MM-DD
+   */
+  startDate: string;
+  
+  /**
+   * Ngày kết thúc (cuối tháng) - format: YYYY-MM-DD
+   */
+  endDate: string;
+}
+
+export interface ContractScheduleItemDTO {
+  /**
+   * ID của contract_car (bản ghi xe trong hợp đồng)
+   */
+  contractCarId: string;
+  
+  /**
+   * ID hợp đồng
+   */
+  contractId: string;
+  
+  /**
+   * Mã hợp đồng (ví dụ: HD000123)
+   */
+  contractCode: string;
+  
+  /**
+   * ID xe
+   */
+  carId: string;
+  
+  /**
+   * Mẫu xe
+   */
+  carModel: string;
+  
+  /**
+   * Biển số xe
+   */
+  licensePlate: string;
+  
+  /**
+   * Tên khách hàng
+   */
+  customerName: string;
+  
+  /**
+   * Số điện thoại khách hàng
+   */
+  customerPhone: string;
+  
+  /**
+   * Ngày giờ bắt đầu thuê - format: yyyy-MM-dd HH:mm:ss
+   */
+  startDate: string;
+  
+  /**
+   * Ngày giờ kết thúc thuê - format: yyyy-MM-dd HH:mm:ss
+   */
+  endDate: string;
+  
+  /**
+   * Trạng thái hợp đồng
+   */
+  status: string;
+  
+  /**
+   * ID chi nhánh nhận xe
+   */
+  pickupBranchId: string;
+}

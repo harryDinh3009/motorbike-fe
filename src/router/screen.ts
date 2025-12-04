@@ -75,4 +75,8 @@ export const SCREEN = {
     path: "/model-rental-report",
     name: "modelRentalReport",
   },
+  contractSchedule: {
+    path: "/contract/schedule",
+    name: "ContractSchedule",
+  },
 };

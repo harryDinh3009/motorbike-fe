@@ -4,6 +4,7 @@
     "module": "ESNext", // Specify module code generation
     "jsx": "react-jsx", // Use the new JSX transform
     "strict": true, // Enable all strict type-checking options
+    "composite": true, // Required for project references
     "baseUrl": ".", // Base directory to resolve non-relative module names
     "paths": {
       "@/*": ["src/*"] // Allow alias imports

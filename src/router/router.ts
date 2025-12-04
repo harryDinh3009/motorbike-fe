@@ -105,6 +105,11 @@ export const routes: RouteType[] = [
         name: SCREEN.modelRentalReport.name,
         component: getView("modelRentalReport/index"),
       },
+      {
+        path: SCREEN.contractSchedule.path,
+        name: SCREEN.contractSchedule.name,
+        component: getView("contract/schedule/index"),
+      },
     ],
   },
   {

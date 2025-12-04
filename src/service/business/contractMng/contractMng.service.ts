@@ -16,6 +16,8 @@ import {
   UploadImageResponse,
   ContractCarCreateDTO,
   ContractCarUpdateDTO,
+  ContractScheduleRequestDTO,
+  ContractScheduleItemDTO,
 } from "./contractMng.type";
 
 /**
@@ -438,5 +440,18 @@ export const exportModelRentalReport = async (
   const res = await http.post("/a/contract-mng/rental/model-report", params, {
     responseType: "blob",
   });
+  return res.data;
+};
+
+/**
+ * Lấy dữ liệu lịch đặt xe
+ */
+export const getContractSchedule = async (
+  params: ContractScheduleRequestDTO
+): Promise<ApiResponse<ContractScheduleItemDTO[]>> => {
+  const res = await http.post<ApiResponse<ContractScheduleItemDTO[]>>(
+    "/a/contract-mng/schedule",
+    params
+  );
   return res.data;
 };

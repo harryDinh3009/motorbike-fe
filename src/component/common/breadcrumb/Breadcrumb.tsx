@@ -39,12 +39,11 @@ const BreadcrumbBase: React.FC<BreadcrumbBaseProps> = ({
             key={index}
             onClick={() => handleItemClick(item.path)}
             className={styles.breadcrumbItem}
-            style={{
-              ...(item.style || {}),
-            }}
           >
-            {item.icon && <span style={{ marginRight: 5 }}>{item.icon}</span>}
-            <span>{item.label}</span>
+            <span style={item.style || {}}>
+              {item.icon && <span style={{ marginRight: 5 }}>{item.icon}</span>}
+              <span>{item.label}</span>
+            </span>
           </Breadcrumb.Item>
         ))}
       </Breadcrumb>
