@@ -29,10 +29,12 @@ import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/
 import { getAllCustomers, saveCustomer as apiSaveCustomer } from "@/service/business/customerMng/customerMng.service";
 import { searchAvailableCars } from "@/service/business/carMng/carMng.service";
 import { ContractSaveDTO } from "@/service/business/contractMng/contractMng.type";
-import { CustomerSaveDTO } from "@/service/business/customerMng/customerMng.type";
+import { CustomerSaveDTO, CustomerDTO } from "@/service/business/customerMng/customerMng.type";
 import { message } from "antd"; // thêm import này
 import ModalSaveInfoCustomer from "@/views/customer/ModalSaveInfoCustomer";
-import { PlusOutlined } from "@ant-design/icons";
+import TModal from "@/component/common/modal/TModal";
+import { PlusOutlined, InfoCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { formatDateDMYOnly } from "@/utils/common";
 
 const getPageTitle = (isEdit: boolean) =>
   isEdit ? "Cập nhật hợp đồng thuê xe" : "Tạo hợp đồng thuê xe";
@@ -90,39 +92,42 @@ function calcRentalInfo(
     return { days: 0, extraHours: 0, total: 0, durationText: "" };
   const ms = new Date(end).getTime() - new Date(start).getTime();
   if (ms <= 0) return { days: 0, extraHours: 0, total: 0, durationText: "" };
-  // Tính số giờ lẻ chính xác
+  
+  // Tính số giờ và phút
   let totalHours = Math.floor(ms / (1000 * 60 * 60));
   const leftoverMinutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  if (leftoverMinutes > 0) {
+  
+  // Quy tắc 4: Làm tròn phút thành giờ (≥ 30 phút)
+  if (leftoverMinutes >= 30) {
     totalHours += 1;
   }
+  
   let days = 0;
   let extraHours = 0;
   let total = 0;
   let durationText = "";
 
   if (dailyPrice) {
+    // Quy tắc 1: Tối thiểu tính 1 ngày
     if (totalHours < 24) {
-      // Nếu thuê dưới 24h thì tính là 1 ngày
       days = 1;
       extraHours = 0;
       total = dailyPrice;
       durationText = "1 ngày";
     } else {
+      // Quy tắc 2: Chia thành ngày + giờ vượt
       days = Math.floor(totalHours / 24);
       extraHours = totalHours % 24;
-      // Nếu giờ phát sinh > 8h thì làm tròn thành 1 ngày
-      if (extraHours > 8) {
+      
+      // Quy tắc 3: Làm tròn giờ vượt thành ngày (≥ 8 giờ)
+      if (extraHours >= 8) {
         days += 1;
         extraHours = 0;
       }
-      // Nếu trả xe trễ dưới 30 phút thì không tính thêm giờ phát sinh
-      const msMod = ms % (1000 * 60 * 60);
-      if (days > 0 && msMod > 0 && msMod <= 1000 * 60 * 30 && extraHours > 0) {
-        extraHours -= 1;
-        if (extraHours < 0) extraHours = 0;
-      }
+      
       total = dailyPrice * days + (hourlyPrice || 0) * extraHours;
+      
+      // Format durationText
       if (days > 0 && extraHours > 0) {
         durationText = `${days} ngày ${extraHours} giờ`;
       } else if (days > 0) {
@@ -140,6 +145,37 @@ function calcRentalInfo(
   return { days, extraHours, total, durationText };
 }
 
+// Hàm tính thời gian thuê thực tế (không áp dụng các quy tắc làm tròn)
+function calcActualRentalDuration(start: string, end: string): string {
+  if (!start || !end) return "";
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (ms <= 0) return "";
+  
+  // Tính số giờ và phút
+  let totalHours = Math.floor(ms / (1000 * 60 * 60));
+  const leftoverMinutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  
+  // Làm tròn phút thành giờ (≥ 30 phút)
+  if (leftoverMinutes >= 30) {
+    totalHours += 1;
+  }
+  
+  // Chia thành ngày và giờ vượt (không áp dụng quy tắc làm tròn)
+  const days = Math.floor(totalHours / 24);
+  const extraHours = totalHours % 24;
+  
+  // Format durationText
+  if (days > 0 && extraHours > 0) {
+    return `${days} ngày ${extraHours} tiếng`;
+  } else if (days > 0) {
+    return `${days} ngày`;
+  } else if (extraHours > 0) {
+    return `${extraHours} tiếng`;
+  } else {
+    return "";
+  }
+}
+
 const ContractCreateComponent = () => {
   const [form, setForm] = useState(initialForm);
   const [carList, setCarList] = useState<any[]>(initialCarList);
@@ -154,6 +190,9 @@ const ContractCreateComponent = () => {
   const [showAddSurcharge, setShowAddSurcharge] = useState(false);
   const [editingFee, setEditingFee] = useState<any>(null);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [showCustomerInfoModal, setShowCustomerInfoModal] = useState(false);
+  const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDTO | null>(null);
+  const [showRentalCalculationModal, setShowRentalCalculationModal] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const contractId = searchParams.get("id");
@@ -177,13 +216,32 @@ const ContractCreateComponent = () => {
       const res = await getAllCustomers();
       setCustomerOptions([
         { value: "", label: "Chọn khách hàng" },
-        ...(res.data || []).map((c: any) => ({
+        ...(res.data || []).map((c: CustomerDTO) => ({
           value: c.id,
-          label: c.fullName,
+          label: `${c.fullName} - ${c.phoneNumber}`, // Format: "Tên - Số điện thoại"
+          // Lưu thêm thông tin để filter
+          fullName: c.fullName || "",
+          phoneNumber: c.phoneNumber || "",
         })),
       ]);
     } catch (err) {
       console.error("Failed to fetch customers:", err);
+    }
+  };
+
+  // Load thông tin chi tiết khách hàng
+  const loadCustomerDetail = async (customerId: string) => {
+    if (!customerId) {
+      setSelectedCustomerDetail(null);
+      return;
+    }
+    try {
+      const res = await getAllCustomers();
+      const customer = (res.data || []).find((c: CustomerDTO) => c.id === customerId);
+      setSelectedCustomerDetail(customer || null);
+    } catch (err) {
+      console.error("Failed to fetch customer detail:", err);
+      setSelectedCustomerDetail(null);
     }
   };
 
@@ -212,11 +270,14 @@ const ContractCreateComponent = () => {
     getBranchByCurrentUser()
       .then((res) => {
         setCurrentBranchId(res.data?.id || "");
-        // Nếu tạo mới hợp đồng thì set branchRent mặc định
-        setForm((prev) => ({
-          ...prev,
-          branchRent: res.data?.id || "",
-        }));
+        // Nếu tạo mới hợp đồng thì set branchRent và branchReturn mặc định
+        if (!isEditMode) {
+          setForm((prev) => ({
+            ...prev,
+            branchRent: res.data?.id || "",
+            branchReturn: res.data?.id || "", // Set chi nhánh trả xe mặc định
+          }));
+        }
       })
       .catch(() => setCurrentBranchId(""));
   }, []);
@@ -333,6 +394,11 @@ const ContractCreateComponent = () => {
           paid: c.paidAmount || 0,
           remain: c.remainingAmount || 0,
         });
+        
+        // Load thông tin khách hàng chi tiết
+        if (c.customerId) {
+          loadCustomerDetail(c.customerId);
+        }
       });
       // Lấy danh sách phụ thu riêng biệt để luôn đồng bộ
       getSurchargesByContractId(contractId).then((res) => {
@@ -526,6 +592,24 @@ const ContractCreateComponent = () => {
     setEditingFee(null);
   };
 
+  // Handler khi bấm "Chọn xe" - validate ngày thuê và ngày trả
+  const handleClickAddCar = () => {
+    // Validate ngày thuê và ngày trả
+    if (!form.startDate || !form.endDate) {
+      message.warning("Vui lòng chọn ngày thuê và ngày trả trước khi chọn xe!");
+      return;
+    }
+    
+    // Kiểm tra ngày hợp lệ
+    if (new Date(form.startDate) >= new Date(form.endDate)) {
+      message.warning("Ngày trả phải sau ngày thuê!");
+      return;
+    }
+    
+    // Mở modal chọn xe
+    setShowAddMotor(true);
+  };
+
   // Thêm xe thuê
   const handleAddCar = () => {
     setCarList([
@@ -543,6 +627,18 @@ const ContractCreateComponent = () => {
 
   const rentalStart = form.startDate;
   const rentalEnd = form.endDate;
+  
+  // Tính thời gian thuê thực tế (không áp dụng các quy tắc làm tròn)
+  const actualRentalDurationText = calcActualRentalDuration(rentalStart, rentalEnd);
+  
+  // Tính thời gian tính tiền thuê từ ngày thuê và ngày trả (dùng giá mặc định vì durationText không phụ thuộc vào giá)
+  const { durationText: rentalDurationText } = calcRentalInfo(
+    rentalStart,
+    rentalEnd,
+    1, // dailyPrice mặc định (chỉ để tính durationText)
+    1  // hourlyPrice mặc định (chỉ để tính durationText)
+  );
+  
   const carRentalList = carList.map((c) => {
     const { days, extraHours, total, durationText } = calcRentalInfo(
       rentalStart,
@@ -685,7 +781,7 @@ const ContractCreateComponent = () => {
       const phoneToFind = payload.phoneNumber;
       const res = await getAllCustomers();
       const newCustomer = (res.data || []).find(
-        (c: any) => c.phoneNumber === phoneToFind
+        (c: CustomerDTO) => c.phoneNumber === phoneToFind
       );
       
       if (newCustomer) {
@@ -693,11 +789,15 @@ const ContractCreateComponent = () => {
           ...form,
           customer: newCustomer.id,
         });
+        // Load thông tin chi tiết khách hàng vừa tạo
+        setSelectedCustomerDetail(newCustomer);
         message.success("Đã thêm khách hàng và chọn vào hợp đồng!");
       } else {
         message.success("Đã thêm khách hàng thành công!");
       }
       
+      // Reload lại danh sách khách hàng để cập nhật dropdown
+      await fetchCustomerOptions();
       setShowAddCustomer(false);
     } catch (err: any) {
       message.error(err?.response?.data?.message || "Lưu khách hàng thất bại!");
@@ -730,15 +830,63 @@ const ContractCreateComponent = () => {
                     <SelectboxBase
                       value={form.customer}
                       options={customerOptions}
-                      onChange={(val: string | string[]) =>
+                      onChange={async (val: string | string[]) => {
+                        const customerId = typeof val === "string" ? val : val[0] || "";
                         setForm({
                           ...form,
-                          customer: typeof val === "string" ? val : val[0] || "",
-                        })
-                      }
+                          customer: customerId,
+                        });
+                        // Load thông tin chi tiết khách hàng
+                        await loadCustomerDetail(customerId);
+                      }}
                       style={{ width: "100%" }}
+                      showSearch
+                      placeholder="Nhập tên hoặc số điện thoại khách hàng"
+                      filterOption={(input, option) => {
+                        if (!option) return false;
+                        const searchText = input.toLowerCase();
+                        const label = String(option.label || "").toLowerCase();
+                        const fullName = String((option as any).fullName || "").toLowerCase();
+                        const phoneNumber = String((option as any).phoneNumber || "").toLowerCase();
+                        return label.includes(searchText) || 
+                               fullName.includes(searchText) || 
+                               phoneNumber.includes(searchText);
+                      }}
                     />
                   </div>
+                  {/* Icon More Information - chỉ hiện khi đã chọn khách hàng */}
+                  {form.customer && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomerInfoModal(true)}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: 6,
+                        border: "1px solid #d9d9d9",
+                        background: "#fff",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minWidth: 40,
+                        width: 40,
+                        height: 32,
+                        flexShrink: 0,
+                        transition: "all 0.2s",
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.borderColor = "#1677ff";
+                        e.currentTarget.style.color = "#1677ff";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.borderColor = "#d9d9d9";
+                        e.currentTarget.style.color = "#000";
+                      }}
+                      title="Xem thông tin khách hàng"
+                    >
+                      <InfoCircleOutlined style={{ fontSize: 18, color: "#1677ff" }} />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowAddCustomer(true)}
@@ -800,6 +948,7 @@ const ContractCreateComponent = () => {
                     setForm({ ...form, startDate: date || "" })
                   }
                   required
+                  placeholder="Chọn ngày thuê/trả"
                   style={{ width: "100%", minWidth: 180 }}
                 />
               </div>
@@ -812,6 +961,7 @@ const ContractCreateComponent = () => {
                     setForm({ ...form, endDate: date || "" })
                   }
                   required
+                  placeholder="Chọn ngày thuê/trả"
                   style={{ width: "100%", minWidth: 180 }}
                 />
               </div>
@@ -973,20 +1123,25 @@ const ContractCreateComponent = () => {
 
         <ContainerBase>
           <div className="box_section">
-            <p className="box_title_sm">Danh sách xe thuê</p>
-            {/* Thời gian tính thuê giống detail */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <p className="box_title_sm" style={{ margin: 0 }}>Danh sách xe thuê</p>
+            </div>
+            {/* Thời gian thuê thực tế và thời gian tính tiền thuê */}
             <div
               style={{
                 display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
+                flexDirection: "column",
+                alignItems: "flex-end",
                 marginBottom: 8,
                 width: "100%",
+                gap: 4,
               }}
             >
+              <span style={{ color: "#333", fontWeight: 500, fontSize: 14 }}>
+                Thời gian thuê thực tế: {actualRentalDurationText || ""}
+              </span>
               <span style={{ color: "#1677ff", fontWeight: 500, fontSize: 15 }}>
-                Thời gian tính thuê:{" "}
-                {carRentalList[0]?.rentalDurationText || ""}
+                Thời gian tính tiền thuê: {rentalDurationText || ""}
               </span>
             </div>
             <table
@@ -1000,7 +1155,7 @@ const ContractCreateComponent = () => {
                 overflow: "hidden",
               }}
             >
-              <thead style={{ background: "#fafbfc" }}>
+              <thead style={{ background: "#e6f4ff" }}>
                 <tr>
                   <th style={{ padding: "8px 4px" }}>STT</th>
                   <th>Loại xe</th>
@@ -1008,13 +1163,35 @@ const ContractCreateComponent = () => {
                   <th>Biển số xe</th>
                   <th>Giá/ngày</th>
                   <th>Giá/giờ</th>
-                  <th>Tiền thuê</th>
+                  <th style={{ position: "relative" }}>
+                    Tiền thuê
+                    <QuestionCircleOutlined 
+                      onClick={() => setShowRentalCalculationModal(true)}
+                      style={{ 
+                        fontSize: 16, 
+                        color: "#1677ff", 
+                        cursor: "pointer",
+                        marginLeft: 6,
+                        verticalAlign: "middle",
+                        transition: "all 0.2s"
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.color = "#0958d9";
+                        e.currentTarget.style.transform = "scale(1.1)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.color = "#1677ff";
+                        e.currentTarget.style.transform = "scale(1)";
+                      }}
+                      title="Xem cách tính tiền thuê"
+                    />
+                  </th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {carRentalList.map((car, idx) => (
-                  <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                  <tr key={idx} style={{ borderBottom: "1px solid #d9d9d9" }}>
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
                     <td>{car.type}</td>
                     <td>{car.name}</td>
@@ -1038,7 +1215,7 @@ const ContractCreateComponent = () => {
                             width: 90,
                             textAlign: "right",
                             borderRadius: 6,
-                            border: "1px solid #eee",
+                            border: "1px solid #d9d9d9",
                             padding: "4px 8px",
                           }}
                         />
@@ -1063,7 +1240,7 @@ const ContractCreateComponent = () => {
                             width: 90,
                             textAlign: "right",
                             borderRadius: 6,
-                            border: "1px solid #eee",
+                            border: "1px solid #d9d9d9",
                             padding: "4px 8px",
                           }}
                         />
@@ -1101,7 +1278,7 @@ const ContractCreateComponent = () => {
               <ButtonBase
                 label="+ Chọn xe"
                 className="contract-action-btn contract-btn-yellow"
-                onClick={() => setShowAddMotor(true)}
+                onClick={handleClickAddCar}
                 style={{ borderRadius: 6, fontWeight: 500 }}
               />
             </div>
@@ -1132,7 +1309,7 @@ const ContractCreateComponent = () => {
                 overflow: "hidden",
               }}
             >
-              <thead style={{ background: "#fafbfc" }}>
+              <thead style={{ background: "#e6f4ff" }}>
                 <tr>
                   <th style={{ padding: "8px 4px" }}>STT</th>
                   <th>Lý do thu</th>
@@ -1143,7 +1320,7 @@ const ContractCreateComponent = () => {
               </thead>
               <tbody>
                 {feeList.map((fee, idx) => (
-                  <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                  <tr key={idx} style={{ borderBottom: "1px solid #d9d9d9" }}>
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
                     <td>
                       <select
@@ -1173,7 +1350,7 @@ const ContractCreateComponent = () => {
                         style={{
                           width: "100%",
                           borderRadius: 6,
-                          border: "1px solid #eee",
+                          border: "1px solid #d9d9d9",
                           padding: "4px 8px",
                         }}
                       >
@@ -1206,7 +1383,7 @@ const ContractCreateComponent = () => {
                           width: 100,
                           textAlign: "right",
                           borderRadius: 6,
-                          border: "1px solid #eee",
+                          border: "1px solid #d9d9d9",
                           padding: "4px 8px",
                         }}
                       />
@@ -1231,7 +1408,7 @@ const ContractCreateComponent = () => {
                         style={{
                           width: "100%",
                           borderRadius: 6,
-                          border: "1px solid #eee",
+                          border: "1px solid #d9d9d9",
                           padding: "4px 8px",
                         }}
                       />
@@ -1490,6 +1667,377 @@ const ContractCreateComponent = () => {
           onClose={() => setShowAddCustomer(false)}
           onSave={handleSaveCustomer}
         />
+
+        {/* Modal thông tin khách hàng */}
+        <TModal
+          visible={showCustomerInfoModal}
+          onCancel={() => setShowCustomerInfoModal(false)}
+          title="Thông tin khách hàng"
+          width={600}
+          footer={null}
+          hideOkButton={true}
+          hideCancelButton={true}
+        >
+          {selectedCustomerDetail ? (
+            <div style={{ padding: "16px 0" }}>
+              {/* Thông tin cơ bản */}
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+                  Thông tin cơ bản
+                </h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                      Tên khách hàng
+                    </label>
+                    <div style={{ fontSize: 15, fontWeight: 500 }}>
+                      {selectedCustomerDetail.fullName}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                      Số điện thoại
+                    </label>
+                    <div style={{ fontSize: 15 }}>
+                      {selectedCustomerDetail.phoneNumber}
+                    </div>
+                  </div>
+                  {selectedCustomerDetail.email && (
+                    <div>
+                      <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                        Email
+                      </label>
+                      <div style={{ fontSize: 15 }}>
+                        {selectedCustomerDetail.email}
+                      </div>
+                    </div>
+                  )}
+                  {selectedCustomerDetail.dateOfBirth && (
+                    <div>
+                      <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                        Ngày sinh
+                      </label>
+                      <div style={{ fontSize: 15 }}>
+                        {formatDateDMYOnly(selectedCustomerDetail.dateOfBirth)}
+                      </div>
+                    </div>
+                  )}
+                  {selectedCustomerDetail.gender && (
+                    <div>
+                      <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                        Giới tính
+                      </label>
+                      <div style={{ fontSize: 15 }}>
+                        {selectedCustomerDetail.gender === "male" ? "Nam" : 
+                         selectedCustomerDetail.gender === "female" ? "Nữ" : 
+                         selectedCustomerDetail.gender === "other" ? "Khác" : 
+                         selectedCustomerDetail.gender}
+                      </div>
+                    </div>
+                  )}
+                  {selectedCustomerDetail.country && (
+                    <div>
+                      <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                        Quốc gia
+                      </label>
+                      <div style={{ fontSize: 15 }}>
+                        {selectedCustomerDetail.country}
+                      </div>
+                    </div>
+                  )}
+                  {selectedCustomerDetail.address && (
+                    <div style={{ gridColumn: "span 2" }}>
+                      <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                        Địa chỉ
+                      </label>
+                      <div style={{ fontSize: 15 }}>
+                        {selectedCustomerDetail.address}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Giấy tờ tùy thân */}
+              {(selectedCustomerDetail.citizenId || 
+                selectedCustomerDetail.driverLicense || 
+                selectedCustomerDetail.passport) && (
+                <div style={{ marginBottom: 24 }}>
+                  <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+                    Giấy tờ tùy thân
+                  </h3>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    {selectedCustomerDetail.citizenId && (
+                      <div>
+                        <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                          CCCD/CMND
+                        </label>
+                        <div style={{ fontSize: 15, marginBottom: 8 }}>
+                          {selectedCustomerDetail.citizenId}
+                        </div>
+                        {selectedCustomerDetail.citizenIdFrontImageUrl && (
+                          <div style={{ marginTop: 8 }}>
+                            <div style={{ fontSize: 12, color: "#999", marginBottom: 4 }}>Mặt trước:</div>
+                            <img 
+                              src={selectedCustomerDetail.citizenIdFrontImageUrl} 
+                              alt="CCCD mặt trước"
+                              style={{ maxWidth: "100%", borderRadius: 4, border: "1px solid #eee" }}
+                            />
+                          </div>
+                        )}
+                        {selectedCustomerDetail.citizenIdBackImageUrl && (
+                          <div style={{ marginTop: 8 }}>
+                            <div style={{ fontSize: 12, color: "#999", marginBottom: 4 }}>Mặt sau:</div>
+                            <img 
+                              src={selectedCustomerDetail.citizenIdBackImageUrl} 
+                              alt="CCCD mặt sau"
+                              style={{ maxWidth: "100%", borderRadius: 4, border: "1px solid #eee" }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedCustomerDetail.driverLicense && (
+                      <div>
+                        <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                          GPLX
+                        </label>
+                        <div style={{ fontSize: 15, marginBottom: 8 }}>
+                          {selectedCustomerDetail.driverLicense}
+                        </div>
+                        {selectedCustomerDetail.driverLicenseImageUrl && (
+                          <div style={{ marginTop: 8 }}>
+                            <img 
+                              src={selectedCustomerDetail.driverLicenseImageUrl} 
+                              alt="GPLX"
+                              style={{ maxWidth: "100%", borderRadius: 4, border: "1px solid #eee" }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedCustomerDetail.passport && (
+                      <div>
+                        <label style={{ fontWeight: 600, color: "#666", fontSize: 13, display: "block", marginBottom: 4 }}>
+                          Passport
+                        </label>
+                        <div style={{ fontSize: 15, marginBottom: 8 }}>
+                          {selectedCustomerDetail.passport}
+                        </div>
+                        {selectedCustomerDetail.passportImageUrl && (
+                          <div style={{ marginTop: 8 }}>
+                            <img 
+                              src={selectedCustomerDetail.passportImageUrl} 
+                              alt="Passport"
+                              style={{ maxWidth: "100%", borderRadius: 4, border: "1px solid #eee" }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Ghi chú */}
+              {selectedCustomerDetail.note && (
+                <div>
+                  <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+                    Ghi chú
+                  </h3>
+                  <div style={{ fontSize: 15, color: "#666", padding: "12px", background: "#f8f9fa", borderRadius: 6 }}>
+                    {selectedCustomerDetail.note}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "40px 0", color: "#999" }}>
+              Không có thông tin khách hàng
+            </div>
+          )}
+        </TModal>
+
+        {/* Modal giải thích cách tính tiền thuê */}
+        <TModal
+          visible={showRentalCalculationModal}
+          onCancel={() => setShowRentalCalculationModal(false)}
+          title="Cách tính tiền thuê xe"
+          width={650}
+          hideOkButton={true}
+          hideCancelButton={true}
+        >
+          <div style={{ padding: "8px 0" }}>
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: "#222" }}>
+                Công thức tính tiền thuê
+              </h3>
+              <div style={{ 
+                padding: "16px", 
+                borderRadius: 6, 
+                border: "1px solid #e8e8e8",
+                background: "#fafafa",
+                marginBottom: 16
+              }}>
+                <div style={{ fontSize: 15, fontWeight: 500, textAlign: "center", color: "#222" }}>
+                  Tiền thuê = (Giá ngày × Số ngày) + (Giá giờ × Số giờ vượt)
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 12, color: "#222" }}>
+                Quy tắc tính thời gian
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ 
+                    minWidth: 24, 
+                    height: 24, 
+                    borderRadius: "50%", 
+                    background: "#f0f0f0", 
+                    color: "#666", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    border: "1px solid #d9d9d9"
+                  }}>
+                    1
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 500, marginBottom: 4, color: "#222" }}>
+                      Tối thiểu tính 1 ngày
+                    </div>
+                    <div style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>
+                      Dù khách thuê dưới 24 giờ, hệ thống vẫn tính tối thiểu 1 ngày.
+                    </div>
+                    <div style={{ fontSize: 13, color: "#999", marginTop: 6 }}>
+                      Ví dụ: Thuê 5 giờ → Tính 1 ngày
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ 
+                    minWidth: 24, 
+                    height: 24, 
+                    borderRadius: "50%", 
+                    background: "#f0f0f0", 
+                    color: "#666", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    border: "1px solid #d9d9d9"
+                  }}>
+                    2
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 500, marginBottom: 4, color: "#222" }}>
+                      Chia thành ngày + giờ vượt
+                    </div>
+                    <div style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>
+                      Thời gian trên 24 giờ được tách thành số ngày đầy đủ và số giờ vượt.
+                    </div>
+                    <div style={{ fontSize: 13, color: "#999", marginTop: 6 }}>
+                      Ví dụ: Thuê 26 giờ → 1 ngày + 2 giờ vượt
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ 
+                    minWidth: 24, 
+                    height: 24, 
+                    borderRadius: "50%", 
+                    background: "#f0f0f0", 
+                    color: "#666", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    border: "1px solid #d9d9d9"
+                  }}>
+                    3
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 500, marginBottom: 4, color: "#222" }}>
+                      Làm tròn giờ vượt thành ngày
+                    </div>
+                    <div style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>
+                      Nếu số giờ vượt ≥ 8 giờ, hệ thống tự động làm tròn thành thêm 1 ngày.
+                    </div>
+                    <div style={{ fontSize: 13, color: "#999", marginTop: 6 }}>
+                      Ví dụ: Thuê 1 ngày 8 giờ → Tính 2 ngày (không tính giờ vượt)
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ 
+                    minWidth: 24, 
+                    height: 24, 
+                    borderRadius: "50%", 
+                    background: "#f0f0f0", 
+                    color: "#666", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    border: "1px solid #d9d9d9"
+                  }}>
+                    4
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 500, marginBottom: 4, color: "#222" }}>
+                      Làm tròn phút thành giờ
+                    </div>
+                    <div style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>
+                      Phút lẻ ≥ 30 phút được làm tròn lên thành 1 giờ.
+                    </div>
+                    <div style={{ fontSize: 13, color: "#999", marginTop: 6 }}>
+                      Ví dụ: Thuê 1 ngày 2 giờ 30 phút → Tính 1 ngày 3 giờ
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ 
+              padding: "16px", 
+              borderRadius: 6, 
+              border: "1px solid #e8e8e8",
+              background: "#fafafa"
+            }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12, color: "#222" }}>
+                Ví dụ cụ thể
+              </h3>
+              <div style={{ fontSize: 14, lineHeight: 1.8, color: "#666" }}>
+                <div style={{ marginBottom: 8 }}>
+                  <strong style={{ color: "#222" }}>Xe có giá:</strong> 300,000 đ/ngày, 40,000 đ/giờ
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                  <strong style={{ color: "#222" }}>Thuê:</strong> 6 ngày 4 giờ
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                  <strong style={{ color: "#222" }}>Tính:</strong> (300,000 × 6) + (40,000 × 4) = 1,800,000 + 160,000
+                </div>
+                <div style={{ fontWeight: 600, color: "#222", fontSize: 14, marginTop: 8 }}>
+                  <strong>Tổng tiền thuê:</strong> 1,960,000 đ
+                </div>
+              </div>
+            </div>
+          </div>
+        </TModal>
       </div>
     </div>
   );

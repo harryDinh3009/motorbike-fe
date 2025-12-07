@@ -181,10 +181,10 @@ const ModalAddMotor = ({
             minWidth: 600,
             fontWeight: 500,
             padding: "8px 0",
-            borderBottom: "1px solid #eee",
+            borderBottom: "1px solid #d9d9d9",
             display: "flex",
             alignItems: "center",
-            background: "#fafbfc",
+            background: "#e6f4ff",
           }}
         >
           <div style={{ width: "20%", textAlign: "left" }} />
@@ -211,11 +211,11 @@ const ModalAddMotor = ({
                 style={{
                   alignItems: "center",
                   gap: 0,
-                  borderBottom: "1px solid #f0f0f0",
+                  borderBottom: "1px solid #d9d9d9",
                   padding: "12px 0",
                   fontSize: 15,
                   minWidth: 600,
-                  background: idx % 2 === 0 ? "#fff" : "#fafbfc",
+                  background: idx % 2 === 0 ? "#fff" : "#fafafa",
                 }}
               >
                 <div style={{ width: 40, textAlign: "center" }}>

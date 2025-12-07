@@ -277,17 +277,17 @@ const ContractSchedule: React.FC = () => {
     return grouped;
   }, [scheduleData, allCars, modelNames]);
 
-  // Get status color
+  // Get status color - đồng bộ với màu trong danh sách hợp đồng
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "CONFIRMED":
-        return "#d9d9d9"; // Grey
+        return "#FFD600"; // Vàng - Đã xác nhận
       case "DELIVERED":
-        return "#1890ff"; // Blue
+        return "#345FCE"; // Xanh dương - Đã giao xe
       case "RETURNED":
-        return "#faad14"; // Yellow
+        return "#FF8C00"; // Cam - Đã trả xe
       case "COMPLETED":
-        return "#52c41a"; // Green
+        return "#26D02E"; // Xanh lá - Hoàn thành
       default:
         return "#d9d9d9";
     }
@@ -799,19 +799,19 @@ const ContractSchedule: React.FC = () => {
         {/* Legend Section */}
         <div className="schedule-legend">
           <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#d9d9d9" }}></div>
+            <div className="legend-color" style={{ backgroundColor: "#FFD600" }}></div>
             <span>Đã xác nhận</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#1890ff" }}></div>
+            <div className="legend-color" style={{ backgroundColor: "#345FCE" }}></div>
             <span>Đã giao xe</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#faad14" }}></div>
+            <div className="legend-color" style={{ backgroundColor: "#FF8C00" }}></div>
             <span>Đã trả xe</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#52c41a" }}></div>
+            <div className="legend-color" style={{ backgroundColor: "#26D02E" }}></div>
             <span>Hoàn thành</span>
           </div>
         </div>
@@ -891,7 +891,7 @@ const ContractSchedule: React.FC = () => {
                   padding: "4px 8px",
                   borderRadius: "4px",
                   backgroundColor: getStatusColor(selectedContract.status),
-                  color: "#fff",
+                  color: selectedContract.status === "CONFIRMED" ? "#222" : "#fff",
                   fontWeight: 500,
                 }}
               >
