@@ -8,7 +8,7 @@ import {
   CheckCircleTwoTone,
   ClockCircleTwoTone,
 } from "@ant-design/icons";
-import { Table, Dropdown, Menu, message } from "antd";
+import { Table, Dropdown, Menu, message, Tooltip } from "antd";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import {
   EditOutlined,
@@ -17,6 +17,7 @@ import {
   DollarOutlined,
   FileDoneOutlined,
   MoreOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import {
   getContractDetail,
@@ -110,6 +111,37 @@ function calcRentalInfo(
   }
 
   return { days, extraHours, total, durationText };
+}
+
+// Hàm tính thời gian thuê thực tế (không áp dụng các quy tắc làm tròn)
+function calcActualRentalDuration(start: string, end: string): string {
+  if (!start || !end) return "";
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (ms <= 0) return "";
+  
+  // Tính số giờ và phút
+  let totalHours = Math.floor(ms / (1000 * 60 * 60));
+  const leftoverMinutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  
+  // Làm tròn phút thành giờ (≥ 30 phút)
+  if (leftoverMinutes >= 30) {
+    totalHours += 1;
+  }
+  
+  // Chia thành ngày và giờ vượt (không áp dụng quy tắc làm tròn)
+  const days = Math.floor(totalHours / 24);
+  const extraHours = totalHours % 24;
+  
+  // Format durationText
+  if (days > 0 && extraHours > 0) {
+    return `${days} ngày ${extraHours} tiếng`;
+  } else if (days > 0) {
+    return `${days} ngày`;
+  } else if (extraHours > 0) {
+    return `${extraHours} tiếng`;
+  } else {
+    return "";
+  }
 }
 
 const ContractDetailComponent = () => {
@@ -226,6 +258,32 @@ const ContractDetailComponent = () => {
   // Tính toán thời gian thuê và tiền thuê từng xe
   const rentalStart = contract.startDate;
   const rentalEnd = contract.endDate;
+  
+  // Tính thời gian thuê thực tế (không áp dụng các quy tắc làm tròn)
+  const actualRentalDurationText = calcActualRentalDuration(rentalStart, rentalEnd);
+  
+  // Tính thời gian tính tiền thuê (dùng giá mặc định vì durationText không phụ thuộc vào giá)
+  const { durationText: rentalDurationText } = calcRentalInfo(
+    rentalStart,
+    rentalEnd,
+    1, // dailyPrice mặc định (chỉ để tính durationText)
+    1  // hourlyPrice mặc định (chỉ để tính durationText)
+  );
+  
+  // Hàm format công thức tính tiền thuê để hiển thị trong tooltip
+  const formatRentalCalculation = (car: any) => {
+    const { dailyPrice, hourlyPrice, rentalDays, rentalExtraHours, rentalTotal } = car;
+    
+    if (rentalDays > 0 && rentalExtraHours > 0) {
+      return `${(dailyPrice || 0).toLocaleString()} × ${rentalDays} + ${(hourlyPrice || 0).toLocaleString()} × ${rentalExtraHours} = ${(rentalTotal || 0).toLocaleString()}`;
+    } else if (rentalDays > 0) {
+      return `${(dailyPrice || 0).toLocaleString()} × ${rentalDays} = ${(rentalTotal || 0).toLocaleString()}`;
+    } else if (rentalExtraHours > 0) {
+      return `${(hourlyPrice || 0).toLocaleString()} × ${rentalExtraHours} = ${(rentalTotal || 0).toLocaleString()}`;
+    }
+    return "Chưa có thông tin tính toán";
+  };
+  
   const carRentalList = (contract.cars || []).map((c) => {
     const { days, extraHours, total, durationText } = calcRentalInfo(
       rentalStart,
@@ -333,6 +391,8 @@ const ContractDetailComponent = () => {
   // Handler cho modal thanh toán
   const handlePaymentSave = async (payments: any[]) => {
     if (!contract) return;
+    // Lấy userId từ currentUser
+    const userId = currentUser?.userCurrent?.id || currentUser?.userCurrent?.userId || "";
     for (const p of payments) {
       await addPayment({
         contractId: contract.id,
@@ -340,6 +400,7 @@ const ContractDetailComponent = () => {
         amount: Number(p.amount),
         paymentDate: p.date,
         notes: p.note,
+        userId: userId, // Thêm userId để backend lưu vào payment_transaction
       });
     }
     setShowModalPayment(false);
@@ -562,28 +623,27 @@ const ContractDetailComponent = () => {
           {/* Ẩn các nút sau nếu trạng thái là "Đã hủy" */}
           {contract?.statusNm !== "Đã hủy" && (
             <>
-              {/* Ẩn button Thanh toán và Đóng HĐ khi trạng thái là "Hoàn thành" */}
-              {contract?.statusNm !== "Hoàn thành" && (
-                <>
-                  <ButtonBase
-                    label="Thanh toán"
-                    className="btn_primary"
-                    icon={<DollarOutlined />}
-                    onClick={() => {
-                      if (!canEditOrCancelOrPay) return handleNoPermission();
-                      handleShowPaymentModal();
-                    }}
-                  />
-                  <ButtonBase
-                    label="Đóng HĐ"
-                    className="btn_primary"
-                    icon={<FileDoneOutlined />}
-                    onClick={() => {
-                      if (!canEditOrCancelOrPay) return handleNoPermission();
-                      setShowModalClose(true);
-                    }}
-                  />
-                </>
+              {/* Nút Thanh toán luôn hiện (trừ khi hợp đồng đã hủy) */}
+              <ButtonBase
+                label="Thanh toán"
+                className="btn_primary"
+                icon={<DollarOutlined />}
+                onClick={() => {
+                  if (!canEditOrCancelOrPay) return handleNoPermission();
+                  handleShowPaymentModal();
+                }}
+              />
+              {/* Nút Đóng HĐ chỉ hiện khi trạng thái là "Đã trả xe" (RETURNED) */}
+              {contract?.status === "RETURNED" && (
+                <ButtonBase
+                  label="Đóng HĐ"
+                  className="btn_primary"
+                  icon={<FileDoneOutlined />}
+                  onClick={() => {
+                    if (!canEditOrCancelOrPay) return handleNoPermission();
+                    setShowModalClose(true);
+                  }}
+                />
               )}
               <Dropdown
                 overlay={
@@ -984,11 +1044,22 @@ const ContractDetailComponent = () => {
                 </span>
                 Danh sách xe
               </p>
-              {/* Thời gian thuê có thể tính toán nếu cần */}
-              <span style={{ color: "#1677ff", fontWeight: 500, fontSize: 15 }}>
-                Thời gian tính thuê:{" "}
-                {carRentalList[0]?.rentalDurationText || ""}
-              </span>
+              {/* Thời gian thuê thực tế và thời gian tính tiền thuê */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: 4,
+                }}
+              >
+                <span style={{ color: "#333", fontWeight: 500, fontSize: 14 }}>
+                  Thời gian thuê thực tế: {actualRentalDurationText || ""}
+                </span>
+                <span style={{ color: "#1677ff", fontWeight: 500, fontSize: 15 }}>
+                  Thời gian tính tiền thuê: {rentalDurationText || ""}
+                </span>
+              </div>
             </div>
             <Table
               columns={[
@@ -1033,8 +1104,30 @@ const ContractDetailComponent = () => {
                   title: "Tiền thuê",
                   dataIndex: "rentalTotal",
                   key: "rentalTotal",
-                  align: "right" as const,
-                  render: (val: number) => <b>{val?.toLocaleString()}</b>,
+                  align: "center" as const,
+                  render: (val: number, record: any) => (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <b>{val?.toLocaleString()}</b>
+                      <Tooltip
+                        title={
+                          <div style={{ fontSize: 13 }}>
+                            <div style={{ marginBottom: 4, fontWeight: 500 }}>Cách tính tiền thuê:</div>
+                            <div>{formatRentalCalculation(record)}</div>
+                          </div>
+                        }
+                        placement="left"
+                      >
+                        <InfoCircleOutlined 
+                          style={{ 
+                            fontSize: 16, 
+                            color: "#1677ff", 
+                            cursor: "pointer",
+                            flexShrink: 0
+                          }} 
+                        />
+                      </Tooltip>
+                    </div>
+                  ),
                 },
                 // Chỉ hiển thị khi hợp đồng đã trả xe hoặc hoàn thành
                 ...(contract?.status === "RETURNED" || contract?.status === "COMPLETED"
@@ -1084,6 +1177,13 @@ const ContractDetailComponent = () => {
               )}
               bordered
               className="contract-table"
+              components={{
+                header: {
+                  cell: (props: any) => (
+                    <th {...props} style={{ ...props.style, background: "#e6f4ff" }} />
+                  ),
+                },
+              }}
             />
           </div>
         </ContainerBase>
@@ -1150,6 +1250,13 @@ const ContractDetailComponent = () => {
               )}
               bordered
               className="contract-table"
+              components={{
+                header: {
+                  cell: (props: any) => (
+                    <th {...props} style={{ ...props.style, background: "#e6f4ff" }} />
+                  ),
+                },
+              }}
             />
           </div>
         </ContainerBase>
@@ -1318,6 +1425,7 @@ const ContractDetailComponent = () => {
                   title: "Nhân viên",
                   dataIndex: "userName",
                   key: "userName",
+                  render: (val: string) => val || "-",
                 },
                 {
                   title: "Ghi chú",
@@ -1331,6 +1439,13 @@ const ContractDetailComponent = () => {
               style={{ marginTop: 8 }}
               bordered
               className="contract-table"
+              components={{
+                header: {
+                  cell: (props: any) => (
+                    <th {...props} style={{ ...props.style, background: "#e6f4ff" }} />
+                  ),
+                },
+              }}
             />
           </div>
         </ContainerBase>

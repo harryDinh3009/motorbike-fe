@@ -30,7 +30,7 @@ import { getAllCustomers, saveCustomer as apiSaveCustomer } from "@/service/busi
 import { searchAvailableCars } from "@/service/business/carMng/carMng.service";
 import { ContractSaveDTO } from "@/service/business/contractMng/contractMng.type";
 import { CustomerSaveDTO, CustomerDTO } from "@/service/business/customerMng/customerMng.type";
-import { message } from "antd"; // thêm import này
+import { message, Tooltip } from "antd"; // thêm import này
 import ModalSaveInfoCustomer from "@/views/customer/ModalSaveInfoCustomer";
 import TModal from "@/component/common/modal/TModal";
 import { PlusOutlined, InfoCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
@@ -192,6 +192,7 @@ const ContractCreateComponent = () => {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [showCustomerInfoModal, setShowCustomerInfoModal] = useState(false);
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDTO | null>(null);
+  const [dateError, setDateError] = useState<string>("");
   const [showRentalCalculationModal, setShowRentalCalculationModal] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -281,6 +282,19 @@ const ContractCreateComponent = () => {
       })
       .catch(() => setCurrentBranchId(""));
   }, []);
+
+  // Validate ngày thuê và ngày trả khi cả hai đều có giá trị
+  useEffect(() => {
+    if (form.startDate && form.endDate) {
+      if (new Date(form.startDate) >= new Date(form.endDate)) {
+        setDateError("Ngày trả phải sau ngày thuê!");
+      } else {
+        setDateError("");
+      }
+    } else {
+      setDateError("");
+    }
+  }, [form.startDate, form.endDate]);
 
   // Handle query params from schedule screen (carIds, startDate, endDate)
   useEffect(() => {
@@ -639,6 +653,20 @@ const ContractCreateComponent = () => {
     1  // hourlyPrice mặc định (chỉ để tính durationText)
   );
   
+  // Hàm format công thức tính tiền thuê để hiển thị trong tooltip
+  const formatRentalCalculation = (car: any) => {
+    const { priceDay, priceHour, rentalDays, rentalExtraHours, rentalTotal } = car;
+    
+    if (rentalDays > 0 && rentalExtraHours > 0) {
+      return `${(priceDay || 0).toLocaleString()} × ${rentalDays} + ${(priceHour || 0).toLocaleString()} × ${rentalExtraHours} = ${(rentalTotal || 0).toLocaleString()}`;
+    } else if (rentalDays > 0) {
+      return `${(priceDay || 0).toLocaleString()} × ${rentalDays} = ${(rentalTotal || 0).toLocaleString()}`;
+    } else if (rentalExtraHours > 0) {
+      return `${(priceHour || 0).toLocaleString()} × ${rentalExtraHours} = ${(rentalTotal || 0).toLocaleString()}`;
+    }
+    return "Chưa có thông tin tính toán";
+  };
+  
   const carRentalList = carList.map((c) => {
     const { days, extraHours, total, durationText } = calcRentalInfo(
       rentalStart,
@@ -677,15 +705,25 @@ const ContractCreateComponent = () => {
   const handleSave = async () => {
     // Validate dữ liệu ở đây nếu cần
     if (!form.customer) {
-      alert("Vui lòng chọn khách hàng!");
+      message.error("Vui lòng chọn khách hàng!");
       return;
     }
     if (!form.startDate || !form.endDate) {
-      alert("Vui lòng nhập ngày thuê và ngày trả!");
+      message.error("Vui lòng nhập ngày thuê và ngày trả!");
+      return;
+    }
+    // Validate ngày trả phải sau ngày thuê
+    if (new Date(form.startDate) >= new Date(form.endDate)) {
+      setDateError("Ngày trả phải sau ngày thuê!");
+      message.error("Ngày trả phải sau ngày thuê!");
+      return;
+    }
+    if (dateError) {
+      message.error(dateError);
       return;
     }
     if (!form.branchRent || !form.branchReturn) {
-      alert("Vui lòng chọn chi nhánh thuê và trả xe!");
+      message.error("Vui lòng chọn chi nhánh thuê và trả xe!");
       return;
     }
     if (!carList.length) {
@@ -964,6 +1002,11 @@ const ContractCreateComponent = () => {
                   placeholder="Chọn ngày thuê/trả"
                   style={{ width: "100%", minWidth: 180 }}
                 />
+                {dateError && (
+                  <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>
+                    {dateError}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="form_label">Chi nhánh thuê xe</label>
@@ -1250,10 +1293,32 @@ const ContractCreateComponent = () => {
                       style={{
                         fontWeight: "bold",
                         color: "#222",
-                        textAlign: "right",
+                        textAlign: "center",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
                       }}
                     >
-                      {car.rentalTotal?.toLocaleString()}
+                      <span>{car.rentalTotal?.toLocaleString()}</span>
+                      <Tooltip
+                        title={
+                          <div style={{ fontSize: 13 }}>
+                            <div style={{ marginBottom: 4, fontWeight: 500 }}>Cách tính tiền thuê:</div>
+                            <div>{formatRentalCalculation(car)}</div>
+                          </div>
+                        }
+                        placement="left"
+                      >
+                        <InfoCircleOutlined 
+                          style={{ 
+                            fontSize: 16, 
+                            color: "#1677ff", 
+                            cursor: "pointer",
+                            flexShrink: 0
+                          }} 
+                        />
+                      </Tooltip>
                     </td>
                     <td style={{ textAlign: "center" }}>
                       <ButtonBase

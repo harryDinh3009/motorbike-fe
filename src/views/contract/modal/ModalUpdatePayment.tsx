@@ -9,6 +9,7 @@ import {
   addPayment,
   deletePayment,
 } from "@/service/business/contractMng/contractMng.service";
+import { getUserInfo } from "@/utils/storage";
 
 interface PaymentItem {
   id?: string; // thêm id để nhận biết payment đã có
@@ -106,6 +107,17 @@ const ModalUpdatePayment = ({
         setLoading(false);
         return;
       }
+      // Lấy userId từ currentUser
+      let currentUser: any = getUserInfo();
+      if (typeof currentUser === "string") {
+        try {
+          currentUser = JSON.parse(currentUser);
+        } catch {
+          currentUser = {};
+        }
+      }
+      const userId = currentUser?.userCurrent?.id || currentUser?.userCurrent?.userId || "";
+      
       // Thêm mới các payment chưa có id
       for (const p of list.filter((item) => !item.id)) {
         await addPayment({
@@ -114,6 +126,7 @@ const ModalUpdatePayment = ({
           amount: Number(p.amount),
           paymentDate: p.date,
           notes: p.note,
+          userId: userId, // Thêm userId để backend lưu vào payment_transaction
         });
       }
       // Cập nhật các payment đã có id (nếu muốn cho phép chỉnh sửa)
@@ -125,6 +138,7 @@ const ModalUpdatePayment = ({
           amount: Number(p.amount),
           paymentDate: p.date,
           notes: p.note,
+          userId: userId, // Thêm userId để backend lưu vào payment_transaction
         });
       }
       await onSave([]);
