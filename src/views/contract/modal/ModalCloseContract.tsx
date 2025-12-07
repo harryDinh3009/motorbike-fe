@@ -42,8 +42,8 @@ const ModalCloseContract = ({
   const remain = mustPay - paid;
 
   const handleSubmit = () => {
-    // Validation: nếu phải thu khách thì phải chọn hình thức thanh toán
-    if (remain >= 0 && !paymentMethod) {
+    // Validation: luôn phải chọn hình thức thanh toán
+    if (!paymentMethod) {
       alert("Vui lòng chọn hình thức thanh toán");
       return;
     }
@@ -57,7 +57,7 @@ const ModalCloseContract = ({
     onSubmit({
       paymentAmount: remain,
       closeDate,
-      paymentMethod: remain >= 0 ? paymentMethod : undefined,
+      paymentMethod: paymentMethod, // Luôn truyền paymentMethod
     });
   };
 
@@ -130,51 +130,50 @@ const ModalCloseContract = ({
         </div>
       </div>
       <div style={{ borderTop: "1px solid #eee", margin: "16px 0" }} />
-      {/* Chỉ hiện trường thanh toán nếu phải thu khách */}
-      {remain >= 0 && (
-        <>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontWeight: 500, marginBottom: 6 }}>
-              Khách thanh toán
-            </div>
-            <input
-              type="text"
-              value={remain.toLocaleString() + " đ"}
-              disabled
-              style={{
-                width: "100%",
-                border: "1px solid #eee",
-                borderRadius: 4,
-                padding: 8,
-                color: '#888',
-                background: '#f5f5f5',
-                fontWeight: 600,
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontWeight: 500, marginBottom: 6 }}>
-              Hình thức thanh toán
-            </div>
-            <select
-              value={paymentMethod}
-              onChange={e => setPaymentMethod(e.target.value)}
-              style={{
-                width: "100%",
-                border: "1px solid #eee",
-                borderRadius: 4,
-                padding: 8,
-              }}
-              required
-            >
-              <option value="">Chọn hình thức</option>
-              {paymentMethods.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-        </>
-      )}
+      {/* Luôn hiển thị số tiền còn lại */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontWeight: 500, marginBottom: 6 }}>
+          {remain >= 0 ? "Phải thu khách:" : "Phải trả khách:"}
+        </div>
+        <input
+          type="text"
+          value={remain >= 0 
+            ? remain.toLocaleString() + " đ" 
+            : "-" + Math.abs(remain).toLocaleString() + " đ"}
+          disabled
+          style={{
+            width: "100%",
+            border: "1px solid #eee",
+            borderRadius: 4,
+            padding: 8,
+            color: '#888',
+            background: '#f5f5f5',
+            fontWeight: 600,
+          }}
+        />
+      </div>
+      {/* Luôn hiển thị trường phương thức thanh toán */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontWeight: 500, marginBottom: 6 }}>
+          Hình thức thanh toán
+        </div>
+        <select
+          value={paymentMethod}
+          onChange={e => setPaymentMethod(e.target.value)}
+          style={{
+            width: "100%",
+            border: "1px solid #eee",
+            borderRadius: 4,
+            padding: 8,
+          }}
+          required
+        >
+          <option value="">Chọn hình thức</option>
+          {paymentMethods.map((m) => (
+            <option key={m.value} value={m.value}>{m.label}</option>
+          ))}
+        </select>
+      </div>
       <div style={{ marginBottom: 12 }}>
         <DatePickerBase
           id="closeDate"

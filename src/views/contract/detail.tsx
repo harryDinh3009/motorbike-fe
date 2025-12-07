@@ -414,7 +414,8 @@ const ContractDetailComponent = () => {
       await completeContract({
         contractId: contract.id,
         completedDate: data.closeDate,
-        finalPaymentAmount: data.paymentAmount > 0 ? data.paymentAmount : undefined,
+        // Truyền finalPaymentAmount kể cả số âm (nếu != 0)
+        finalPaymentAmount: data.paymentAmount !== 0 ? data.paymentAmount : undefined,
         paymentMethod: data.paymentMethod,
       });
       setShowModalClose(false);
@@ -1413,7 +1414,12 @@ const ContractDetailComponent = () => {
                   dataIndex: "amount",
                   key: "amount",
                   align: "right" as const,
-                  render: (val: number) => val?.toLocaleString() + "đ",
+                  render: (val: number) => {
+                    if (val == null) return "-";
+                    const absVal = Math.abs(val);
+                    const formatted = absVal.toLocaleString();
+                    return val < 0 ? `-${formatted} đ` : `${formatted} đ`;
+                  },
                 },
                 {
                   title: "Ngày thanh toán",
