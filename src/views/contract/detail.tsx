@@ -443,8 +443,18 @@ const ContractDetailComponent = () => {
 
   // Khi bấm nút "Giao xe"
   const handleShowDeliveryModal = () => {
-    // Sử dụng dayjs để format local time thay vì toISOString() (UTC)
-    const defaultTime = contract?.deliveryTime || dayjs().format("YYYY-MM-DDTHH:mm:ss");
+    // Lấy thời gian mặc định từ ngày thuê (startDate) hoặc deliveryTime nếu đã có
+    let defaultTime = "";
+    if (contract?.deliveryTime) {
+      // Nếu đã có deliveryTime thì dùng nó
+      defaultTime = contract.deliveryTime;
+    } else if (contract?.startDate) {
+      // Nếu chưa có thì lấy từ ngày thuê (startDate)
+      defaultTime = dayjs(contract.startDate).format("YYYY-MM-DDTHH:mm:ss");
+    } else {
+      // Fallback về thời gian hiện tại
+      defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
+    }
     setDeliveryDefault({
       staff: currentUser?.userCurrent?.id || "",
       time: defaultTime,
@@ -454,8 +464,18 @@ const ContractDetailComponent = () => {
 
   // Khi bấm nút "Trả xe"
   const handleShowPickupModal = () => {
-    // Sử dụng dayjs để format local time thay vì toISOString() (UTC)
-    const defaultTime = contract?.returnTime || dayjs().format("YYYY-MM-DDTHH:mm:ss");
+    // Lấy thời gian mặc định từ ngày trả (endDate) hoặc returnTime nếu đã có
+    let defaultTime = "";
+    if (contract?.returnTime) {
+      // Nếu đã có returnTime thì dùng nó
+      defaultTime = contract.returnTime;
+    } else if (contract?.endDate) {
+      // Nếu chưa có thì lấy từ ngày trả (endDate)
+      defaultTime = dayjs(contract.endDate).format("YYYY-MM-DDTHH:mm:ss");
+    } else {
+      // Fallback về thời gian hiện tại
+      defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
+    }
     setPickupDefault({
       staff: currentUser?.userCurrent?.id || "",
       time: defaultTime,
@@ -1055,7 +1075,7 @@ const ContractDetailComponent = () => {
                 }}
               >
                 <span style={{ color: "#333", fontWeight: 500, fontSize: 14 }}>
-                  Thời gian thuê thực tế: {actualRentalDurationText || ""}
+                  Thời gian thuê trên hợp đồng: {actualRentalDurationText || ""}
                 </span>
                 <span style={{ color: "#1677ff", fontWeight: 500, fontSize: 15 }}>
                   Thời gian tính tiền thuê: {rentalDurationText || ""}
@@ -1087,6 +1107,57 @@ const ContractDetailComponent = () => {
                   dataIndex: "licensePlate",
                   key: "licensePlate",
                 },
+                // Chỉ hiển thị khi hợp đồng đã giao xe
+                ...(contract?.status === "DELIVERED" ||
+                contract?.status === "RETURNED" ||
+                contract?.status === "COMPLETED" ||
+                contract?.deliveryTime
+                  ? [
+                      {
+                        title: "Odometer giao",
+                        dataIndex: "startOdometer",
+                        key: "startOdometer",
+                        width: 150,
+                        align: "right" as const,
+                        render: (val: number) => {
+                          return val ? val.toLocaleString("vi-VN") : "-";
+                        },
+                      },
+                    ]
+                  : []),
+                // Chỉ hiển thị khi hợp đồng đã trả xe hoặc hoàn thành
+                ...(contract?.status === "RETURNED" || contract?.status === "COMPLETED"
+                  ? [
+                      {
+                        title: "Odometer khi trả",
+                        dataIndex: "endOdometer",
+                        key: "endOdometer",
+                        width: 150,
+                        align: "right" as const,
+                        render: (val: number) => {
+                          return val ? val.toLocaleString("vi-VN") : "-";
+                        },
+                      },
+                      {
+                        title: "Trạng thái xe trả",
+                        dataIndex: "returnStatus",
+                        key: "returnStatus",
+                        width: 150,
+                        render: (val: string) => {
+                          if (!val) return "-";
+                          // Map status code sang tên tiếng Việt
+                          const statusMap: Record<string, string> = {
+                            AVAILABLE: "Hoạt động",
+                            NOT_AVAILABLE: "Không sẵn sàng",
+                            MAINTENANCE: "Đang bảo dưỡng",
+                            BROKEN: "Hỏng hóc",
+                            LOST: "Bị mất",
+                          };
+                          return statusMap[val] || val;
+                        },
+                      },
+                    ]
+                  : []),
                 {
                   title: "Giá/ngày",
                   dataIndex: "dailyPrice",
@@ -1105,9 +1176,9 @@ const ContractDetailComponent = () => {
                   title: "Tiền thuê",
                   dataIndex: "rentalTotal",
                   key: "rentalTotal",
-                  align: "center" as const,
+                  align: "right" as const,
                   render: (val: number, record: any) => (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
                       <b>{val?.toLocaleString()}</b>
                       <Tooltip
                         title={
@@ -1130,39 +1201,6 @@ const ContractDetailComponent = () => {
                     </div>
                   ),
                 },
-                // Chỉ hiển thị khi hợp đồng đã trả xe hoặc hoàn thành
-                ...(contract?.status === "RETURNED" || contract?.status === "COMPLETED"
-                  ? [
-                      {
-                        title: "Trạng thái xe trả",
-                        dataIndex: "returnStatus",
-                        key: "returnStatus",
-                        width: 150,
-                        render: (val: string) => {
-                          if (!val) return "-";
-                          // Map status code sang tên tiếng Việt
-                          const statusMap: Record<string, string> = {
-                            AVAILABLE: "Hoạt động",
-                            NOT_AVAILABLE: "Không sẵn sàng",
-                            MAINTENANCE: "Đang bảo dưỡng",
-                            BROKEN: "Hỏng hóc",
-                            LOST: "Bị mất",
-                          };
-                          return statusMap[val] || val;
-                        },
-                      },
-                      {
-                        title: "Odometer khi trả",
-                        dataIndex: "endOdometer",
-                        key: "endOdometer",
-                        width: 150,
-                        align: "right" as const,
-                        render: (val: number) => {
-                          return val ? val.toLocaleString("vi-VN") : "-";
-                        },
-                      },
-                    ]
-                  : []),
               ]}
               dataSource={carRentalList}
               pagination={false}
@@ -1468,6 +1506,7 @@ const ContractDetailComponent = () => {
             model: c.carModel,
             licensePlate: c.licensePlate,
             odometer: c.endOdometer ?? c.startOdometer ?? "", // Truyền odo hiện tại (ưu tiên endOdometer nếu đã có, nếu chưa thì lấy startOdometer)
+            startOdometer: c.startOdometer, // Odometer ban đầu (không edit)
             condition: "", // truyền lại nếu có field tình trạng
             status: c.status || "", // Truyền status sang modal
           }))}
@@ -1482,6 +1521,15 @@ const ContractDetailComponent = () => {
           open={showModalDelivery}
           onClose={() => setShowModalDelivery(false)}
           onSave={handleDeliverySave}
+          cars={(contract.cars || []).map((c) => ({
+            id: c.id,
+            carId: c.carId,
+            type: c.carType,
+            model: c.carModel,
+            licensePlate: c.licensePlate,
+            startOdometer: c.startOdometer,
+            status: "", // Trạng thái sẽ được set khi giao xe
+          }))}
           staffOptions={staffOptions}
           defaultStaff={deliveryDefault.staff}
           defaultTime={deliveryDefault.time}

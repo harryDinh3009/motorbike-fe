@@ -40,6 +40,24 @@ export interface CarDTO {
   insuranceExpiryDate?: string;
 }
 
+/**
+ * DTO lightweight cho màn chọn xe khả dụng
+ * Chỉ chứa các field cần thiết để tối ưu hiệu suất
+ */
+export interface AvailableCarDTO {
+  id: string;
+  model: string;
+  licensePlate: string;
+  carType?: string;
+  branchId: string;
+  branchName: string;
+  dailyPrice?: number;
+  hourlyPrice?: number;
+  status?: CarStatus;
+  statusNm?: string;
+  imageUrl?: string;
+}
+
 export interface CarSaveDTO {
   id?: string;
   model: string;

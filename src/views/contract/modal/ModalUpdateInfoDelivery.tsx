@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from "react";
 import TModal from "@/component/common/modal/TModal";
 import ButtonBase from "@/component/common/button/ButtonBase";
-import SelectboxBase from "@/component/common/input/SelectboxBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
+
+interface CarDeliveryItem {
+  id: string;
+  carId: string;
+  type: string;
+  model: string;
+  licensePlate: string;
+  startOdometer?: number;
+  status?: string;
+}
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onSave: (data: any) => void;
+  cars?: CarDeliveryItem[];
   staffOptions?: { value: string; label: string }[];
   defaultStaff?: string;
   defaultTime?: string;
@@ -19,6 +29,7 @@ const ModalUpdateInfoDelivery = ({
   open,
   onClose,
   onSave,
+  cars = [],
   staffOptions = [],
   defaultStaff = "",
   defaultTime = "",
@@ -68,6 +79,113 @@ const ModalUpdateInfoDelivery = ({
         </div>
       }
     >
+      <div
+        style={{
+          border: "1px solid #e0e0e0",
+          borderRadius: 8,
+          background: "#fff",
+          marginBottom: 18,
+          overflow: "hidden",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: 14,
+          }}
+        >
+          <thead>
+            <tr style={{ background: "#f5f7fa" }}>
+              <th
+                style={{
+                  padding: "12px 8px",
+                  textAlign: "center",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  borderBottom: "2px solid #e0e0e0",
+                  width: 50,
+                }}
+              >
+                STT
+              </th>
+              <th
+                style={{
+                  padding: "12px 8px",
+                  textAlign: "left",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  borderBottom: "2px solid #e0e0e0",
+                }}
+              >
+                Loại xe
+              </th>
+              <th
+                style={{
+                  padding: "12px 8px",
+                  textAlign: "left",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  borderBottom: "2px solid #e0e0e0",
+                }}
+              >
+                Mẫu xe
+              </th>
+              <th
+                style={{
+                  padding: "12px 8px",
+                  textAlign: "right",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  borderBottom: "2px solid #e0e0e0",
+                  width: 140,
+                }}
+              >
+                Odometer hiện tại
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {cars.map((car, idx) => (
+              <tr
+                key={car.id}
+                style={{
+                  background: idx % 2 === 0 ? "#fff" : "#fafbfc",
+                  borderBottom: "1px solid #f0f0f0",
+                }}
+              >
+                <td
+                  style={{
+                    padding: "12px 8px",
+                    textAlign: "center",
+                    color: "#666",
+                  }}
+                >
+                  {idx + 1}
+                </td>
+                <td style={{ padding: "12px 8px", color: "#333" }}>
+                  {car.type || "-"}
+                </td>
+                <td style={{ padding: "12px 8px", color: "#333" }}>
+                  {car.model || "-"}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 8px",
+                    textAlign: "right",
+                    color: "#333",
+                    fontWeight: 500,
+                  }}
+                >
+                  {car.startOdometer
+                    ? car.startOdometer.toLocaleString("vi-VN")
+                    : "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div
         style={{
           display: "flex",
@@ -152,11 +270,13 @@ const ModalUpdateInfoDelivery = ({
             disabled
             style={{
               width: "100%",
-              background: "#f5f5f5",
-              color: "#888",
-              border: "1px solid #eee",
+              background: "#f0f7ff",
+              color: "#1677ff",
+              border: "1px solid #91caff",
               borderRadius: 6,
-              padding: "4px 8px",
+              padding: "8px 12px",
+              fontWeight: 500,
+              fontSize: 14,
             }}
           />
         </div>

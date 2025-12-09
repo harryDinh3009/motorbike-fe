@@ -2,6 +2,7 @@ import http from "@/utils/http";
 import {
   CarSearchDTO,
   CarDTO,
+  AvailableCarDTO,
   CarSaveDTO,
   ApiResponse,
   PageableObject,
@@ -29,6 +30,20 @@ export const searchAvailableCars = async (
 ): Promise<ApiResponse<PageableObject<CarDTO>>> => {
   const res = await http.post<ApiResponse<PageableObject<CarDTO>>>(
     "/a/car-mng/list-available",
+    params
+  );
+  return res.data;
+};
+
+/**
+ * Tìm kiếm xe khả dụng (lightweight) - chỉ trả về các field cần thiết
+ * Dùng cho màn chọn xe khi tạo hợp đồng để tối ưu hiệu suất
+ */
+export const searchAvailableCarsLight = async (
+  params: CarSearchDTO
+): Promise<ApiResponse<PageableObject<AvailableCarDTO>>> => {
+  const res = await http.post<ApiResponse<PageableObject<AvailableCarDTO>>>(
+    "/a/car-mng/list-available-light",
     params
   );
   return res.data;

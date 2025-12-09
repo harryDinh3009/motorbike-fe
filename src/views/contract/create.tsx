@@ -27,7 +27,7 @@ import {
 } from "@/service/business/branchMng/branchMng.service";
 import { getAllActiveSurchargeTypes } from "@/service/business/surchargeTypeMng/surchargeTypeMng.service";
 import { getAllCustomers, saveCustomer as apiSaveCustomer } from "@/service/business/customerMng/customerMng.service";
-import { searchAvailableCars } from "@/service/business/carMng/carMng.service";
+import { searchAvailableCarsLight } from "@/service/business/carMng/carMng.service";
 import { ContractSaveDTO } from "@/service/business/contractMng/contractMng.type";
 import { CustomerSaveDTO, CustomerDTO } from "@/service/business/customerMng/customerMng.type";
 import { message, Tooltip } from "antd"; // thêm import này
@@ -317,7 +317,7 @@ const ContractCreateComponent = () => {
       // Check each car availability and auto-add if available
       const checkAndAddCars = async () => {
         try {
-          const res = await searchAvailableCars({
+          const res = await searchAvailableCarsLight({
             keyword: "",
             page: 1,
             size: 10000,

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TModal from "@/component/common/modal/TModal";
 import { SearchOutlined } from "@ant-design/icons";
-import { searchAvailableCars } from "@/service/business/carMng/carMng.service";
-import { CarDTO } from "@/service/business/carMng/carMng.type";
+import { searchAvailableCarsLight } from "@/service/business/carMng/carMng.service";
+import { AvailableCarDTO } from "@/service/business/carMng/carMng.type";
 
 interface MotorSelect {
   id: string;
@@ -26,7 +26,7 @@ const ModalAddMotor = ({
   endDate?: string;
 }) => {
   const [search, setSearch] = useState("");
-  const [carList, setCarList] = useState<CarDTO[]>([]);
+  const [carList, setCarList] = useState<AvailableCarDTO[]>([]);
   const [motors, setMotors] = useState<MotorSelect[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +34,7 @@ const ModalAddMotor = ({
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    searchAvailableCars({
+    searchAvailableCarsLight({
       keyword: search,
       page: 1,
       size: 10000,
@@ -85,11 +85,11 @@ const ModalAddMotor = ({
           plate: info?.licensePlate || "",
           branch: info?.branchName || "",
           status: info?.statusNm || "",
-          condition: info?.condition || "",
+          condition: "", // AvailableCarDTO không có condition
           priceDay: m.priceDay,
           priceHour: m.priceHour,
           total: (m.priceDay || 0) + (m.priceHour || 0),
-          startOdometer: info?.currentOdometer ?? null, // Thêm dòng này
+          startOdometer: null, // AvailableCarDTO không có currentOdometer
         };
       });
       console.log(selected);
