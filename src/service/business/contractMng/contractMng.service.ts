@@ -203,6 +203,18 @@ export const uploadDeliveryImages = async (
 /**
  * Cập nhật thông tin nhận xe
  */
+/**
+ * Kiểm tra quyền trả xe
+ */
+export const checkReturnPermission = async (
+  contractId: string
+): Promise<ApiResponse<boolean>> => {
+  const res = await http.get<ApiResponse<boolean>>(
+    `/a/contract-mng/return/check-permission/${contractId}`
+  );
+  return res.data;
+};
+
 export const updateReturn = async (
   data: ContractReturnDTO
 ): Promise<ApiResponse<boolean>> => {

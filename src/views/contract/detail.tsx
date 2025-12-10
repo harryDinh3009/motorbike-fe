@@ -25,6 +25,7 @@ import {
   getPaymentHistory,
   updateDelivery,
   updateReturn,
+  checkReturnPermission,
   addPayment,
   completeContract,
   getContractStatuses,
@@ -363,29 +364,42 @@ const ContractDetailComponent = () => {
     console.log(data);
 
     if (!contract) return;
-    const cars: ContractCarSaveDTO[] = (data.cars || contract.cars || []).map(
-      (c: any) => ({
-        id: c.id,
-        carId: c.carId || c.id,
-        endOdometer: c.endOdometer,
-        notes: c.notes,
-        status: c.status,
-      })
-    );
+    
+    try {
+      const cars: ContractCarSaveDTO[] = (data.cars || contract.cars || []).map(
+        (c: any) => ({
+          id: c.id,
+          carId: c.carId || c.id,
+          endOdometer: c.endOdometer,
+          notes: c.notes,
+          status: c.status,
+        })
+      );
 
-    await updateReturn({
-      contractId: contract.id,
-      cars,
-      returnUserId: data.staff,
-      returnUserName:
-        currentUser?.userCurrent?.fullName ||
-        currentUser?.userCurrent?.userName ||
-        currentUser?.userCurrent?.username ||
-        "",
-      returnTime: data.time,
-    });
-    setShowModalPickup(false);
-    reloadData();
+      await updateReturn({
+        contractId: contract.id,
+        cars,
+        returnUserId: data.staff,
+        returnUserName:
+          currentUser?.userCurrent?.fullName ||
+          currentUser?.userCurrent?.userName ||
+          currentUser?.userCurrent?.username ||
+          "",
+        returnTime: data.time,
+      });
+      
+      message.success("Trả xe thành công!");
+      setShowModalPickup(false);
+      reloadData();
+    } catch (err: any) {
+      console.error("Error returning car:", err);
+      // Parse error message từ backend
+      const errorMessage = err?.response?.data?.message || 
+                           err?.response?.data?.data?.message ||
+                           err?.message ||
+                           "Trả xe thất bại!";
+      message.error(errorMessage);
+    }
   };
 
   // Handler cho modal thanh toán
@@ -463,24 +477,39 @@ const ContractDetailComponent = () => {
   };
 
   // Khi bấm nút "Trả xe"
-  const handleShowPickupModal = () => {
-    // Lấy thời gian mặc định từ ngày trả (endDate) hoặc returnTime nếu đã có
-    let defaultTime = "";
-    if (contract?.returnTime) {
-      // Nếu đã có returnTime thì dùng nó
-      defaultTime = contract.returnTime;
-    } else if (contract?.endDate) {
-      // Nếu chưa có thì lấy từ ngày trả (endDate)
-      defaultTime = dayjs(contract.endDate).format("YYYY-MM-DDTHH:mm:ss");
-    } else {
-      // Fallback về thời gian hiện tại
-      defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
+  const handleShowPickupModal = async () => {
+    if (!contract?.id) return;
+    
+    try {
+      // Kiểm tra quyền trả xe trước khi mở modal
+      await checkReturnPermission(contract.id);
+      
+      // Lấy thời gian mặc định từ ngày trả (endDate) hoặc returnTime nếu đã có
+      let defaultTime = "";
+      if (contract?.returnTime) {
+        // Nếu đã có returnTime thì dùng nó
+        defaultTime = contract.returnTime;
+      } else if (contract?.endDate) {
+        // Nếu chưa có thì lấy từ ngày trả (endDate)
+        defaultTime = dayjs(contract.endDate).format("YYYY-MM-DDTHH:mm:ss");
+      } else {
+        // Fallback về thời gian hiện tại
+        defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
+      }
+      setPickupDefault({
+        staff: currentUser?.userCurrent?.id || "",
+        time: defaultTime,
+      });
+      setShowModalPickup(true);
+    } catch (err: any) {
+      console.error("Error checking return permission:", err);
+      // Parse error message từ backend
+      const errorMessage = err?.response?.data?.message || 
+                           err?.response?.data?.data?.message ||
+                           err?.message ||
+                           "Bạn không có quyền thực hiện chức năng này";
+      message.error(errorMessage);
     }
-    setPickupDefault({
-      staff: currentUser?.userCurrent?.id || "",
-      time: defaultTime,
-    });
-    setShowModalPickup(true);
   };
 
   // Chuẩn hóa dữ liệu cho các modal
@@ -610,10 +639,7 @@ const ContractDetailComponent = () => {
                   label="Trả xe"
                   className="btn_primary"
                   icon={<RollbackOutlined />}
-                  onClick={() => {
-                    if (!canReturn) return handleNoPermission();
-                    handleShowPickupModal();
-                  }}
+                  onClick={handleShowPickupModal}
                 />
               );
             }
@@ -633,10 +659,7 @@ const ContractDetailComponent = () => {
                   label="Trả xe"
                   className="btn_primary"
                   icon={<RollbackOutlined />}
-                  onClick={() => {
-                    if (!canReturn) return handleNoPermission();
-                    handleShowPickupModal();
-                  }}
+                  onClick={handleShowPickupModal}
                 />
               </>
             );
