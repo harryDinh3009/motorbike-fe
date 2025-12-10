@@ -24,6 +24,7 @@ export interface ContractCarDTO {
   totalAmount?: number;
   startOdometer?: number;
   endOdometer?: number;
+  currentOdometer?: number; // Odometer hiện tại của xe từ bảng car
   returnStatus?: string; // Trạng thái xe khi trả
   notes?: string;
 }

@@ -3,6 +3,45 @@ import TModal from "@/component/common/modal/TModal";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 
+// Status color mapping giống màn quản lý xe
+const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
+  "Hoạt động": { bg: "#D6F5E6", color: "#22A06B" },
+  "Đang bảo dưỡng": { bg: "#E6E8EA", color: "#6B7280" },
+  "Không sẵn sàng": { bg: "#FFE066", color: "#B38600" },
+  "Bị mất": { bg: "#FFD6D6", color: "#E14D4D" },
+};
+
+function getStatusStyle(status: string): React.CSSProperties {
+  const s = STATUS_COLOR_MAP[status?.trim() || ""];
+  if (s) {
+    return {
+      background: s.bg,
+      color: s.color,
+      borderRadius: "16px",
+      padding: "2px 16px",
+      fontWeight: 500,
+      fontSize: 14,
+      display: "inline-block",
+      minWidth: "100px",
+      textAlign: "center" as const,
+      margin: "2px 0",
+      whiteSpace: "nowrap" as const,
+    };
+  }
+  return {
+    background: "#f5f5f5",
+    color: "#333",
+    borderRadius: "8px",
+    padding: "2px 12px",
+    fontWeight: 500,
+    fontSize: 14,
+    display: "inline-block",
+    minWidth: "100px",
+    textAlign: "center" as const,
+    margin: "2px 0",
+  };
+}
+
 interface CarDeliveryItem {
   id: string;
   carId: string;
@@ -10,6 +49,7 @@ interface CarDeliveryItem {
   model: string;
   licensePlate: string;
   startOdometer?: number;
+  currentOdometer?: number;
   status?: string;
 }
 
@@ -38,15 +78,35 @@ const ModalUpdateInfoDelivery = ({
 }: Props) => {
   const [staff, setStaff] = useState(defaultStaff);
   const [time, setTime] = useState(defaultTime);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [invalidStatusCarIds, setInvalidStatusCarIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setStaff(defaultStaff);
     setTime(defaultTime);
+    // Reset errors when modal opens
+    setStatusError(null);
+    setInvalidStatusCarIds(new Set());
   }, [open, defaultStaff, defaultTime]);
 
   const totalAll = (totalCar || 0) + (totalSurcharge || 0);
 
   const handleSave = () => {
+    // Check status validation - chỉ cho phép status "AVAILABLE" (Hoạt động)
+    const invalidCars = cars.filter(
+      (c) => !c.status || c.status !== "AVAILABLE"
+    );
+    
+    if (invalidCars.length > 0) {
+      setStatusError("Có xe không thể cho thuê do trạng thái không thỏa mãn");
+      setInvalidStatusCarIds(new Set(invalidCars.map((c) => c.id)));
+      return;
+    }
+
+    // Clear errors if validation passes
+    setStatusError(null);
+    setInvalidStatusCarIds(new Set());
+
     onSave({
       staff,
       time,
@@ -79,6 +139,11 @@ const ModalUpdateInfoDelivery = ({
         </div>
       }
     >
+      {statusError && (
+        <div style={{ color: "#ff4d4f", fontWeight: 600, marginBottom: 12 }}>
+          {statusError}
+        </div>
+      )}
       <div
         style={{
           border: "1px solid #e0e0e0",
@@ -118,7 +183,7 @@ const ModalUpdateInfoDelivery = ({
                   borderBottom: "2px solid #e0e0e0",
                 }}
               >
-                Loại xe
+                Mẫu xe
               </th>
               <th
                 style={{
@@ -129,7 +194,7 @@ const ModalUpdateInfoDelivery = ({
                   borderBottom: "2px solid #e0e0e0",
                 }}
               >
-                Mẫu xe
+                Biển số xe
               </th>
               <th
                 style={{
@@ -143,46 +208,87 @@ const ModalUpdateInfoDelivery = ({
               >
                 Odometer hiện tại
               </th>
+              <th
+                style={{
+                  padding: "12px 8px",
+                  textAlign: "center",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  borderBottom: "2px solid #e0e0e0",
+                  width: 120,
+                }}
+              >
+                Trạng thái
+              </th>
             </tr>
           </thead>
           <tbody>
-            {cars.map((car, idx) => (
-              <tr
-                key={car.id}
-                style={{
-                  background: idx % 2 === 0 ? "#fff" : "#fafbfc",
-                  borderBottom: "1px solid #f0f0f0",
-                }}
-              >
-                <td
+            {cars.map((car, idx) => {
+              // Map status code sang tên tiếng Việt
+              const statusMap: Record<string, string> = {
+                AVAILABLE: "Hoạt động",
+                NOT_AVAILABLE: "Không sẵn sàng",
+                MAINTENANCE: "Đang bảo dưỡng",
+                BROKEN: "Hỏng hóc",
+                LOST: "Bị mất",
+              };
+              const statusText = car.status ? statusMap[car.status] || car.status : "-";
+              const isInvalidStatus = invalidStatusCarIds.has(car.id);
+              
+              return (
+                <tr
+                  key={car.id}
                   style={{
-                    padding: "12px 8px",
-                    textAlign: "center",
-                    color: "#666",
+                    background: isInvalidStatus 
+                      ? "#fff1f0" 
+                      : idx % 2 === 0 ? "#fff" : "#fafbfc",
+                    borderBottom: isInvalidStatus 
+                      ? "2px solid #ff4d4f" 
+                      : "1px solid #f0f0f0",
+                    borderLeft: isInvalidStatus ? "3px solid #ff4d4f" : "none",
                   }}
                 >
-                  {idx + 1}
-                </td>
-                <td style={{ padding: "12px 8px", color: "#333" }}>
-                  {car.type || "-"}
-                </td>
-                <td style={{ padding: "12px 8px", color: "#333" }}>
-                  {car.model || "-"}
-                </td>
-                <td
-                  style={{
-                    padding: "12px 8px",
-                    textAlign: "right",
-                    color: "#333",
-                    fontWeight: 500,
-                  }}
-                >
-                  {car.startOdometer
-                    ? car.startOdometer.toLocaleString("vi-VN")
-                    : "-"}
-                </td>
-              </tr>
-            ))}
+                  <td
+                    style={{
+                      padding: "12px 8px",
+                      textAlign: "center",
+                      color: isInvalidStatus ? "#ff4d4f" : "#666",
+                      fontWeight: isInvalidStatus ? 600 : 400,
+                    }}
+                  >
+                    {idx + 1}
+                  </td>
+                  <td style={{ padding: "12px 8px", color: isInvalidStatus ? "#ff4d4f" : "#333", fontWeight: isInvalidStatus ? 600 : 400 }}>
+                    {car.model || "-"}
+                  </td>
+                  <td style={{ padding: "12px 8px", color: isInvalidStatus ? "#ff4d4f" : "#333", fontWeight: isInvalidStatus ? 600 : 400 }}>
+                    {car.licensePlate || "-"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 8px",
+                      textAlign: "right",
+                      color: isInvalidStatus ? "#ff4d4f" : "#333",
+                      fontWeight: isInvalidStatus ? 600 : 500,
+                    }}
+                  >
+                    {car.currentOdometer !== undefined && car.currentOdometer !== null
+                      ? car.currentOdometer.toLocaleString("vi-VN")
+                      : "-"}
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <span style={getStatusStyle(statusText)}>
+                      {statusText}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

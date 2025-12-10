@@ -26,6 +26,7 @@ import {
   updateDelivery,
   updateReturn,
   checkReturnPermission,
+  checkDeliveryPermission,
   addPayment,
   completeContract,
   getContractStatuses,
@@ -456,24 +457,73 @@ const ContractDetailComponent = () => {
   };
 
   // Khi bấm nút "Giao xe"
-  const handleShowDeliveryModal = () => {
-    // Lấy thời gian mặc định từ ngày thuê (startDate) hoặc deliveryTime nếu đã có
-    let defaultTime = "";
-    if (contract?.deliveryTime) {
-      // Nếu đã có deliveryTime thì dùng nó
-      defaultTime = contract.deliveryTime;
-    } else if (contract?.startDate) {
-      // Nếu chưa có thì lấy từ ngày thuê (startDate)
-      defaultTime = dayjs(contract.startDate).format("YYYY-MM-DDTHH:mm:ss");
-    } else {
-      // Fallback về thời gian hiện tại
-      defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
+  const handleShowDeliveryModal = async () => {
+    if (!contract?.id) return;
+    
+    try {
+      // Check permission trước khi mở modal
+      await checkDeliveryPermission(contract.id);
+      
+      // Nếu check thành công, mở modal như cũ
+      let defaultTime = "";
+      if (contract?.deliveryTime) {
+        // Nếu đã có deliveryTime thì dùng nó và trừ 7 giờ
+        defaultTime = dayjs(contract.deliveryTime).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+      } else if (contract?.startDate) {
+        // Nếu chưa có thì lấy từ ngày thuê (startDate) và trừ 7 giờ
+        defaultTime = dayjs(contract.startDate).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+      } else {
+        // Fallback về thời gian hiện tại
+        defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
+      }
+      setDeliveryDefault({
+        staff: currentUser?.userCurrent?.id || "",
+        time: defaultTime,
+      });
+      setShowModalDelivery(true);
+    } catch (err: any) {
+      let errorMessage = err?.response?.data?.message || err?.message || "Lỗi không xác định khi kiểm tra quyền giao xe.";
+      
+      // Fix timezone +7 giờ (trừ 7 giờ)
+      const fixTimezoneInMessage = (msg: string): string => {
+        const regex = /(\d{2}\/\d{2}\/\d{4} \d{2}:\d{2})/g;
+        return msg.replace(regex, (match) => {
+          const [datePart, timePart] = match.split(" ");
+          const [day, month, year] = datePart.split("/").map(Number);
+          const [hour, minute] = timePart.split(":").map(Number);
+
+          // Create a Date object in local timezone
+          const date = new Date(year, month - 1, day, hour, minute);
+          // Subtract 7 hours
+          date.setHours(date.getHours() - 7);
+
+          const fixedDay = String(date.getDate()).padStart(2, '0');
+          const fixedMonth = String(date.getMonth() + 1).padStart(2, '0');
+          const fixedYear = date.getFullYear();
+          const fixedHour = String(date.getHours()).padStart(2, '0');
+          const fixedMinute = String(date.getMinutes()).padStart(2, '0');
+
+          return `${fixedDay}/${fixedMonth}/${fixedYear} ${fixedHour}:${fixedMinute}`;
+        });
+      };
+      
+      errorMessage = fixTimezoneInMessage(errorMessage);
+      
+      // Nếu message có nhiều dòng (phân cách bởi \n), hiển thị từng message riêng biệt
+      const errorLines = errorMessage.split('\n').filter((line: string) => line.trim().length > 0);
+      
+      if (errorLines.length > 1) {
+        // Hiển thị từng message riêng với delay nhỏ để không bị chồng lên nhau
+        errorLines.forEach((line: string, index: number) => {
+          setTimeout(() => {
+            message.error(line.trim(), 5); // 5 giây tự động ẩn
+          }, index * 300); // Delay 300ms giữa các message
+        });
+      } else {
+        // Chỉ có 1 message thì hiển thị bình thường
+        message.error(errorMessage, 5); // 5 giây tự động ẩn
+      }
     }
-    setDeliveryDefault({
-      staff: currentUser?.userCurrent?.id || "",
-      time: defaultTime,
-    });
-    setShowModalDelivery(true);
   };
 
   // Khi bấm nút "Trả xe"
@@ -487,11 +537,11 @@ const ContractDetailComponent = () => {
       // Lấy thời gian mặc định từ ngày trả (endDate) hoặc returnTime nếu đã có
       let defaultTime = "";
       if (contract?.returnTime) {
-        // Nếu đã có returnTime thì dùng nó
-        defaultTime = contract.returnTime;
+        // Nếu đã có returnTime thì dùng nó và trừ 7 giờ
+        defaultTime = dayjs(contract.returnTime).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
       } else if (contract?.endDate) {
-        // Nếu chưa có thì lấy từ ngày trả (endDate)
-        defaultTime = dayjs(contract.endDate).format("YYYY-MM-DDTHH:mm:ss");
+        // Nếu chưa có thì lấy từ ngày trả (endDate) và trừ 7 giờ
+        defaultTime = dayjs(contract.endDate).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
       } else {
         // Fallback về thời gian hiện tại
         defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
@@ -1551,7 +1601,8 @@ const ContractDetailComponent = () => {
             model: c.carModel,
             licensePlate: c.licensePlate,
             startOdometer: c.startOdometer,
-            status: "", // Trạng thái sẽ được set khi giao xe
+            currentOdometer: c.currentOdometer, // Odometer hiện tại từ bảng car
+            status: c.status || "", // Trạng thái hiện tại của xe từ bảng car
           }))}
           staffOptions={staffOptions}
           defaultStaff={deliveryDefault.staff}

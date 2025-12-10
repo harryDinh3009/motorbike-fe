@@ -215,6 +215,18 @@ export const checkReturnPermission = async (
   return res.data;
 };
 
+/**
+ * Kiểm tra quyền giao xe
+ */
+export const checkDeliveryPermission = async (
+  contractId: string
+): Promise<ApiResponse<boolean>> => {
+  const res = await http.get<ApiResponse<boolean>>(
+    `/a/contract-mng/delivery/check-permission/${contractId}`
+  );
+  return res.data;
+};
+
 export const updateReturn = async (
   data: ContractReturnDTO
 ): Promise<ApiResponse<boolean>> => {
