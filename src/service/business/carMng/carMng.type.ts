@@ -101,3 +101,13 @@ export interface CarImportResult {
   count: number;
   message: string;
 }
+
+export interface ConflictingContractDTO {
+  id: string;
+  contractCode: string;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  statusNm: string;
+}

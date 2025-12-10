@@ -7,6 +7,7 @@ import {
   ApiResponse,
   PageableObject,
   CarImportResult,
+  ConflictingContractDTO,
 } from "./carMng.type";
 
 /**
@@ -225,5 +226,22 @@ export const exportRentableCarsReport = async (
   const res = await http.post("/a/car-mng/report/rentable-cars", params, {
     responseType: "blob",
   });
+  return res.data;
+};
+
+/**
+ * Lấy danh sách hợp đồng conflict với xe trong khoảng thời gian
+ */
+export const getConflictingContracts = async (
+  carId: string,
+  startDate: string,
+  endDate: string
+): Promise<ApiResponse<ConflictingContractDTO[]>> => {
+  const res = await http.get<ApiResponse<ConflictingContractDTO[]>>(
+    `/a/car-mng/${carId}/conflicting-contracts`,
+    {
+      params: { startDate, endDate },
+    }
+  );
   return res.data;
 };

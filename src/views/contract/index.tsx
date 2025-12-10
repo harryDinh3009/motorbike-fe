@@ -28,6 +28,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { formatDateDMY } from "@/utils/common";
+import ModalRentableCarReport from "./modal/ModalRentableCarReport";
 
 const ContractComponent = () => {
   const pageTitle = "Quản lý hợp đồng";
@@ -37,6 +38,7 @@ const ContractComponent = () => {
   ];
 
   const navigate = useNavigate();
+  const [showRentableCarModal, setShowRentableCarModal] = useState(false);
 
   // State filter
   const defaultFilter: ContractSearchDTO = {
@@ -413,7 +415,7 @@ const ContractComponent = () => {
                       borderColor: "#1890ff",
                       color: "#fff"
                     }}
-                    onClick={() => navigate("/rentable-car-report")}
+                    onClick={() => setShowRentableCarModal(true)}
                   />
                   <ButtonBase
                     label="Xuất Excel"
@@ -863,6 +865,12 @@ const ContractComponent = () => {
             </div>
           </div>
         </ContainerBase>
+        
+        {/* Modal thống kê xe khả dụng */}
+        <ModalRentableCarReport
+          visible={showRentableCarModal}
+          onClose={() => setShowRentableCarModal(false)}
+        />
       </div>
     </div>
   );
