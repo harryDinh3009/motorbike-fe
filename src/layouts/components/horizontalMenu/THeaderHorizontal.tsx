@@ -97,6 +97,11 @@ const THeaderHorizontal = () => {
           subMenus: [],
         },
         {
+          name: "Giao nhận xe",
+          path: SCREEN.contractDeliveryPickup.path,
+          subMenus: [],
+        },
+        {
           name: "Xem lịch thuê xe",
           path: SCREEN.contractSchedule.path,
           subMenus: [],

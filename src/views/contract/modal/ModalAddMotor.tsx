@@ -108,7 +108,7 @@ const ModalAddMotor = ({
           <div style={{ fontWeight: 600, fontSize: 18 }}>Chọn xe thuê</div>
         </div>
       }
-      width={800}
+      width={1100}
       footer={
         <div
           className="modal_footer dp_flex"
@@ -180,20 +180,22 @@ const ModalAddMotor = ({
       >
         <div
           style={{
-            minWidth: 600,
+            minWidth: 1000,
             fontWeight: 500,
-            padding: "8px 0",
-            borderBottom: "1px solid #d9d9d9",
+            padding: "12px 16px",
+            borderBottom: "2px solid #d9d9d9",
             display: "flex",
             alignItems: "center",
             background: "#e6f4ff",
+            fontSize: 15,
           }}
         >
-          <div style={{ width: "20%", textAlign: "left" }} /> 
-          <div style={{ width: "20%", textAlign: "left" }}>Tên xe</div>
-          <div style={{ width: "20%", textAlign: "left" }}>Biển số</div>
-          <div style={{ width: "20%", textAlign: "right" }}>Giá/ngày</div>
-          <div style={{ width: "20%", textAlign: "right" }}>Giá/giờ</div>
+          <div style={{ width: 50, textAlign: "center" }} /> 
+          <div style={{ flex: 1, minWidth: 180, textAlign: "left", paddingLeft: 8 }}>Tên xe</div>
+          <div style={{ width: 140, textAlign: "left", paddingLeft: 8 }}>Biển số</div>
+          <div style={{ width: 140, textAlign: "left", paddingLeft: 8 }}>Trạng thái</div>
+          <div style={{ width: 180, textAlign: "right", paddingRight: 8 }}>Giá/ngày</div>
+          <div style={{ width: 180, textAlign: "right", paddingRight: 8 }}>Giá/giờ</div>
         </div>
         {loading ? (
           <div style={{ padding: 32, textAlign: "center" }}>
@@ -217,13 +219,13 @@ const ModalAddMotor = ({
                   alignItems: "center",
                   gap: 0,
                   borderBottom: "1px solid #d9d9d9",
-                  padding: "12px 0",
+                  padding: "12px 16px",
                   fontSize: 15,
-                  minWidth: 600,
+                  minWidth: 1000,
                   background: idx % 2 === 0 ? "#fff" : "#fafafa",
                 }}
               >
-                <div style={{ width: 40, textAlign: "center" }}>
+                <div style={{ width: 50, textAlign: "center" }}>
                   <input
                     type="checkbox"
                     checked={isAlreadySelected || (mState?.checked || false)}
@@ -236,17 +238,21 @@ const ModalAddMotor = ({
                     disabled={isDisabled}
                   />
                 </div>
-                <div style={{ flex: 1, ...strikeStyle }}>{motor.model}</div>
-                <div style={{ width: "20%", ...strikeStyle }}>
+                <div style={{ flex: 1, minWidth: 180, paddingLeft: 8, ...strikeStyle }}>{motor.model}</div>
+                <div style={{ width: 140, paddingLeft: 8, ...strikeStyle }}>
                   {motor.licensePlate}
+                </div>
+                <div style={{ width: 140, paddingLeft: 8, ...strikeStyle }}>
+                  {motor.statusNm || motor.status || "-"}
                 </div>
                 <div
                   style={{
-                    width: "20%",
+                    width: 180,
                     display: "flex",
                     alignItems: "center",
                     gap: 4,
                     justifyContent: "flex-end",
+                    paddingRight: 8,
                     ...strikeStyle,
                   }}
                 >
@@ -262,8 +268,8 @@ const ModalAddMotor = ({
                       )
                     }
                     style={{
-                      width: 60,
-                      padding: "6px 8px",
+                      width: 120,
+                      padding: "6px 10px",
                       borderRadius: 6,
                       border: "1px solid #e0e0e0",
                       fontSize: 15,
@@ -285,11 +291,12 @@ const ModalAddMotor = ({
                 </div>
                 <div
                   style={{
-                    width: "20%",
+                    width: 180,
                     display: "flex",
                     alignItems: "center",
                     gap: 4,
                     justifyContent: "flex-end",
+                    paddingRight: 8,
                     ...strikeStyle,
                   }}
                 >
@@ -305,8 +312,8 @@ const ModalAddMotor = ({
                       )
                     }
                     style={{
-                      width: 60,
-                      padding: "6px 8px",
+                      width: 120,
+                      padding: "6px 10px",
                       borderRadius: 6,
                       border: "1px solid #e0e0e0",
                       fontSize: 15,

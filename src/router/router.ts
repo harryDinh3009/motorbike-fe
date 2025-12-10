@@ -110,6 +110,11 @@ export const routes: RouteType[] = [
         name: SCREEN.contractSchedule.name,
         component: getView("contract/schedule/index"),
       },
+      {
+        path: SCREEN.contractDeliveryPickup.path,
+        name: SCREEN.contractDeliveryPickup.name,
+        component: getView("contract/deliveryPickup/index"),
+      },
     ],
   },
   {

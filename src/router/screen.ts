@@ -79,4 +79,8 @@ export const SCREEN = {
     path: "/contract/schedule",
     name: "ContractSchedule",
   },
+  contractDeliveryPickup: {
+    path: "/contract/delivery-pickup",
+    name: "ContractDeliveryPickup",
+  },
 };

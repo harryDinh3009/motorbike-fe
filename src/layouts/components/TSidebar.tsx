@@ -15,6 +15,7 @@ import {
   UnorderedListOutlined,
   CarryOutOutlined,
   CalendarOutlined,
+  SwapOutlined,
 } from "@ant-design/icons";
 import { SCREEN } from "@/router/screen";
 import Logo from "@/assets/images/motorbike_logo_new.jpg";
@@ -53,6 +54,7 @@ const TSidebar: React.FC = () => {
     ]),
     getItem("Quản lý thuê xe", "contract-management", <FileTextOutlined />, [
       getItem("Danh sách hợp đồng", SCREEN.contractMng.path, <FileTextOutlined />),
+      getItem("Giao nhận xe", SCREEN.contractDeliveryPickup.path, <SwapOutlined />),
       getItem("Xem lịch thuê xe", SCREEN.contractSchedule.path, <CalendarOutlined />),
     ]),
     getItem("Khách hàng", SCREEN.customer?.path || "#", <TeamOutlined />),
@@ -77,7 +79,8 @@ const TSidebar: React.FC = () => {
     }
     if (
       currentPath.includes("/contract") ||
-      currentPath.includes("/schedule")
+      currentPath.includes("/schedule") ||
+      currentPath.includes("/delivery-pickup")
     ) {
       setOpenKeys((prev) => [...new Set([...prev, "contract-management"])]);
     }

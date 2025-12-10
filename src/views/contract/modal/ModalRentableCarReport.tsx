@@ -343,7 +343,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
     <TModal
       visible={visible}
       onCancel={onClose}
-      title="Thống kê xe khả dụng"
+      title="Quản lý xe khả dụng cho thuê"
       width={1200}
       hideOkButton={true}
       hideCancelButton={true}
@@ -412,7 +412,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
             loading={loading}
             size="large"
           >
-            Xem báo cáo
+            Tìm xe
           </Button>
           {searched && carList.length > 0 && (
             <Button
@@ -425,13 +425,6 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
               In PDF
             </Button>
           )}
-          <Button
-            onClick={onClose}
-            size="large"
-            style={{ marginLeft: "auto" }}
-          >
-            Đóng
-          </Button>
         </div>
 
         {/* Result message */}
