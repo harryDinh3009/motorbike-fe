@@ -31,7 +31,10 @@ export interface ContractCarDTO {
 export interface SurchargeDTO {
   id: string;
   contractId: string;
+  surchargeTypeId?: string;
   description?: string;
+  quantity?: number;
+  unitPrice?: number;
   amount?: number;
   notes?: string;
 }
@@ -85,7 +88,10 @@ export interface ContractCarSaveDTO {
 export interface SurchargeSaveDTO {
   id?: string;
   contractId?: string;
+  surchargeTypeId?: string;
   description?: string;
+  quantity?: number;
+  unitPrice?: number;
   amount?: number;
   notes?: string;
 }

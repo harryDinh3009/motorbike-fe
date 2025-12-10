@@ -455,3 +455,23 @@ export const getContractSchedule = async (
   );
   return res.data;
 };
+
+/**
+ * Check availability của nhiều xe cùng lúc
+ */
+export interface CheckCarsAvailabilityDTO {
+  carIds: string[];
+  startDate: string;
+  endDate: string;
+  excludeContractId?: string;
+}
+
+export const checkCarsAvailability = async (
+  params: CheckCarsAvailabilityDTO
+): Promise<ApiResponse<Record<string, boolean>>> => {
+  const res = await http.post<ApiResponse<Record<string, boolean>>>(
+    "/a/contract-mng/check-cars-availability",
+    params
+  );
+  return res.data;
+};

@@ -35,11 +35,10 @@ const ModalSaveSurcharge = ({ open, onClose, onSave, fee }: Props) => {
 
   useEffect(() => {
     if (fee) {
-      setType(
-        surchargeTypeOptions.find((s) => s.label === fee.desc)?.value ||
-          surchargeTypeOptions[0]?.value ||
-          ""
-      );
+      // Ưu tiên tìm theo surchargeTypeId, nếu không có thì tìm theo desc
+      const typeId = fee.type || fee.surchargeTypeId || "";
+      const foundType = surchargeTypeOptions.find((s) => s.value === typeId);
+      setType(typeId || "");
       setQuantity(fee.quantity || 1);
       setPrice(fee.unitPrice || fee.amount || 0);
       setNote(fee.note || "");
@@ -66,6 +65,7 @@ const ModalSaveSurcharge = ({ open, onClose, onSave, fee }: Props) => {
     onSave({
       desc: selectedType?.label || "",
       type,
+      surchargeTypeId: type,
       quantity,
       unitPrice: price,
       amount: total,

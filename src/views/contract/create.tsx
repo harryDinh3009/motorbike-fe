@@ -20,6 +20,7 @@ import {
   updateSurcharge,
   deleteSurcharge,
   getSurchargesByContractId,
+  checkCarsAvailability,
 } from "@/service/business/contractMng/contractMng.service";
 import {
   getAllActiveBranches,
@@ -33,7 +34,7 @@ import { CustomerSaveDTO, CustomerDTO } from "@/service/business/customerMng/cus
 import { message, Tooltip } from "antd"; // thêm import này
 import ModalSaveInfoCustomer from "@/views/customer/ModalSaveInfoCustomer";
 import TModal from "@/component/common/modal/TModal";
-import { PlusOutlined, InfoCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { PlusOutlined, InfoCircleOutlined, QuestionCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { formatDateDMYOnly } from "@/utils/common";
 
 const getPageTitle = (isEdit: boolean) =>
@@ -194,6 +195,9 @@ const ContractCreateComponent = () => {
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState<CustomerDTO | null>(null);
   const [dateError, setDateError] = useState<string>("");
   const [showRentalCalculationModal, setShowRentalCalculationModal] = useState(false);
+  const [unavailableCars, setUnavailableCars] = useState<Set<string>>(new Set());
+  // Lưu error message chi tiết cho từng xe không khả dụng: Map<carId, errorMessage>
+  const [carConflictMessages, setCarConflictMessages] = useState<Map<string, string>>(new Map());
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const contractId = searchParams.get("id");
@@ -296,6 +300,74 @@ const ContractCreateComponent = () => {
     }
   }, [form.startDate, form.endDate]);
 
+  // Check availability của các xe khi thay đổi ngày thuê/trả
+  useEffect(() => {
+    const checkAvailability = async () => {
+      // Chỉ check khi có đủ thông tin: ngày thuê, ngày trả, và có xe trong danh sách
+      if (!form.startDate || !form.endDate || carList.length === 0) {
+        setUnavailableCars(new Set());
+        return;
+      }
+
+      // Validate ngày hợp lệ
+      if (new Date(form.startDate) >= new Date(form.endDate)) {
+        setUnavailableCars(new Set());
+        return;
+      }
+
+      try {
+        // Lấy carId từ carList - ưu tiên carId, sau đó id
+        const carIds = carList
+          .map((c) => c.carId || c.id)
+          .filter(Boolean) as string[];
+
+        if (carIds.length === 0) {
+          setUnavailableCars(new Set());
+          return;
+        }
+
+        console.log("Checking availability for cars:", carIds);
+        console.log("Date range:", form.startDate, "to", form.endDate);
+        console.log("Exclude contract:", isEditMode ? contractId : "none");
+
+        const res = await checkCarsAvailability({
+          carIds,
+          startDate: form.startDate,
+          endDate: form.endDate,
+          excludeContractId: isEditMode ? contractId || undefined : undefined,
+        });
+
+        console.log("Availability check result:", res.data);
+
+        const unavailable = new Set<string>();
+        Object.entries(res.data).forEach(([carId, isAvailable]) => {
+          if (!isAvailable) {
+            unavailable.add(carId);
+          }
+        });
+        setUnavailableCars(unavailable);
+        // Clear conflict messages khi check lại availability (vì có thể đã thay đổi ngày)
+        setCarConflictMessages(new Map());
+        
+        // Debug log để kiểm tra
+        console.log("Unavailable cars set:", Array.from(unavailable));
+        console.log("Car list details:", carList.map(c => ({ 
+          carId: c.carId, 
+          id: c.id, 
+          contractCarId: c.contractCarId,
+          plate: c.plate 
+        })));
+      } catch (err) {
+        console.error("Failed to check car availability:", err);
+        // Không hiển thị error để tránh làm phiền user khi đang nhập
+      }
+    };
+
+    // Debounce để tránh gọi API quá nhiều
+    const timeoutId = setTimeout(checkAvailability, 500);
+    return () => clearTimeout(timeoutId);
+  }, [form.startDate, form.endDate, carList, isEditMode, contractId]);
+
   // Handle query params from schedule screen (carIds, startDate, endDate)
   useEffect(() => {
     if (isEditMode) return; // Skip if in edit mode
@@ -390,9 +462,9 @@ const ContractCreateComponent = () => {
         });
         setCarList(
           (c.cars || []).map((car) => ({
-            id: car.carId,
-            carId: car.carId,
-            contractCarId: car.id,
+            id: car.carId, // carId từ contract_car
+            carId: car.carId, // Đảm bảo carId được map đúng
+            contractCarId: car.id, // ID của contract_car record
             type: car.carType,
             name: car.carModel,
             plate: car.licensePlate,
@@ -676,6 +748,9 @@ const ContractCreateComponent = () => {
     );
     return {
       ...c,
+      // Đảm bảo carId được giữ nguyên
+      carId: c.carId || c.id || c.contractCarId,
+      id: c.id || c.carId || c.contractCarId,
       rentalDays: days,
       rentalExtraHours: extraHours,
       rentalDurationText: durationText,
@@ -768,14 +843,90 @@ const ContractCreateComponent = () => {
     try {
       const res = await saveContract(contractPayload);
       const newId = res.data.id;
-      alert(isEditMode ? "Đã cập nhật hợp đồng!" : "Đã lưu hợp đồng!");
+      message.success(isEditMode ? "Đã cập nhật hợp đồng!" : "Đã lưu hợp đồng!");
       if (newId) {
         navigate(`/contract/detail/${newId}`);
       } else {
         navigate("/contract");
       }
-    } catch (err) {
-      alert("Lưu hợp đồng thất bại!");
+    } catch (err: any) {
+      // Parse error message từ backend
+      const errorMessage = err?.response?.data?.message || 
+                           err?.response?.data?.data?.message ||
+                           err?.message ||
+                           err?.response?.data?.error ||
+                           "";
+      
+      console.error("Error saving contract:", err);
+      console.log("Error message:", errorMessage);
+      
+      // Nếu là lỗi conflict với hợp đồng khác, parse để tìm xe conflict và hiển thị icon cảnh báo
+      if (errorMessage && errorMessage.includes("không khả dụng vì đã được đặt trong hợp đồng")) {
+        // Fix timezone: trừ 7 giờ từ thời gian trong error message
+        const fixTimezoneInMessage = (msg: string): string => {
+          // Pattern: "từ 08/12/2025 07:00 đến 09/12/2025 07:51"
+          return msg.replace(
+            /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}):(\d{2})/g,
+            (match, date, hour, minute) => {
+              // Parse date và time
+              const [day, month, year] = date.split("/");
+              const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour, 10), parseInt(minute, 10));
+              
+              // Trừ 7 giờ (7 * 60 * 60 * 1000 milliseconds)
+              dateObj.setTime(dateObj.getTime() - 7 * 60 * 60 * 1000);
+              
+              // Format lại
+              const newDay = String(dateObj.getDate()).padStart(2, "0");
+              const newMonth = String(dateObj.getMonth() + 1).padStart(2, "0");
+              const newYear = dateObj.getFullYear();
+              const newHour = String(dateObj.getHours()).padStart(2, "0");
+              const newMinute = String(dateObj.getMinutes()).padStart(2, "0");
+              
+              return `${newDay}/${newMonth}/${newYear} ${newHour}:${newMinute}`;
+            }
+          );
+        };
+        
+        const fixedErrorMessage = fixTimezoneInMessage(errorMessage);
+        
+        // Parse biển số xe từ message: "Xe 30L1-66666 không khả dụng..."
+        const plateMatch = fixedErrorMessage.match(/Xe\s+([A-Z0-9-]+)\s+không khả dụng/);
+        if (plateMatch && plateMatch[1]) {
+          const conflictPlate = plateMatch[1];
+          // Tìm xe trong carList có biển số trùng
+          const conflictCar = carList.find(c => c.plate === conflictPlate);
+          if (conflictCar) {
+            const conflictCarId = conflictCar.carId || conflictCar.id || "";
+            // Thêm vào unavailableCars để hiển thị icon cảnh báo
+            setUnavailableCars(prev => new Set([...prev, conflictCarId]));
+            // Lưu error message chi tiết đã fix timezone cho xe này
+            setCarConflictMessages(prev => {
+              const newMap = new Map(prev);
+              newMap.set(conflictCarId, fixedErrorMessage);
+              return newMap;
+            });
+            // Hiển thị toast message với message đã fix timezone
+            message.error(fixedErrorMessage);
+            // Scroll đến phần danh sách xe để user dễ thấy
+            setTimeout(() => {
+              const carListSection = document.getElementById("car-list-section");
+              if (carListSection) {
+                carListSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                // Thêm offset để không bị che bởi header nếu có
+                window.scrollBy(0, -20);
+              }
+            }, 100);
+            return; // Không navigate, giữ user ở lại để xem cảnh báo
+          }
+        }
+        // Nếu không parse được biển số, vẫn hiển thị warning
+        message.warning(errorMessage);
+        return;
+      }
+      
+      // Các lỗi khác vẫn hiển thị error như bình thường
+      const finalMessage = errorMessage || "Lưu hợp đồng thất bại!";
+      message.error(finalMessage);
     }
   };
 
@@ -1165,7 +1316,7 @@ const ContractCreateComponent = () => {
         </ContainerBase>
 
         <ContainerBase>
-          <div className="box_section">
+          <div className="box_section" id="car-list-section">
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
               <p className="box_title_sm" style={{ margin: 0 }}>Danh sách xe thuê</p>
             </div>
@@ -1233,12 +1384,68 @@ const ContractCreateComponent = () => {
                 </tr>
               </thead>
               <tbody>
-                {carRentalList.map((car, idx) => (
-                  <tr key={idx} style={{ borderBottom: "1px solid #d9d9d9" }}>
+                {carRentalList.map((car, idx) => {
+                  // Lấy carId - ưu tiên carId, sau đó id
+                  const carId = car.carId || car.id || "";
+                  const isUnavailable = unavailableCars.has(carId);
+                  const conflictMessage = carConflictMessages.get(carId);
+                  
+                  return (
+                    <tr 
+                      key={idx}
+                      data-car-id={carId}
+                      style={{ 
+                        borderBottom: "1px solid #d9d9d9", 
+                        background: isUnavailable ? "#fff1f0" : undefined 
+                      }}
+                    >
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
                     <td>{car.type}</td>
                     <td>{car.name}</td>
-                    <td>{car.plate}</td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {isUnavailable && (
+                          <Tooltip 
+                            title={
+                              <div style={{ fontSize: 13, maxWidth: 400 }}>
+                                {conflictMessage ? (
+                                  <>
+                                    <div style={{ fontWeight: 500, marginBottom: 8, color: "#fff" }}>
+                                      Xe không khả dụng!
+                                    </div>
+                                    <div style={{ lineHeight: 1.6, color: "#fff" }}>
+                                      {conflictMessage}
+                                    </div>
+                                    <div style={{ marginTop: 8, fontSize: 12, color: "#ffccc7", fontStyle: "italic" }}>
+                                      Vui lòng chọn khoảng thời gian khác hoặc xóa xe này khỏi hợp đồng.
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div style={{ fontWeight: 500, marginBottom: 4, color: "#fff" }}>Xe không khả dụng!</div>
+                                    <div style={{ color: "#fff" }}>Xe này đã được đặt trong hợp đồng khác trong khoảng thời gian đã chọn.</div>
+                                    <div style={{ marginTop: 4, fontSize: 12, color: "#ffccc7" }}>
+                                      Vui lòng chọn khoảng thời gian khác hoặc xóa xe này khỏi hợp đồng.
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            }
+                          >
+                            <ExclamationCircleOutlined 
+                              style={{ 
+                                color: "#ff4d4f", 
+                                fontSize: 18,
+                                cursor: "pointer"
+                              }} 
+                            />
+                          </Tooltip>
+                        )}
+                        <span style={{ color: isUnavailable ? "#ff4d4f" : undefined, fontWeight: isUnavailable ? 500 : undefined }}>
+                          {car.plate}
+                        </span>
+                      </div>
+                    </td>
                     <td>
                       {isEditMode ? (
                         <span>{car.priceDay?.toLocaleString() || 0}</span>
@@ -1332,8 +1539,9 @@ const ContractCreateComponent = () => {
                         }}
                       />
                     </td>
-                  </tr>
-                ))}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             <div
