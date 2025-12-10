@@ -270,11 +270,14 @@ const MotorbikeList = () => {
       const res = await importCarExcel(file);
       setImportResult(res.data);
       fetchMotorbikes(appliedFilter);
-      alert(`Nhập xe thành công!\n${res.data.message || ""}`);
     } catch (err: any) {
-      alert(
-        "Có lỗi khi nhập file Excel. Vui lòng kiểm tra lại file hoặc liên hệ quản trị viên."
-      );
+      const errorMessage = err?.response?.data?.message || 
+                          err?.message || 
+                          "Có lỗi khi nhập file Excel. Vui lòng kiểm tra lại file hoặc liên hệ quản trị viên.";
+      setImportResult({
+        count: 0,
+        message: errorMessage
+      });
     } finally {
       setImporting(false);
       setImportFileName("");
@@ -563,7 +566,7 @@ const MotorbikeList = () => {
                 onClick={handleExportExcel}
               />
               <ButtonBase
-                label="Tải file mẫu"
+                label="Tải file import mẫu"
                 className="btn_gray"
                 style={{ minWidth: 140 }}
                 onClick={handleDownloadTemplate}
@@ -586,7 +589,7 @@ const MotorbikeList = () => {
                     id="import-excel-input"
                   />
                   <ButtonBase
-                    label={importing ? "Đang nhập..." : "Chọn file Excel"}
+                    label={importing ? "Đang nhập..." : "Import xe bằng Excel"}
                     className="btn_yellow"
                     icon={<ImportOutlined />}
                     style={{ 
