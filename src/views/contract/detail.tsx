@@ -886,7 +886,7 @@ const ContractDetailComponent = () => {
                       <div style={{ minWidth: 110, color: "#666", fontSize: 14, fontWeight: 500 }}>
                         Tiền đặt cọc:
                       </div>
-                      <div style={{ flex: 1, color: "#222", fontSize: 14, fontWeight: 600 }}>
+                      <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
                         {(contract.depositAmount || 0).toLocaleString("vi-VN")} đ
                       </div>
                     </div>

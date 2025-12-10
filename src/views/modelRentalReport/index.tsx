@@ -115,7 +115,7 @@ const ModelRentalReport: React.FC = () => {
       dataIndex: "rentalCount",
       key: "rentalCount",
       width: 130,
-      align: "center" as const,
+      align: "right" as const,
     },
     {
       title: "Tiền thuê xe",
@@ -261,7 +261,7 @@ const ModelRentalReport: React.FC = () => {
                       <Table.Summary.Cell index={0} colSpan={2} align="center">
                         Tổng cộng
                       </Table.Summary.Cell>
-                      <Table.Summary.Cell index={2} align="center">
+                      <Table.Summary.Cell index={2} align="right">
                         {totals.rentalCount}
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={3} align="right">

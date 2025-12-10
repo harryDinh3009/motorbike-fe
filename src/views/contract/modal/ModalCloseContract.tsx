@@ -149,6 +149,7 @@ const ModalCloseContract = ({
             color: '#888',
             background: '#f5f5f5',
             fontWeight: 600,
+            textAlign: "right",
           }}
         />
       </div>

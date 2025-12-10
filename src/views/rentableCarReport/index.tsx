@@ -148,6 +148,7 @@ const RentableCarReport: React.FC = () => {
       dataIndex: "dailyPrice",
       key: "dailyPrice",
       width: 120,
+      align: "right" as const,
       render: (val: number) => formatCurrency(val),
     },
     {
@@ -155,6 +156,7 @@ const RentableCarReport: React.FC = () => {
       dataIndex: "hourlyPrice",
       key: "hourlyPrice",
       width: 120,
+      align: "right" as const,
       render: (val: number) => formatCurrency(val),
     },
   ];

@@ -105,7 +105,7 @@ const MonthlyRevenueReport: React.FC = () => {
       dataIndex: "contractCount",
       key: "contractCount",
       width: 130,
-      align: "center" as const,
+      align: "right" as const,
     },
     {
       title: "Tiền thuê xe",
@@ -271,7 +271,7 @@ const MonthlyRevenueReport: React.FC = () => {
                   <Table.Summary fixed>
                     <Table.Summary.Row style={{ background: "#fafafa", fontWeight: 600 }}>
                       <Table.Summary.Cell index={0}>Tổng cộng</Table.Summary.Cell>
-                      <Table.Summary.Cell index={1} align="center">
+                      <Table.Summary.Cell index={1} align="right">
                         {totals.contractCount}
                       </Table.Summary.Cell>
                       <Table.Summary.Cell index={2} align="right">

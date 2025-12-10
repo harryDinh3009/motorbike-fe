@@ -238,7 +238,7 @@ const ModalUpdatePayment = ({
                       modelValue={item.amount}
                       placeholder="0"
                       onChange={(val) => handleChange(idx, "amount", val)}
-                      style={{ width: "100%" }}
+                      style={{ width: "100%", textAlign: "right" }}
                       disabled={isReadonly}
                     />
                     <span style={{ marginLeft: 8, color: "#888" }}>VND</span>

@@ -1133,11 +1133,17 @@ const ContractCreateComponent = () => {
                   id="startDate"
                   label="Ngày thuê"
                   value={form.startDate}
-                  onChange={(date) =>
-                    setForm({ ...form, startDate: date || "" })
-                  }
+                  onChange={(date) => {
+                    setForm({ ...form, startDate: date || "" });
+                    // Xóa danh sách xe đã chọn khi thay đổi ngày thuê (chỉ khi tạo mới, không áp dụng khi chỉnh sửa)
+                    if (!isEditMode) {
+                      setCarList([]);
+                      setUnavailableCars(new Set());
+                      setCarConflictMessages(new Map());
+                    }
+                  }}
                   required
-                  placeholder="Chọn ngày thuê/trả"
+                  placeholder="Chọn ngày thuê"
                   style={{ width: "100%", minWidth: 180 }}
                 />
               </div>
@@ -1146,11 +1152,17 @@ const ContractCreateComponent = () => {
                   id="endDate"
                   label="Ngày trả"
                   value={form.endDate}
-                  onChange={(date) =>
-                    setForm({ ...form, endDate: date || "" })
-                  }
+                  onChange={(date) => {
+                    setForm({ ...form, endDate: date || "" });
+                    // Xóa danh sách xe đã chọn khi thay đổi ngày trả (chỉ khi tạo mới, không áp dụng khi chỉnh sửa)
+                    if (!isEditMode) {
+                      setCarList([]);
+                      setUnavailableCars(new Set());
+                      setCarConflictMessages(new Map());
+                    }
+                  }}
                   required
-                  placeholder="Chọn ngày thuê/trả"
+                  placeholder="Chọn ngày trả"
                   style={{ width: "100%", minWidth: 180 }}
                 />
                 {dateError && (
@@ -1355,9 +1367,9 @@ const ContractCreateComponent = () => {
                   <th>Loại xe</th>
                   <th>Xe</th>
                   <th>Biển số xe</th>
-                  <th>Giá/ngày</th>
-                  <th>Giá/giờ</th>
-                  <th style={{ position: "relative" }}>
+                  <th style={{ textAlign: "right" }}>Giá/ngày</th>
+                  <th style={{ textAlign: "right" }}>Giá/giờ</th>
+                  <th style={{ position: "relative", textAlign: "right" }}>
                     Tiền thuê
                     <QuestionCircleOutlined 
                       onClick={() => setShowRentalCalculationModal(true)}
@@ -1446,7 +1458,7 @@ const ContractCreateComponent = () => {
                         </span>
                       </div>
                     </td>
-                    <td>
+                    <td style={{ textAlign: "right" }}>
                       {isEditMode ? (
                         <span>{car.priceDay?.toLocaleString() || 0}</span>
                       ) : (
@@ -1471,7 +1483,7 @@ const ContractCreateComponent = () => {
                         />
                       )}
                     </td>
-                    <td>
+                    <td style={{ textAlign: "right" }}>
                       {isEditMode ? (
                         <span>{car.priceHour?.toLocaleString() || 0}</span>
                       ) : (
@@ -1500,10 +1512,10 @@ const ContractCreateComponent = () => {
                       style={{
                         fontWeight: "bold",
                         color: "#222",
-                        textAlign: "center",
+                        textAlign: "right",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
+                        justifyContent: "flex-end",
                         gap: 6,
                       }}
                     >
@@ -1814,6 +1826,7 @@ const ContractCreateComponent = () => {
                       borderRadius: 6,
                       border: "1px solid #eee",
                       padding: "6px 10px",
+                      textAlign: "right",
                     }}
                   />
                 </div>
@@ -1832,6 +1845,7 @@ const ContractCreateComponent = () => {
                     borderRadius: 6,
                     border: "1px solid #eee",
                     padding: "6px 10px",
+                    textAlign: "right",
                   }}
                 />
               </div>
@@ -1920,6 +1934,7 @@ const ContractCreateComponent = () => {
           onAdd={handleAddCarFromModal}
           startDate={form.startDate}
           endDate={form.endDate}
+          selectedCarIds={carList.map(c => c.carId || c.id).filter(Boolean)}
         />
 
         {/* Modal thêm phụ phí */}

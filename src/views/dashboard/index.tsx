@@ -27,7 +27,7 @@ const tableColumns: ColumnsType<{
 }> = [
   { title: "STT", dataIndex: "stt", key: "stt", width: 60, align: "center" },
   { title: "Mẫu xe", dataIndex: "model", key: "model" },
-  { title: "Số lượt thuê", dataIndex: "count", key: "count", align: "center" },
+  { title: "Số lượt thuê", dataIndex: "count", key: "count", align: "right" },
   {
     title: "Tiền thuê xe",
     dataIndex: "revenue",

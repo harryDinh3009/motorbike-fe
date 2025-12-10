@@ -18,12 +18,14 @@ const ModalAddMotor = ({
   onAdd,
   startDate,
   endDate,
+  selectedCarIds = [],
 }: {
   open: boolean;
   onClose: () => void;
   onAdd: (motors: any[]) => void;
   startDate?: string;
   endDate?: string;
+  selectedCarIds?: string[];
 }) => {
   const [search, setSearch] = useState("");
   const [carList, setCarList] = useState<AvailableCarDTO[]>([]);
@@ -187,11 +189,11 @@ const ModalAddMotor = ({
             background: "#e6f4ff",
           }}
         >
-          <div style={{ width: "20%", textAlign: "left" }} />
+          <div style={{ width: "20%", textAlign: "left" }} /> 
           <div style={{ width: "20%", textAlign: "left" }}>Tên xe</div>
           <div style={{ width: "20%", textAlign: "left" }}>Biển số</div>
-          <div style={{ width: "20%", textAlign: "center" }}>Giá/ngày</div>
-          <div style={{ width: "20%", textAlign: "center" }}>Giá/giờ</div>
+          <div style={{ width: "20%", textAlign: "right" }}>Giá/ngày</div>
+          <div style={{ width: "20%", textAlign: "right" }}>Giá/giờ</div>
         </div>
         {loading ? (
           <div style={{ padding: 32, textAlign: "center" }}>
@@ -201,9 +203,12 @@ const ModalAddMotor = ({
           carList.map((motor, idx) => {
             const mState = motors.find((m) => m.id === motor.id)!;
             const isAvailable = motor.status === "AVAILABLE";
+            const isAlreadySelected = selectedCarIds.includes(motor.id);
             const strikeStyle = !isAvailable
               ? { textDecoration: "line-through", color: "#ff4d4f" }
               : {};
+            const isDisabled = !isAvailable || isAlreadySelected;
+            
             return (
               <div
                 key={motor.id}
@@ -221,14 +226,14 @@ const ModalAddMotor = ({
                 <div style={{ width: 40, textAlign: "center" }}>
                   <input
                     type="checkbox"
-                    checked={mState?.checked || false}
+                    checked={isAlreadySelected || (mState?.checked || false)}
                     onChange={(e) => handleCheck(motor.id, e.target.checked)}
                     style={{
                       width: 18,
                       height: 18,
                       accentColor: "#222",
                     }}
-                    disabled={!isAvailable}
+                    disabled={isDisabled}
                   />
                 </div>
                 <div style={{ flex: 1, ...strikeStyle }}>{motor.model}</div>
@@ -241,7 +246,7 @@ const ModalAddMotor = ({
                     display: "flex",
                     alignItems: "center",
                     gap: 4,
-                    justifyContent: "center",
+                    justifyContent: "flex-end",
                     ...strikeStyle,
                   }}
                 >
@@ -267,7 +272,7 @@ const ModalAddMotor = ({
                       textDecoration: !isAvailable ? "line-through" : undefined,
                       color: !isAvailable ? "#ff4d4f" : undefined,
                     }}
-                    disabled={!isAvailable}
+                    disabled={isDisabled}
                   />
                   <span
                     style={{
@@ -284,7 +289,7 @@ const ModalAddMotor = ({
                     display: "flex",
                     alignItems: "center",
                     gap: 4,
-                    justifyContent: "center",
+                    justifyContent: "flex-end",
                     ...strikeStyle,
                   }}
                 >
@@ -310,7 +315,7 @@ const ModalAddMotor = ({
                       textDecoration: !isAvailable ? "line-through" : undefined,
                       color: !isAvailable ? "#ff4d4f" : undefined,
                     }}
-                    disabled={!isAvailable}
+                    disabled={isDisabled}
                   />
                   <span
                     style={{
