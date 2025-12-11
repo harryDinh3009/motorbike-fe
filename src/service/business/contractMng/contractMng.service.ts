@@ -18,6 +18,7 @@ import {
   ContractCarUpdateDTO,
   ContractScheduleRequestDTO,
   ContractScheduleItemDTO,
+  DeliveryPickupSearchDTO,
 } from "./contractMng.type";
 
 /**
@@ -495,6 +496,32 @@ export const checkCarsAvailability = async (
 ): Promise<ApiResponse<Record<string, boolean>>> => {
   const res = await http.post<ApiResponse<Record<string, boolean>>>(
     "/a/contract-mng/check-cars-availability",
+    params
+  );
+  return res.data;
+};
+
+/**
+ * Tìm kiếm hợp đồng chờ giao xe (tối ưu)
+ */
+export const searchDeliveryContracts = async (
+  params: DeliveryPickupSearchDTO
+): Promise<ApiResponse<PageableObject<ContractDTO>>> => {
+  const res = await http.post<ApiResponse<PageableObject<ContractDTO>>>(
+    "/a/contract-mng/delivery/list",
+    params
+  );
+  return res.data;
+};
+
+/**
+ * Tìm kiếm hợp đồng chờ nhận xe (tối ưu)
+ */
+export const searchPickupContracts = async (
+  params: DeliveryPickupSearchDTO
+): Promise<ApiResponse<PageableObject<ContractDTO>>> => {
+  const res = await http.post<ApiResponse<PageableObject<ContractDTO>>>(
+    "/a/contract-mng/pickup/list",
     params
   );
   return res.data;

@@ -12,6 +12,19 @@ export interface ContractSearchDTO {
   size?: number;
 }
 
+/**
+ * DTO tìm kiếm hợp đồng giao/nhận xe (tối ưu)
+ */
+export interface DeliveryPickupSearchDTO {
+  keyword?: string;
+  branchId?: string;
+  dateFrom?: string; // YYYY-MM-DD
+  dateTo?: string;   // YYYY-MM-DD
+  status?: string;    // "all" | "delivered"/"received" | "not_delivered"/"not_received"
+  page?: number;
+  size?: number;
+}
+
 export interface ContractCarDTO {
   id: string;
   contractId: string;

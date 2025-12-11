@@ -10,9 +10,9 @@ import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
 import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 import InputBase from "@/component/common/input/InputBase";
-import { searchContracts } from "@/service/business/contractMng/contractMng.service";
+import { searchDeliveryContracts, searchPickupContracts } from "@/service/business/contractMng/contractMng.service";
 import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
-import { ContractDTO, ContractSearchDTO } from "@/service/business/contractMng/contractMng.type";
+import { ContractDTO, DeliveryPickupSearchDTO } from "@/service/business/contractMng/contractMng.type";
 import { formatDateDMY } from "@/utils/common";
 import ModalUpdateInfoDelivery from "../modal/ModalUpdateInfoDelivery";
 import ModalUpdateInfoPickup from "../modal/ModalUpdateInfoPickup";
@@ -33,16 +33,27 @@ const DeliveryPickupPage = () => {
   const [activeTab, setActiveTab] = useState<string>("delivery");
   const [loading, setLoading] = useState(false);
   
+  // Helper function để lấy đầu tháng và cuối tháng hiện tại
+  const getCurrentMonthRange = (): [string, string] => {
+    const startOfMonth = dayjs().startOf('month').startOf('day').format('YYYY-MM-DD HH:mm:ss');
+    const endOfMonth = dayjs().endOf('month').endOf('day').format('YYYY-MM-DD HH:mm:ss');
+    return [startOfMonth, endOfMonth];
+  };
+  
   // Filter states cho tab Chờ giao xe
   const [deliveryKeyword, setDeliveryKeyword] = useState<string>("");
   const [deliveryBranchId, setDeliveryBranchId] = useState<string>("");
-  const [deliveryDateRange, setDeliveryDateRange] = useState<[string | null, string | null]>([null, null]);
+  const [deliveryDateRange, setDeliveryDateRange] = useState<[string | null, string | null]>(
+    getCurrentMonthRange() // Set default = tháng hiện tại
+  );
   const [deliveryStatus, setDeliveryStatus] = useState<string>(""); // "all" | "delivered" | "not_delivered"
   
   // Filter states cho tab Chờ nhận xe
   const [pickupKeyword, setPickupKeyword] = useState<string>("");
   const [pickupBranchId, setPickupBranchId] = useState<string>("");
-  const [pickupDateRange, setPickupDateRange] = useState<[string | null, string | null]>([null, null]);
+  const [pickupDateRange, setPickupDateRange] = useState<[string | null, string | null]>(
+    getCurrentMonthRange() // Set default = tháng hiện tại
+  );
   const [pickupStatus, setPickupStatus] = useState<string>(""); // "all" | "received" | "not_received"
   
   // Data states
@@ -50,6 +61,19 @@ const DeliveryPickupPage = () => {
   const [pickupContracts, setPickupContracts] = useState<ContractDTO[]>([]);
   const [deliveryTotal, setDeliveryTotal] = useState(0);
   const [pickupTotal, setPickupTotal] = useState(0);
+  
+  // Pagination states
+  const [deliveryPagination, setDeliveryPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  });
+  
+  const [pickupPagination, setPickupPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  });
   
   // Options
   const [branchOptions, setBranchOptions] = useState<{ label: string; value: string }[]>([]);
@@ -102,37 +126,33 @@ const DeliveryPickupPage = () => {
   }, []);
 
   // Fetch delivery contracts
-  const fetchDeliveryContracts = async () => {
+  const fetchDeliveryContracts = async (page: number = deliveryPagination.current, pageSize: number = deliveryPagination.pageSize) => {
     setLoading(true);
     try {
-      const params: ContractSearchDTO = {
+      // Extract date only (YYYY-MM-DD) from datetime string for backend
+      const dateFrom = deliveryDateRange[0] ? deliveryDateRange[0].split(' ')[0] : undefined;
+      const dateTo = deliveryDateRange[1] ? deliveryDateRange[1].split(' ')[0] : undefined;
+      
+      const params: DeliveryPickupSearchDTO = {
         keyword: deliveryKeyword || undefined,
-        pickupBranchId: deliveryBranchId || undefined,
-        startDateFrom: deliveryDateRange[0] || undefined,
-        startDateTo: deliveryDateRange[1] || undefined,
-        page: 1,
-        size: 10000,
+        branchId: deliveryBranchId || undefined,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        status: deliveryStatus || undefined,
+        page: page,
+        size: pageSize, // Giảm từ 100 xuống 20 để tối ưu với pagination
       };
       
-      const res = await searchContracts(params);
-      let contracts = res.data.data || [];
-      
-      // Filter theo trạng thái giao xe
-      if (deliveryStatus === "delivered") {
-        // Đã giao: có deliveryTime
-        contracts = contracts.filter(c => c.deliveryTime);
-      } else if (deliveryStatus === "not_delivered") {
-        // Chưa giao: không có deliveryTime và status = CONFIRMED
-        contracts = contracts.filter(c => !c.deliveryTime && c.status === "CONFIRMED");
-      } else {
-        // Tất cả: lấy hợp đồng có status = CONFIRMED hoặc đã giao (có deliveryTime)
-        contracts = contracts.filter(c => 
-          c.status === "CONFIRMED" || c.deliveryTime
-        );
-      }
+      const res = await searchDeliveryContracts(params);
+      const contracts = res.data.data || [];
       
       setDeliveryContracts(contracts);
-      setDeliveryTotal(contracts.length);
+      setDeliveryTotal(res.data.totalRecords || 0);
+      setDeliveryPagination({
+        current: page,
+        pageSize: pageSize,
+        total: res.data.totalRecords || 0,
+      });
     } catch (err) {
       message.error("Lỗi khi tải danh sách hợp đồng chờ giao xe!");
     } finally {
@@ -141,37 +161,33 @@ const DeliveryPickupPage = () => {
   };
 
   // Fetch pickup contracts
-  const fetchPickupContracts = async () => {
+  const fetchPickupContracts = async (page: number = pickupPagination.current, pageSize: number = pickupPagination.pageSize) => {
     setLoading(true);
     try {
-      const params: ContractSearchDTO = {
+      // Extract date only (YYYY-MM-DD) from datetime string for backend
+      const dateFrom = pickupDateRange[0] ? pickupDateRange[0].split(' ')[0] : undefined;
+      const dateTo = pickupDateRange[1] ? pickupDateRange[1].split(' ')[0] : undefined;
+      
+      const params: DeliveryPickupSearchDTO = {
         keyword: pickupKeyword || undefined,
-        returnBranchId: pickupBranchId || undefined,
-        endDateFrom: pickupDateRange[0] || undefined,
-        endDateTo: pickupDateRange[1] || undefined,
-        page: 1,
-        size: 10000,
+        branchId: pickupBranchId || undefined,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        status: pickupStatus || undefined,
+        page: page,
+        size: pageSize, // Giảm từ 100 xuống 20 để tối ưu với pagination
       };
       
-      const res = await searchContracts(params);
-      let contracts = res.data.data || [];
-      
-      // Filter theo trạng thái nhận xe
-      if (pickupStatus === "received") {
-        // Đã nhận: có returnTime
-        contracts = contracts.filter(c => c.returnTime);
-      } else if (pickupStatus === "not_received") {
-        // Chưa nhận: không có returnTime và status = DELIVERED
-        contracts = contracts.filter(c => !c.returnTime && c.status === "DELIVERED");
-      } else {
-        // Tất cả: lấy hợp đồng có status = DELIVERED hoặc đã nhận (có returnTime)
-        contracts = contracts.filter(c => 
-          c.status === "DELIVERED" || c.returnTime
-        );
-      }
+      const res = await searchPickupContracts(params);
+      const contracts = res.data.data || [];
       
       setPickupContracts(contracts);
-      setPickupTotal(contracts.length);
+      setPickupTotal(res.data.totalRecords || 0);
+      setPickupPagination({
+        current: page,
+        pageSize: pageSize,
+        total: res.data.totalRecords || 0,
+      });
     } catch (err) {
       message.error("Lỗi khi tải danh sách hợp đồng chờ nhận xe!");
     } finally {
@@ -179,12 +195,22 @@ const DeliveryPickupPage = () => {
     }
   };
 
+  // Handler cho pagination delivery
+  const handleDeliveryTableChange = (page: number, pageSize: number) => {
+    fetchDeliveryContracts(page, pageSize);
+  };
+
+  // Handler cho pagination pickup
+  const handlePickupTableChange = (page: number, pageSize: number) => {
+    fetchPickupContracts(page, pageSize);
+  };
+
   // Load data khi tab thay đổi (không tự động load khi filter thay đổi)
   useEffect(() => {
     if (activeTab === "delivery") {
-      fetchDeliveryContracts();
+      fetchDeliveryContracts(1, deliveryPagination.pageSize); // Reset về trang 1 khi chuyển tab
     } else {
-      fetchPickupContracts();
+      fetchPickupContracts(1, pickupPagination.pageSize); // Reset về trang 1 khi chuyển tab
     }
   }, [activeTab]);
 
@@ -615,7 +641,7 @@ const DeliveryPickupPage = () => {
       <div id="content" className="grid_content">
         {loading && <LoadingIndicator />}
         <BreadcrumbBase
-          title="Giao nhận xe"
+          title="Quản lý giao - nhận xe"
           items={[
             { label: "Dashboard", path: "/", icon: <HomeOutlined /> },
             { label: "Quản lý hợp đồng", path: "/contract" },
@@ -667,7 +693,11 @@ const DeliveryPickupPage = () => {
                           value={deliveryDateRange[0]}
                           placeholder="Ngày thuê từ"
                           style={{ width: "100%" }}
-                          onChange={(val) => setDeliveryDateRange([val, deliveryDateRange[1]])}
+                          onChange={(val) => {
+                            // Set time = 00:00:00 cho ngày "từ"
+                            const dateStr = val ? dayjs(val).startOf('day').format('YYYY-MM-DD HH:mm:ss') : null;
+                            setDeliveryDateRange([dateStr, deliveryDateRange[1]]);
+                          }}
                         />
                       </div>
                       <div style={{ minWidth: 280 }}>
@@ -676,7 +706,11 @@ const DeliveryPickupPage = () => {
                           value={deliveryDateRange[1]}
                           placeholder="Ngày thuê đến"
                           style={{ width: "100%" }}
-                          onChange={(val) => setDeliveryDateRange([deliveryDateRange[0], val])}
+                          onChange={(val) => {
+                            // Set time = 23:59:59 cho ngày "đến"
+                            const dateStr = val ? dayjs(val).endOf('day').format('YYYY-MM-DD HH:mm:ss') : null;
+                            setDeliveryDateRange([deliveryDateRange[0], dateStr]);
+                          }}
                         />
                       </div>
                       <div style={{ minWidth: 150 }}>
@@ -698,9 +732,14 @@ const DeliveryPickupPage = () => {
                         label="Tìm kiếm"
                         className="btn_primary"
                         icon={<SearchOutlined />}
-                        onClick={fetchDeliveryContracts}
+                        onClick={() => fetchDeliveryContracts(1, deliveryPagination.pageSize)} // Reset về trang 1 khi tìm kiếm
                         loading={loading}
                       />
+                    </div>
+
+                    {/* Thống kê */}
+                    <div style={{ marginBottom: 16, fontSize: 14, fontWeight: 500, color: "#1677ff" }}>
+                      Có {deliveryTotal} hợp đồng
                     </div>
 
                     {/* Table */}
@@ -708,7 +747,16 @@ const DeliveryPickupPage = () => {
                       columns={deliveryColumns}
                       dataSource={flattenDeliveryContracts()}
                       loading={loading}
-                      pagination={false}
+                      pagination={{
+                        current: deliveryPagination.current,
+                        pageSize: deliveryPagination.pageSize,
+                        total: deliveryPagination.total,
+                        showSizeChanger: true,
+                        showTotal: (total) => `Tổng ${total} hợp đồng`,
+                        pageSizeOptions: ['20', '50', '100'],
+                        onChange: handleDeliveryTableChange,
+                        onShowSizeChange: handleDeliveryTableChange,
+                      }}
                       scroll={{ x: 1200 }}
                       bordered
                     />
@@ -753,7 +801,11 @@ const DeliveryPickupPage = () => {
                           value={pickupDateRange[0]}
                           placeholder="Ngày trả từ"
                           style={{ width: "100%" }}
-                          onChange={(val) => setPickupDateRange([val, pickupDateRange[1]])}
+                          onChange={(val) => {
+                            // Set time = 00:00:00 cho ngày "từ"
+                            const dateStr = val ? dayjs(val).startOf('day').format('YYYY-MM-DD HH:mm:ss') : null;
+                            setPickupDateRange([dateStr, pickupDateRange[1]]);
+                          }}
                         />
                       </div>
                       <div style={{ minWidth: 280 }}>
@@ -762,7 +814,11 @@ const DeliveryPickupPage = () => {
                           value={pickupDateRange[1]}
                           placeholder="Ngày trả đến"
                           style={{ width: "100%" }}
-                          onChange={(val) => setPickupDateRange([pickupDateRange[0], val])}
+                          onChange={(val) => {
+                            // Set time = 23:59:59 cho ngày "đến"
+                            const dateStr = val ? dayjs(val).endOf('day').format('YYYY-MM-DD HH:mm:ss') : null;
+                            setPickupDateRange([pickupDateRange[0], dateStr]);
+                          }}
                         />
                       </div>
                       <div style={{ minWidth: 150 }}>
@@ -784,9 +840,14 @@ const DeliveryPickupPage = () => {
                         label="Tìm kiếm"
                         className="btn_primary"
                         icon={<SearchOutlined />}
-                        onClick={fetchPickupContracts}
+                        onClick={() => fetchPickupContracts(1, pickupPagination.pageSize)} // Reset về trang 1 khi tìm kiếm
                         loading={loading}
                       />
+                    </div>
+
+                    {/* Thống kê */}
+                    <div style={{ marginBottom: 16, fontSize: 14, fontWeight: 500, color: "#1677ff" }}>
+                      Có {pickupTotal} hợp đồng
                     </div>
 
                     {/* Table */}
@@ -794,7 +855,16 @@ const DeliveryPickupPage = () => {
                       columns={pickupColumns}
                       dataSource={flattenPickupContracts()}
                       loading={loading}
-                      pagination={false}
+                      pagination={{
+                        current: pickupPagination.current,
+                        pageSize: pickupPagination.pageSize,
+                        total: pickupPagination.total,
+                        showSizeChanger: true,
+                        showTotal: (total) => `Tổng ${total} hợp đồng`,
+                        pageSizeOptions: ['20', '50', '100'],
+                        onChange: handlePickupTableChange,
+                        onShowSizeChange: handlePickupTableChange,
+                      }}
                       scroll={{ x: 1200 }}
                       bordered
                     />
