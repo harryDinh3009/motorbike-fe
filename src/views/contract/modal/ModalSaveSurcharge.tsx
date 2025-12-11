@@ -60,6 +60,30 @@ const ModalSaveSurcharge = ({ open, onClose, onSave, fee }: Props) => {
 
   const total = (quantity || 0) * (price || 0);
 
+  // Hàm xác định đơn vị tính dựa trên loại phụ thu
+  const getUnitLabel = (surchargeTypeName: string): string => {
+    if (!surchargeTypeName) return "VND/Lượt";
+    
+    const name = surchargeTypeName.toLowerCase();
+    
+    // Phụ phí trả xe muộn -> VND/Giờ
+    if (name.includes("trả xe muộn")) {
+      return "VND/Giờ";
+    }
+    
+    // Phụ phí đi đường dài -> VND/KM
+    if (name.includes("đi đường dài")) {
+      return "VND/KM";
+    }
+    
+    // Các loại còn lại -> VND/Lượt
+    return "VND/Lượt";
+  };
+
+  // Lấy đơn vị tính hiện tại
+  const selectedSurchargeType = surchargeTypeOptions.find((s) => s.value === type);
+  const unitLabel = getUnitLabel(selectedSurchargeType?.label || "");
+
   const handleSave = () => {
     const selectedType = surchargeTypeOptions.find((s) => s.value === type);
     onSave({
@@ -131,20 +155,34 @@ const ModalSaveSurcharge = ({ open, onClose, onSave, fee }: Props) => {
         />
       </div>
       <div style={{ marginBottom: 12 }}>
-        <label>Đơn giá</label>
-        <input
-          type="number"
-          value={price}
-          min={0}
-          onChange={(e) => setPrice(Number(e.target.value))}
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: 8,
-            border: "1px solid #eee",
-          }}
-        />
-        <span style={{ marginLeft: 8 }}>VND</span>
+        <label>Đơn giá <span style={{ color: "red" }}>*</span></label>
+        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+          <input
+            type="number"
+            value={price}
+            min={0}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            style={{
+              width: "100%",
+              padding: "8px",
+              paddingRight: type ? "80px" : "50px", // Tạo khoảng trống cho label
+              borderRadius: 8,
+              border: "1px solid #eee",
+            }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              right: "8px",
+              color: "#1677ff",
+              fontWeight: 500,
+              fontSize: 14,
+              pointerEvents: "none",
+            }}
+          >
+            {unitLabel}
+          </span>
+        </div>
       </div>
       <div style={{ marginBottom: 12 }}>
         <label>Ghi chú</label>

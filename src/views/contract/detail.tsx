@@ -18,6 +18,7 @@ import {
   FileDoneOutlined,
   MoreOutlined,
   InfoCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import {
   getContractDetail,
@@ -55,6 +56,47 @@ const breadcrumbItems = [
   { label: "Quản lý hợp đồng", path: "/contract" },
   { label: "Chi tiết hợp đồng", path: "/contract/detail" },
 ];
+
+// Hàm kiểm tra phụ thu cần cảnh báo
+const checkRequiredSurcharges = (contract: ContractDTO | null): string[] => {
+  if (!contract) return [];
+  
+  const warnings: string[] = [];
+  
+  // 1. Kiểm tra Phụ phí đi đường dài: có xe có (endOdometer - startOdometer) >= 300km
+  const hasLongDistance = (contract.cars || []).some((car) => {
+    if (car.endOdometer && car.startOdometer) {
+      const distance = car.endOdometer - car.startOdometer;
+      return distance >= 300;
+    }
+    return false;
+  });
+  if (hasLongDistance) {
+    warnings.push("Phụ phí đi đường dài");
+  }
+  
+  // 2. Kiểm tra Phụ phí trả xe muộn: returnTime > endDate
+  if (contract.returnTime && contract.endDate) {
+    const returnTime = new Date(contract.returnTime).getTime();
+    const endDate = new Date(contract.endDate).getTime();
+    if (returnTime > endDate) {
+      warnings.push("Phụ phí trả xe muộn");
+    }
+  }
+  
+  // 3. Kiểm tra Phụ phí vận chuyển giao nhận: needPickupDelivery = 1 hoặc needReturnDelivery = 1
+  if (contract.needPickupDelivery || contract.needReturnDelivery) {
+    warnings.push("Phụ phí vận chuyển giao nhận");
+  }
+  
+  // 4. Kiểm tra Phụ phí trả xe tại điểm khác: pickupBranchId != returnBranchId
+  if (contract.pickupBranchId && contract.returnBranchId && 
+      contract.pickupBranchId !== contract.returnBranchId) {
+    warnings.push("Phụ phí trả xe tại điểm khác");
+  }
+  
+  return warnings;
+};
 
 // Hàm tính số ngày, số giờ phát sinh và tổng tiền thuê cho từng xe
 function calcRentalInfo(
@@ -155,6 +197,7 @@ const ContractDetailComponent = () => {
   const [paymentHistory, setPaymentHistory] = useState<PaymentTransactionDTO[]>(
     []
   );
+  const [requiredSurcharges, setRequiredSurcharges] = useState<string[]>([]);
 
   // Modal states
   const [showModalPickup, setShowModalPickup] = useState(false);
@@ -228,6 +271,8 @@ const ContractDetailComponent = () => {
       .then(([contractRes, surchargeRes, paymentRes]) => {
         setContract(contractRes.data);
         setSurchargeList(surchargeRes.data || []);
+        // Kiểm tra phụ thu cần cảnh báo
+        setRequiredSurcharges(checkRequiredSurcharges(contractRes.data));
         // Chỉ hiển thị payment có status = 'SUCCESS' (đã lưu và chưa hủy)
         const paymentData = paymentRes.data || [];
         setPaymentHistory(paymentData.filter((p: PaymentTransactionDTO) => p.status === 'SUCCESS' || !p.status));
@@ -1316,14 +1361,35 @@ const ContractDetailComponent = () => {
                 alignItems: "center",
               }}
             >
-              <span
-                role="img"
-                aria-label="money"
-                style={{ color: "#faad14", marginRight: 8 }}
-              >
-                💸
+              <span style={{ display: "flex", alignItems: "center" }}>
+                <span
+                  role="img"
+                  aria-label="money"
+                  style={{ color: "#faad14", marginRight: 8 }}
+                >
+                  💸
+                </span>
+                Danh sách phụ thu
               </span>
-              Danh sách phụ thu
+              {requiredSurcharges.length > 0 && (
+                <Tooltip
+                  title={
+                    <div style={{ fontSize: 13 }}>
+                      Phát sinh phụ thu: {requiredSurcharges.join("; ")}
+                    </div>
+                  }
+                  placement="top"
+                >
+                  <ExclamationCircleOutlined
+                    style={{
+                      color: "#ff4d4f",
+                      fontSize: 22,
+                      cursor: "pointer",
+                      marginLeft: 10,
+                    }}
+                  />
+                </Tooltip>
+              )}
             </p>
             <Table
               columns={[

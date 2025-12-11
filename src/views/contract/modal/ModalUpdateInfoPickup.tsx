@@ -58,8 +58,6 @@ Props) => {
   >([{ value: "", label: "Chọn trạng thái" }]);
 
   const [odoError, setOdoError] = useState<string | null>(null);
-  console.log(carStates);
-  
 
   useEffect(() => {
     setStaff(defaultStaff);
@@ -91,8 +89,6 @@ Props) => {
     key: keyof CarReceiveItem,
     value: any
   ) => {
-    console.log(value);
-
     setCarStates((prev) =>
       prev.map((item, i) => (i === idx ? { ...item, [key]: value } : item))
     );
@@ -191,7 +187,7 @@ Props) => {
                   borderBottom: "2px solid #e0e0e0",
                 }}
               >
-                Loại xe
+                Mẫu xe
               </th>
               <th
                 style={{
@@ -199,10 +195,11 @@ Props) => {
                   textAlign: "left",
                   fontWeight: 600,
                   fontSize: 14,
-                  borderBottom: "2px solid #e0e0e0",
+                  borderBottom: "2px solid " + "#e0e0e0",
+                  width: 130,
                 }}
               >
-                Mẫu xe
+                Biển số
               </th>
               <th
                 style={{
@@ -263,10 +260,10 @@ Props) => {
                   {idx + 1}
                 </td>
                 <td style={{ padding: "12px 8px", color: "#333" }}>
-                  {car.type}
+                  {car.model}
                 </td>
                 <td style={{ padding: "12px 8px", color: "#333" }}>
-                  {car.model}
+                  {car.licensePlate}
                 </td>
                 <td
                   style={{

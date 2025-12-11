@@ -76,9 +76,13 @@ interface CarItem {
 const initialCarList: CarItem[] = [];
 
 interface FeeItem {
+  id?: string;
+  type?: string; // surchargeTypeId
   desc: string;
   amount: number;
   note: string;
+  unitPrice?: number;
+  quantity?: number;
 }
 
 const initialFeeList: FeeItem[] = [];
@@ -491,6 +495,7 @@ const ContractCreateComponent = () => {
         setFeeList(
           (res.data || []).map((fee) => ({
             id: fee.id,
+            type: fee.surchargeTypeId || "", // Map surchargeTypeId vào type
             desc: fee.description || "",
             amount: fee.amount || 0,
             note: fee.notes || "",
@@ -605,6 +610,7 @@ const ContractCreateComponent = () => {
           setFeeList(
             (res.data || []).map((fee) => ({
               id: fee.id,
+              type: fee.surchargeTypeId || "", // Map surchargeTypeId vào type
               desc: fee.description || "",
               amount: fee.amount || 0,
               note: fee.notes || "",
@@ -630,6 +636,7 @@ const ContractCreateComponent = () => {
           await updateSurcharge(feeId, {
             id: feeId,
             contractId,
+            surchargeTypeId: fee.type || fee.surchargeTypeId, // Gửi surchargeTypeId
             description: fee.desc,
             amount: fee.amount,
             notes: fee.note,
@@ -639,6 +646,7 @@ const ContractCreateComponent = () => {
           setFeeList(
             (res.data || []).map((fee) => ({
               id: fee.id,
+              type: fee.surchargeTypeId || "", // Map surchargeTypeId vào type
               desc: fee.description || "",
               amount: fee.amount || 0,
               note: fee.notes || "",
@@ -648,6 +656,7 @@ const ContractCreateComponent = () => {
           // Thêm mới
           await addSurcharge({
             contractId,
+            surchargeTypeId: fee.type, // Gửi surchargeTypeId
             description: fee.desc,
             amount: fee.amount,
             notes: fee.note,
@@ -657,6 +666,7 @@ const ContractCreateComponent = () => {
           setFeeList(
             (res.data || []).map((fee) => ({
               id: fee.id,
+              type: fee.surchargeTypeId || "", // Map surchargeTypeId vào type
               desc: fee.description || "",
               amount: fee.amount || 0,
               note: fee.notes || "",
@@ -829,11 +839,10 @@ const ContractCreateComponent = () => {
         startOdometer: car.startOdometer ?? null,
       })),
       surcharges: feeList.map((fee) => ({
+        surchargeTypeId: fee.type || fee.surchargeTypeId || "", // Ưu tiên dùng type từ state
         description: fee.desc,
         amount: fee.amount,
         notes: fee.note,
-        surchargeTypeId:
-          surchargeTypeOptions.find((s) => s.label === fee.desc)?.value || "",
         quantity: fee.quantity || 1,
         unitPrice: fee.unitPrice || fee.amount || 0,
       })),
@@ -1513,31 +1522,39 @@ const ContractCreateComponent = () => {
                         fontWeight: "bold",
                         color: "#222",
                         textAlign: "right",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
-                        gap: 6,
+                        padding: "4px 8px",
+                        minWidth: 120,
                       }}
                     >
-                      <span>{car.rentalTotal?.toLocaleString()}</span>
-                      <Tooltip
-                        title={
-                          <div style={{ fontSize: 13 }}>
-                            <div style={{ marginBottom: 4, fontWeight: 500 }}>Cách tính tiền thuê:</div>
-                            <div>{formatRentalCalculation(car)}</div>
-                          </div>
-                        }
-                        placement="left"
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "flex-end",
+                          gap: 6,
+                          width: "100%",
+                        }}
                       >
-                        <InfoCircleOutlined 
-                          style={{ 
-                            fontSize: 16, 
-                            color: "#1677ff", 
-                            cursor: "pointer",
-                            flexShrink: 0
-                          }} 
-                        />
-                      </Tooltip>
+                        <span>{car.rentalTotal?.toLocaleString()}</span>
+                        <Tooltip
+                          title={
+                            <div style={{ fontSize: 13 }}>
+                              <div style={{ marginBottom: 4, fontWeight: 500 }}>Cách tính tiền thuê:</div>
+                              <div>{formatRentalCalculation(car)}</div>
+                            </div>
+                          }
+                          placement="left"
+                        >
+                          <InfoCircleOutlined 
+                            style={{ 
+                              fontSize: 16, 
+                              color: "#1677ff", 
+                              cursor: "pointer",
+                              flexShrink: 0
+                            }} 
+                          />
+                        </Tooltip>
+                      </div>
                     </td>
                     <td style={{ textAlign: "center" }}>
                       <ButtonBase
@@ -1605,7 +1622,7 @@ const ContractCreateComponent = () => {
               </thead>
               <tbody>
                 {feeList.map((fee, idx) => (
-                  <tr key={idx} style={{ borderBottom: "1px solid #d9d9d9" }}>
+                  <tr key={fee.id || `fee-${idx}`} style={{ borderBottom: "1px solid #d9d9d9" }}>
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
                     <td>
                       <select
@@ -1625,6 +1642,7 @@ const ContractCreateComponent = () => {
                           setFeeList(newFeeList);
                           if (isEditMode && fee.id) {
                             debouncedUpdateFee(fee.id, {
+                              surchargeTypeId: e.target.value, // Gửi surchargeTypeId
                               description: found?.label || "",
                               amount: newFeeList[idx].amount,
                               notes: fee.note,
