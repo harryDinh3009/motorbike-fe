@@ -188,7 +188,7 @@ const MonthlyRevenueReport: React.FC = () => {
 
           {/* Filters */}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-            <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ width: 200 }}>
               <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Chi nhánh</label>
               <Select
                 value={branchId}
@@ -200,7 +200,7 @@ const MonthlyRevenueReport: React.FC = () => {
                 allowClear
               />
             </div>
-            <div style={{ flex: 1, minWidth: 150 }}>
+            <div style={{ width: 120 }}>
               <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
                 Năm <span style={{ color: "#ff4d4f" }}>*</span>
               </label>

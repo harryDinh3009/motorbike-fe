@@ -228,7 +228,9 @@ const ContractDetailComponent = () => {
       .then(([contractRes, surchargeRes, paymentRes]) => {
         setContract(contractRes.data);
         setSurchargeList(surchargeRes.data || []);
-        setPaymentHistory(paymentRes.data || []);
+        // Chỉ hiển thị payment có status = 'SUCCESS' (đã lưu và chưa hủy)
+        const paymentData = paymentRes.data || [];
+        setPaymentHistory(paymentData.filter((p: PaymentTransactionDTO) => p.status === 'SUCCESS' || !p.status));
       })
       .finally(() => setLoading(false));
   };
@@ -444,13 +446,16 @@ const ContractDetailComponent = () => {
   // Khi bấm nút "Thanh toán", truyền danh sách thanh toán hiện tại vào modal
   const handleShowPaymentModal = () => {
     if (!contract) return;
-    const mapped = (paymentHistory || []).map((p) => ({
+    // paymentHistory đã được filter chỉ có SUCCESS, nhưng filter thêm để đảm bảo
+    const filteredPayments = (paymentHistory || []).filter((p) => p.status === 'SUCCESS' || !p.status);
+    const mapped = filteredPayments.map((p) => ({
       id: p.id,
       contractId: contract.id, // truyền contractId vào từng item
       method: p.paymentMethod || "",
       amount: p.amount || "",
       date: p.paymentDate || "",
       note: p.notes || "",
+      status: p.status || "SUCCESS", // Truyền status để frontend có thể filter
     }));
     setShowModalPayment(true);
     setCurrentPayments(mapped.length ? mapped : []);
@@ -1630,6 +1635,7 @@ const ContractDetailComponent = () => {
               : []
           }
           contractId={contract.id} // truyền contractId vào props
+          onReload={reloadData}
         />
         <ModalCloseContract
           open={showModalClose}

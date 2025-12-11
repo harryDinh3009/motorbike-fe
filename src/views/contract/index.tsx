@@ -60,6 +60,13 @@ const ContractComponent = () => {
   const [loading, setLoading] = useState(false);
   const [contracts, setContracts] = useState<ContractDTO[]>([]);
   const [total, setTotal] = useState(0);
+  
+  // Tính tổng tiền từ danh sách hợp đồng
+  const calculateTotalAmount = () => {
+    return contracts.reduce((sum, contract) => {
+      return sum + (contract.finalAmount || 0);
+    }, 0);
+  };
 
   // Filter options state
   const [pickupBranchOptions, setPickupBranchOptions] = useState([
@@ -462,6 +469,11 @@ const ContractComponent = () => {
                 minHeight: 380
               }}
             >
+              {/* Thống kê */}
+              <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
+                <div>Số hợp đồng: {total}</div>
+                <div>Tổng tiền: {calculateTotalAmount().toLocaleString('vi-VN')} đ</div>
+              </div>
               <TableBase
                 data={contracts}
                 columns={[

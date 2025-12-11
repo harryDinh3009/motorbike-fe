@@ -352,7 +352,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
       <div style={{ padding: "8px 0" }}>
         {/* Filters */}
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-          <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ width: 200 }}>
             <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Chi nhánh</label>
             <Select
               value={branchId}
@@ -364,7 +364,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
               allowClear
             />
           </div>
-          <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ width: 200 }}>
             <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Tên mẫu xe</label>
             <Select
               value={modelName}
@@ -376,7 +376,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
               allowClear
             />
           </div>
-          <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ width: 200 }}>
             <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Loại xe</label>
             <Select
               value={carType}
@@ -388,7 +388,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
               allowClear
             />
           </div>
-          <div style={{ flex: 1, minWidth: 280 }}>
+          <div style={{ width: 300 }}>
             <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
               Thời gian thuê <span style={{ color: "#ff4d4f" }}>*</span>
             </label>

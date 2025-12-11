@@ -3,6 +3,7 @@ export type CarStatus = "AVAILABLE" | "NOT_AVAILABLE" | "LOST" | "RENTED" | "MAI
 export interface CarSearchDTO {
   keyword?: string;
   branchId?: string;
+  modelName?: string;
   carType?: string;
   condition?: string;
   status?: CarStatus;

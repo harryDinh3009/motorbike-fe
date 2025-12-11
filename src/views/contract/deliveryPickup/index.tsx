@@ -738,7 +738,7 @@ const DeliveryPickupPage = () => {
                     </div>
 
                     {/* Thống kê */}
-                    <div style={{ marginBottom: 16, fontSize: 14, fontWeight: 500, color: "#1677ff" }}>
+                    <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
                       Có {deliveryTotal} hợp đồng
                     </div>
 
@@ -846,7 +846,7 @@ const DeliveryPickupPage = () => {
                     </div>
 
                     {/* Thống kê */}
-                    <div style={{ marginBottom: 16, fontSize: 14, fontWeight: 500, color: "#1677ff" }}>
+                    <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
                       Có {pickupTotal} hợp đồng
                     </div>
 

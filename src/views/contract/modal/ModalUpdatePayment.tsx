@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Modal, message } from "antd";
 import TModal from "@/component/common/modal/TModal";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
@@ -18,6 +19,7 @@ interface PaymentItem {
   amount: number | string;
   date: string;
   note: string;
+  status?: string; // status của payment (SUCCESS, CANCELLED)
 }
 
 interface Props {
@@ -26,6 +28,7 @@ interface Props {
   onSave: (payments: PaymentItem[]) => void;
   payments?: PaymentItem[];
   contractId?: string; // thêm prop contractId
+  onReload?: () => void; // callback để reload lại data sau khi xóa payment
 }
 
 const paymentMethodOptions = [
@@ -48,6 +51,7 @@ const ModalUpdatePayment = ({
   onSave,
   payments = defaultPayments,
   contractId,
+  onReload,
 }: Props) => {
   const [list, setList] = useState<PaymentItem[]>(
     payments.length ? payments : defaultPayments
@@ -56,7 +60,9 @@ const ModalUpdatePayment = ({
 
   // Reset state when open
   React.useEffect(() => {
-    setList(payments.length ? payments : defaultPayments);
+    // Chỉ hiển thị payment có status = 'SUCCESS' hoặc chưa có status (payment mới)
+    const filteredPayments = payments.filter((p) => p.status === 'SUCCESS' || !p.status);
+    setList(filteredPayments.length ? filteredPayments : defaultPayments);
     // eslint-disable-next-line
   }, [open]);
 
@@ -77,17 +83,38 @@ const ModalUpdatePayment = ({
   const handleRemove = async (idx: number) => {
     const item = list[idx];
     if (item.id) {
-      if (!window.confirm("Bạn có chắc chắn muốn xóa thanh toán này?")) return;
-      setLoading(true);
-      try {
-        const res = await deletePayment(item.id);
-        if (res?.status === "SUCCESS" || res?.data === true) {
-          setList((prev) => prev.filter((_, i) => i !== idx));
-        }
-      } finally {
-        setLoading(false);
-      }
+      // Hiển thị popup xác nhận cho payment đã lưu
+      Modal.confirm({
+        title: "Xác nhận xóa",
+        content: "Bạn có chắc chắn muốn xóa giao dịch thanh toán này?",
+        okText: "Xác nhận",
+        cancelText: "Hủy",
+        centered: true,
+        onOk: async () => {
+          setLoading(true);
+          try {
+            const res = await deletePayment(item.id!);
+            if (res?.status === "SUCCESS" || res?.data === true) {
+              setList((prev) => prev.filter((_, i) => i !== idx));
+              message.success("Xóa giao dịch thanh toán thành công");
+              // Gọi callback để reload lại trang detail
+              if (onReload) {
+                onReload();
+              }
+              // Đóng popup sau khi xóa thành công
+              onClose();
+            } else {
+              message.error("Xóa giao dịch thanh toán thất bại");
+            }
+          } catch (error) {
+            message.error("Xóa giao dịch thanh toán thất bại");
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
     } else {
+      // Payment chưa lưu thì xóa trực tiếp
       setList((prev) => prev.filter((_, i) => i !== idx));
     }
   };
@@ -118,7 +145,7 @@ const ModalUpdatePayment = ({
       }
       const userId = currentUser?.userCurrent?.id || currentUser?.userCurrent?.userId || "";
       
-      // Thêm mới các payment chưa có id
+      // CHỈ thêm mới các payment chưa có id (payment đã lưu không được chỉnh sửa)
       for (const p of list.filter((item) => !item.id)) {
         await addPayment({
           contractId: cid,
@@ -129,18 +156,7 @@ const ModalUpdatePayment = ({
           userId: userId, // Thêm userId để backend lưu vào payment_transaction
         });
       }
-      // Cập nhật các payment đã có id (nếu muốn cho phép chỉnh sửa)
-      for (const p of list.filter((item) => item.id)) {
-        await addPayment({
-          id: p.id,
-          contractId: cid,
-          paymentMethod: p.method,
-          amount: Number(p.amount),
-          paymentDate: p.date,
-          notes: p.note,
-          userId: userId, // Thêm userId để backend lưu vào payment_transaction
-        });
-      }
+      // Không cập nhật payment đã có id - payment đã lưu không thể chỉnh sửa
       await onSave([]);
       onClose();
     } finally {
@@ -185,8 +201,8 @@ const ModalUpdatePayment = ({
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         {list.map((item, idx) => {
-          // Cho phép chỉnh sửa tất cả các payment (kể cả có id)
-          const isReadonly = false;
+          // Payment đã lưu (có id) thì không cho phép chỉnh sửa
+          const isReadonly = !!item.id;
           return (
             <div
               key={idx}

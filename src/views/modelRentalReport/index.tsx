@@ -176,7 +176,7 @@ const ModelRentalReport: React.FC = () => {
 
           {/* Filters */}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-            <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ width: 200 }}>
               <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Chi nhánh</label>
               <Select
                 value={branchId}
@@ -188,7 +188,7 @@ const ModelRentalReport: React.FC = () => {
                 allowClear
               />
             </div>
-            <div style={{ flex: 2, minWidth: 280 }}>
+            <div style={{ width: 280 }}>
               <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
                 Từ ngày - Đến ngày <span style={{ color: "#ff4d4f" }}>*</span>
               </label>

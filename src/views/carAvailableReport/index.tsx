@@ -94,7 +94,7 @@ const CarAvailableReport: React.FC = () => {
             style={{ maxWidth: 600, margin: "0 auto" }}
           >
             <div style={{ display: "flex", gap: 16 }}>
-              <Form.Item label="Chi nhánh" name="branchId" style={{ flex: 1 }}>
+              <Form.Item label="Chi nhánh" name="branchId" style={{ width: 200 }}>
                 <Select
                   options={branchOptions}
                   allowClear
@@ -106,7 +106,7 @@ const CarAvailableReport: React.FC = () => {
               <Form.Item
                 label="Tên mẫu xe"
                 name="modelName"
-                style={{ flex: 1 }}
+                style={{ width: 200 }}
               >
                 <Select
                   options={modelOptions}
@@ -118,7 +118,7 @@ const CarAvailableReport: React.FC = () => {
               </Form.Item>
             </div>
             <div style={{ display: "flex", gap: 16 }}>
-              <Form.Item label="Loại xe" name="carType" style={{ flex: 1 }}>
+              <Form.Item label="Loại xe" name="carType" style={{ width: 200 }}>
                 <Select
                   options={carTypeOptions}
                   allowClear
@@ -130,7 +130,7 @@ const CarAvailableReport: React.FC = () => {
               <Form.Item
                 label="Thời gian thuê"
                 name="dateRange"
-                style={{ flex: 1 }}
+                style={{ width: 300 }}
                 rules={[
                   { required: true, message: "Vui lòng chọn thời gian thuê" },
                 ]}
