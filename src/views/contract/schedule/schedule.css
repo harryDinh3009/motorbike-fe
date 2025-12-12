@@ -72,6 +72,14 @@
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
 }
 
+.schedule-row-car .schedule-cell-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  justify-content: center;
+}
+
 .schedule-cell-day {
   min-width: 120px;
   width: 120px;

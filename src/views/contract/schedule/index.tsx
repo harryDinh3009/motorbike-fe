@@ -102,20 +102,18 @@ const ContractSchedule: React.FC = () => {
       const userBranchId = currentBranchRes.data?.id || "";
       setBranchId(userBranchId);
 
-      // Set status options - exclude CANCELLED, add "Tất cả trạng thái"
-      const allStatusNames = (statusesRes.data || [])
-        .filter((s: any) => s.code !== "CANCELLED")
-        .map((s: any) => s.code);
+      // Set status options - chỉ hiển thị CONFIRMED và DELIVERED
+      const allowedStatuses = ["CONFIRMED", "DELIVERED"];
+      const filteredStatuses = (statusesRes.data || [])
+        .filter((s: any) => allowedStatuses.includes(s.code));
       
       setStatusOptions([
         { label: "Tất cả trạng thái", value: "" },
-        ...(statusesRes.data || [])
-          .filter((s: any) => s.code !== "CANCELLED")
-          .map((s: any) => ({ label: s.name, value: s.code })),
+        ...filteredStatuses.map((s: any) => ({ label: s.name, value: s.code })),
       ]);
 
-      // Set default statuses to all (excluding CANCELLED)
-      setStatuses(allStatusNames);
+      // Set default statuses to CONFIRMED và DELIVERED
+      setStatuses(allowedStatuses);
 
       // Set model options
       const allModelNames = (modelsRes.data || []).map((m: string) => m);
@@ -180,15 +178,17 @@ const ContractSchedule: React.FC = () => {
       }
       // If modelNames is empty (all models selected), use all schedule data
       
-      // Filter schedule data by statuses if selected (always exclude CANCELLED)
+      // Filter schedule data: chỉ hiển thị CONFIRMED và DELIVERED
+      // Nếu có chọn status trong dropdown thì filter theo status đó, nếu không thì hiển thị cả hai
       if (statuses.length > 0) {
         filteredScheduleData = filteredScheduleData.filter((item) =>
-          statuses.includes(item.status) && item.status !== "CANCELLED"
+          (item.status === "CONFIRMED" || item.status === "DELIVERED") &&
+          statuses.includes(item.status)
         );
       } else {
-        // If no status selected, exclude CANCELLED
+        // Nếu chọn "Tất cả trạng thái" thì hiển thị cả CONFIRMED và DELIVERED
         filteredScheduleData = filteredScheduleData.filter((item) =>
-          item.status !== "CANCELLED"
+          item.status === "CONFIRMED" || item.status === "DELIVERED"
         );
       }
 
@@ -293,6 +293,15 @@ const ContractSchedule: React.FC = () => {
     }
   };
 
+  // Status color mapping giống màn quản lý xe
+  const STATUS_COLOR_MAP: Record<string, { bg: string; color: string; label: string }> = {
+    AVAILABLE: { bg: "#D6F5E6", color: "#22A06B", label: "Hoạt động" },
+    NOT_AVAILABLE: { bg: "#FFE066", color: "#B38600", label: "Không sẵn sàng" },
+    MAINTENANCE: { bg: "#E6E8EA", color: "#6B7280", label: "Đang bảo dưỡng" },
+    BROKEN: { bg: "#FFD6D6", color: "#E14D4D", label: "Hỏng hóc" },
+    LOST: { bg: "#FFD6D6", color: "#E14D4D", label: "Bị mất" },
+  };
+
   // Get car status icon
   const getCarStatusIcon = (status?: string) => {
     if (!status) return null;
@@ -311,6 +320,30 @@ const ContractSchedule: React.FC = () => {
       default:
         return null;
     }
+  };
+
+  // Get car status label with style
+  const getCarStatusLabel = (status?: string) => {
+    if (!status) return null;
+    const statusInfo = STATUS_COLOR_MAP[status];
+    if (!statusInfo) return null;
+    
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          padding: "2px 8px",
+          borderRadius: "12px",
+          fontSize: "11px",
+          fontWeight: 500,
+          backgroundColor: statusInfo.bg,
+          color: statusInfo.color,
+          marginTop: 4,
+        }}
+      >
+        {statusInfo.label}
+      </span>
+    );
   };
 
   // Parse datetime string without timezone conversion
@@ -686,6 +719,18 @@ const ContractSchedule: React.FC = () => {
           </div>
         </div>
 
+        {/* Legend Section - Moved above grid */}
+        <div className="schedule-legend">
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: "#FFD600" }}></div>
+            <span>Đã xác nhận</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color" style={{ backgroundColor: "#345FCE" }}></div>
+            <span>Đang thuê (Đã giao xe)</span>
+          </div>
+        </div>
+
         {/* Grid Section */}
         {!hasSearched ? (
           <div className="schedule-empty">
@@ -725,9 +770,12 @@ const ContractSchedule: React.FC = () => {
 
                   return (
                     <div key={`${model}-${licensePlate}`} className="schedule-row-car">
-                      <div className="schedule-cell-label">
-                        {licensePlate}
-                        {getCarStatusIcon(carStatus)}
+                      <div className="schedule-cell-label" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                          {licensePlate}
+                          {getCarStatusIcon(carStatus)}
+                        </div>
+                        {getCarStatusLabel(carStatus)}
                       </div>
                       {daysInRange.map((day) => {
                         // Check if this cell is in selection range
@@ -795,26 +843,6 @@ const ContractSchedule: React.FC = () => {
             )}
           </div>
         )}
-
-        {/* Legend Section */}
-        <div className="schedule-legend">
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#FFD600" }}></div>
-            <span>Đã xác nhận</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#345FCE" }}></div>
-            <span>Đã giao xe</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#FF8C00" }}></div>
-            <span>Đã trả xe</span>
-          </div>
-          <div className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: "#26D02E" }}></div>
-            <span>Hoàn thành</span>
-          </div>
-        </div>
       </div>
 
       {/* Contract Detail Modal */}
@@ -896,7 +924,7 @@ const ContractSchedule: React.FC = () => {
                 }}
               >
                 {selectedContract.status === "CONFIRMED" && "Đã xác nhận"}
-                {selectedContract.status === "DELIVERED" && "Đã giao xe"}
+                {selectedContract.status === "DELIVERED" && "Đang thuê (Đã giao xe)"}
                 {selectedContract.status === "RETURNED" && "Đã trả xe"}
                 {selectedContract.status === "COMPLETED" && "Hoàn thành"}
                 {selectedContract.status === "CANCELLED" && "Đã hủy"}
