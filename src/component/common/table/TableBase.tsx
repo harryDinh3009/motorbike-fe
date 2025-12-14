@@ -15,6 +15,7 @@ interface TableBaseProps<T> extends TableProps<T> {
   paginationType?: "FE" | "BE";
   totalPages?: number;
   getPage?: (page: number, pageSize: number) => void;
+  hidePagination?: boolean;
 }
 
 const TableBase = <T extends object>({
@@ -25,6 +26,7 @@ const TableBase = <T extends object>({
   paginationType = "BE",
   totalPages,
   getPage,
+  hidePagination = false,
   ...props
 }: TableBaseProps<T>) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,20 +79,22 @@ const TableBase = <T extends object>({
         rowClassName={rowClassName}
         rowKey={(record) => (record as any).id || record.key}
       />
-      <Row justify="end" style={{ marginTop: 25 }}>
-        <Col>
-          <Pagination
-            style={{ display: "flex", alignItems: "center" }}
-            simple={true}
-            current={currentPage}
-            pageSize={currentPageSize}
-            total={paginationType === "FE" ? data.length : totalPages}
-            onChange={handlePageChange}
-            className={styles["ant-pagination-simple-pager"]}
-            showSizeChanger
-          />
-        </Col>
-      </Row>
+      {!hidePagination && (
+        <Row justify="end" style={{ marginTop: 25 }}>
+          <Col>
+            <Pagination
+              style={{ display: "flex", alignItems: "center" }}
+              simple={true}
+              current={currentPage}
+              pageSize={currentPageSize}
+              total={paginationType === "FE" ? data.length : totalPages}
+              onChange={handlePageChange}
+              className={styles["ant-pagination-simple-pager"]}
+              showSizeChanger
+            />
+          </Col>
+        </Row>
+      )}
     </div>
   );
 };

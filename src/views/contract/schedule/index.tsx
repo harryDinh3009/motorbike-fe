@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DatePicker, Select, Button, message, Modal, Descriptions } from "antd";
-import { PlusOutlined, EyeOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import { HomeOutlined, CalendarOutlined } from "@ant-design/icons";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
-import { getContractSchedule, getContractCars } from "@/service/business/contractMng/contractMng.service";
+import { getContractSchedule, getContractCars, deleteContract } from "@/service/business/contractMng/contractMng.service";
 import { ContractScheduleItemDTO, ContractCarDTO } from "@/service/business/contractMng/contractMng.type";
 import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 import { getContractStatuses } from "@/service/business/contractMng/contractMng.service";
@@ -427,6 +427,37 @@ const ContractSchedule: React.FC = () => {
     }
   };
 
+  // Handle cancel contract
+  const handleCancelContract = async () => {
+    if (!selectedContract) return;
+    
+    Modal.confirm({
+      title: "Xác nhận hủy hợp đồng",
+      content: `Bạn có chắc chắn muốn hủy hợp đồng ${selectedContract.contractCode}?`,
+      okText: "Xác nhận",
+      cancelText: "Hủy",
+      okButtonProps: { danger: true },
+      centered: true,
+      getContainer: () => document.body,
+      style: { top: '15%' },
+      onOk: async () => {
+        try {
+          setLoading(true);
+          await deleteContract(selectedContract.contractId);
+          message.success("Đã hủy hợp đồng thành công!");
+          setModalVisible(false);
+          setSelectedContract(null);
+          setSelectedContractCars([]);
+          // Reload schedule data
+          await handleSearch();
+        } catch (err: any) {
+          message.error(err?.response?.data?.message || "Hủy hợp đồng thất bại!");
+          setLoading(false);
+        }
+      },
+    });
+  };
+
   // Check if cell is in selection range (supports multiple cars)
   const isCellSelected = (day: Dayjs, carId: string): boolean => {
     if (!selectionState) return false;
@@ -543,8 +574,9 @@ const ContractSchedule: React.FC = () => {
   const handleCreateContractWithSelection = () => {
     if (selectionState && selectionState.carIds.length > 0) {
       // Format datetime for datetime-local input (YYYY-MM-DDTHH:mm)
-      const startDate = selectionState.startDay.startOf("day").format("YYYY-MM-DDTHH:mm");
-      const endDate = selectionState.endDay.endOf("day").format("YYYY-MM-DDTHH:mm");
+      // Set start date to 7:00 AM and end date to 10:00 PM (22:00)
+      const startDate = selectionState.startDay.hour(7).minute(0).second(0).format("YYYY-MM-DDTHH:mm");
+      const endDate = selectionState.endDay.hour(22).minute(0).second(0).format("YYYY-MM-DDTHH:mm");
 
       // Pass multiple carIds as comma-separated
       const carIds = selectionState.carIds.join(",");
@@ -862,6 +894,16 @@ const ContractSchedule: React.FC = () => {
           }}>
             Đóng
           </Button>,
+          ...(selectedContract && selectedContract.status !== "CANCELLED" && selectedContract.status !== "COMPLETED" ? [
+            <Button
+              key="cancel"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleCancelContract}
+            >
+              Hủy hợp đồng
+            </Button>
+          ] : []),
           <Button
             key="view"
             type="primary"

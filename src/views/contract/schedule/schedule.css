@@ -1,6 +1,9 @@
 .schedule-container {
   padding: 20px;
   background: #fff;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .schedule-header {
@@ -48,6 +51,8 @@
   border: 1px solid #e8e8e8;
   border-radius: 4px;
   margin-bottom: 20px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .schedule-grid-header {
@@ -57,6 +62,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  min-width: fit-content;
 }
 
 .schedule-cell-label {
@@ -101,6 +107,7 @@
   border-bottom: 2px solid #ffd600; /* Viền vàng logo */
   font-weight: 600;
   color: #ad6800; /* Màu chữ vàng đậm để dễ đọc */
+  min-width: fit-content;
 }
 
 .schedule-row-model .schedule-cell-label {
@@ -114,6 +121,7 @@
   min-height: 60px;
   position: relative;
   overflow: visible; /* Cho phép thanh bar hiển thị đầy đủ */
+  min-width: fit-content;
 }
 
 .schedule-row-car:hover {

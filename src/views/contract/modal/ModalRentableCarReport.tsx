@@ -10,6 +10,19 @@ import { getCarTypes } from "@/service/business/carMng/carMng.service";
 import { CarDTO, ConflictingContractDTO } from "@/service/business/carMng/carMng.type";
 import { formatDateDMY } from "@/utils/common";
 
+// Helper function to format date from backend (handles both ISO and dd/MM/yyyy HH:mm formats)
+const formatContractDate = (dateStr?: string | null): string => {
+  if (!dateStr) return "-";
+  
+  // If already in dd/MM/yyyy HH:mm format (from backend), return as is
+  if (/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  
+  // Otherwise, use formatDateDMY for ISO format
+  return formatDateDMY(dateStr);
+};
+
 const { RangePicker } = DatePicker;
 
 interface ModalRentableCarReportProps {
@@ -233,26 +246,29 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
         const tooltipContent = isLoading ? (
           <div style={{ padding: "8px 0", color: "#fff" }}>Đang tải thông tin hợp đồng...</div>
         ) : contracts.length > 0 ? (
-          <div style={{ maxWidth: 400 }}>
+          <div style={{ maxWidth: 550 }}>
             <div style={{ fontWeight: 600, marginBottom: 8, color: "#fff" }}>
               Hợp đồng đã đặt ({contracts.length}):
             </div>
             {contracts.map((contract) => (
-              <div key={contract.id} style={{ marginBottom: 8, fontSize: 13, lineHeight: 1.5 }}>
-                <div style={{ fontWeight: 500, color: "#fff", marginBottom: 4 }}>
+              <div key={contract.id} style={{ marginBottom: 12, fontSize: 13, lineHeight: 1.6, paddingBottom: 12, borderBottom: contracts.indexOf(contract) < contracts.length - 1 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
+                <div style={{ fontWeight: 500, color: "#fff", marginBottom: 6 }}>
                   {contract.contractCode || `HĐ-${contract.id.slice(0, 8)}`}
                 </div>
-                <div style={{ color: "#d9d9d9", fontSize: 12 }}>
-                  {formatDateDMY(contract.startDate)} - {formatDateDMY(contract.endDate)}
+                <div style={{ color: "#d9d9d9", fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ fontWeight: 500 }}>Ngày thuê:</span> {formatContractDate(contract.startDate)}
+                </div>
+                <div style={{ color: "#d9d9d9", fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ fontWeight: 500 }}>Ngày trả:</span> {formatContractDate(contract.endDate)}
                 </div>
                 {contract.customerName && (
-                  <div style={{ color: "#d9d9d9", fontSize: 12 }}>
-                    KH: {contract.customerName}
+                  <div style={{ color: "#d9d9d9", fontSize: 12, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 500 }}>KH:</span> {contract.customerName}
                   </div>
                 )}
                 {contract.statusNm && (
                   <div style={{ color: "#d9d9d9", fontSize: 12 }}>
-                    TT: {contract.statusNm}
+                    <span style={{ fontWeight: 500 }}>TT:</span> {contract.statusNm}
                   </div>
                 )}
               </div>
@@ -388,7 +404,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
               allowClear
             />
           </div>
-          <div style={{ width: 300 }}>
+          <div style={{ width: 380 }}>
             <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
               Thời gian thuê <span style={{ color: "#ff4d4f" }}>*</span>
             </label>

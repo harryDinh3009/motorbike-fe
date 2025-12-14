@@ -101,15 +101,17 @@ const BarChartBase: React.FC<BarChartBaseProps> = ({
           width: `${width}px`,
           height: `${height}px`,
           position: "relative",
+          maxWidth: "100%",
         }}
       >
         <Bar
           ref={chartRef}
           data={data}
-          options={{ ...options, indexAxis: "y" }}
+          options={options}
           style={{
-            width: `${width}px`,
-            height: `${height}px`,
+            width: "100%",
+            height: "100%",
+            maxWidth: "100%",
             position: "relative",
           }}
         />

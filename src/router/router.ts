@@ -32,7 +32,7 @@ export const routes: RouteType[] = [
       {
         path: "",
         name: SCREEN.dashboard.name,
-        component: getView("dashboard/index"),
+        component: getView("dashboard/DashboardNew"),
       },
       {
         path: SCREEN.contractMng.path,

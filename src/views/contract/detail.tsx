@@ -8,7 +8,7 @@ import {
   CheckCircleTwoTone,
   ClockCircleTwoTone,
 } from "@ant-design/icons";
-import { Table, Dropdown, Menu, message, Tooltip } from "antd";
+import { Table, Dropdown, Menu, message, Tooltip, Modal } from "antd";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import {
   EditOutlined,
@@ -660,7 +660,8 @@ const ContractDetailComponent = () => {
       await deleteContract(contract.id);
       setLoading(false);
       message.success("Đã hủy hợp đồng!");
-      navigate("/contract");
+      // Reload lại dữ liệu để cập nhật trạng thái, không navigate đi đâu
+      reloadData();
     } catch {
       setLoading(false);
       message.error("Hủy hợp đồng thất bại!");
@@ -709,8 +710,27 @@ const ContractDetailComponent = () => {
             icon={<EditOutlined />}
             onClick={() => {
               if (!canEditOrCancelOrPay) return handleNoPermission();
-              if (contract?.id) {
-                navigate(`/contract/create?id=${contract.id}`);
+              // Nếu hợp đồng đã hoàn thành, hiển thị popup confirm
+              if (contract?.status === "COMPLETED") {
+                Modal.confirm({
+                  title: "Xác nhận chỉnh sửa",
+                  content: "Hợp đồng đã hoàn thành. Việc chỉnh sửa các thông tin quan trọng có thể gây ảnh hưởng đến dữ liệu đã được ghi nhận. Bạn có chắc chắn muốn tiếp tục?",
+                  okText: "Xác nhận",
+                  cancelText: "Hủy",
+                  centered: true,
+                  getContainer: () => document.body,
+                  style: { top: '1%' },
+                  onOk: () => {
+                    if (contract?.id) {
+                      navigate(`/contract/create?id=${contract.id}`);
+                    }
+                  },
+                });
+              } else {
+                // Nếu chưa hoàn thành, điều hướng bình thường
+                if (contract?.id) {
+                  navigate(`/contract/create?id=${contract.id}`);
+                }
               }
             }}
           />
@@ -767,16 +787,18 @@ const ContractDetailComponent = () => {
           {/* Ẩn các nút sau nếu trạng thái là "Đã hủy" */}
           {contract?.statusNm !== "Đã hủy" && (
             <>
-              {/* Nút Thanh toán luôn hiện (trừ khi hợp đồng đã hủy) */}
-              <ButtonBase
-                label="Thanh toán"
-                className="btn_primary"
-                icon={<DollarOutlined />}
-                onClick={() => {
-                  if (!canEditOrCancelOrPay) return handleNoPermission();
-                  handleShowPaymentModal();
-                }}
-              />
+              {/* Nút Thanh toán: ẩn khi hợp đồng đã hoàn thành hoặc đã hủy */}
+              {contract?.status !== "COMPLETED" && (
+                <ButtonBase
+                  label="Thanh toán"
+                  className="btn_primary"
+                  icon={<DollarOutlined />}
+                  onClick={() => {
+                    if (!canEditOrCancelOrPay) return handleNoPermission();
+                    handleShowPaymentModal();
+                  }}
+                />
+              )}
               {/* Nút Đóng HĐ chỉ hiện khi trạng thái là "Đã trả xe" (RETURNED) */}
               {contract?.status === "RETURNED" && (
                 <ButtonBase

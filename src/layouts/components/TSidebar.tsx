@@ -16,6 +16,7 @@ import {
   CarryOutOutlined,
   CalendarOutlined,
   SwapOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 import { SCREEN } from "@/router/screen";
 import Logo from "@/assets/images/motorbike_logo_new.jpg";
@@ -57,9 +58,11 @@ const TSidebar: React.FC = () => {
       getItem("Giao nhận xe", SCREEN.contractDeliveryPickup.path, <SwapOutlined />),
       getItem("Xem lịch thuê xe", SCREEN.contractSchedule.path, <CalendarOutlined />),
     ]),
-    getItem("Khách hàng", SCREEN.customer?.path || "#", <TeamOutlined />),
-    getItem("Chi nhánh", SCREEN.branch?.path || "#", <BankOutlined />),
-    getItem("Nhân viên", SCREEN.employee?.path || "#", <UserOutlined />),
+    getItem("Quản lý danh mục", "catalog-management", <AppstoreOutlined />, [
+      getItem("Khách hàng", SCREEN.customer?.path || "#", <TeamOutlined />),
+      getItem("Nhân viên", SCREEN.employee?.path || "#", <UserOutlined />),
+      getItem("Chi nhánh", SCREEN.branch?.path || "#", <BankOutlined />),
+    ]),
     getItem("Báo cáo", "reports", <BarChartOutlined />, [
       getItem("Thống kê xe khả dụng", SCREEN.rentableCarReport?.path || "#"),
       getItem("Lượt thuê theo mẫu xe", SCREEN.modelRentalReport?.path || "#"),
@@ -73,28 +76,46 @@ const TSidebar: React.FC = () => {
     const currentPath = location.pathname;
     setSelectedKeys([currentPath]);
 
-    // Auto open parent menu
+    // Auto open parent menu chỉ khi sidebar không collapsed
+    // và chỉ mở menu tương ứng với path hiện tại, không giữ các menu khác mở
+    const newOpenKeys: string[] = [];
+    
     if (currentPath.includes("/motorbike") || currentPath.includes("/car-model")) {
-      setOpenKeys((prev) => [...new Set([...prev, "car-management"])]);
+      newOpenKeys.push("car-management");
     }
     if (
       currentPath.includes("/contract") ||
       currentPath.includes("/schedule") ||
       currentPath.includes("/delivery-pickup")
     ) {
-      setOpenKeys((prev) => [...new Set([...prev, "contract-management"])]);
+      newOpenKeys.push("contract-management");
     }
     if (
       currentPath.includes("/report") ||
       currentPath.includes("/revenue") ||
       currentPath.includes("/rental")
     ) {
-      setOpenKeys((prev) => [...new Set([...prev, "reports"])]);
+      newOpenKeys.push("reports");
     }
-  }, [location.pathname]);
+    if (
+      currentPath.includes("/customer") ||
+      currentPath.includes("/employee") ||
+      currentPath.includes("/branch")
+    ) {
+      newOpenKeys.push("catalog-management");
+    }
+    
+    // Chỉ cập nhật openKeys nếu có thay đổi và sidebar không collapsed
+    if (!collapsed && newOpenKeys.length > 0) {
+      setOpenKeys(newOpenKeys);
+    } else if (collapsed) {
+      // Khi collapsed, đóng tất cả menu
+      setOpenKeys([]);
+    }
+  }, [location.pathname, collapsed]);
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
-    if (e.key && e.key !== "#" && !e.key.includes("-management") && e.key !== "reports") {
+    if (e.key && e.key !== "#" && !e.key.includes("-management") && e.key !== "reports" && e.key !== "catalog-management") {
       navigate(e.key);
     }
   };
@@ -186,10 +207,11 @@ const TSidebar: React.FC = () => {
         theme="dark"
         mode="inline"
         selectedKeys={selectedKeys}
-        openKeys={openKeys}
+        openKeys={collapsed ? [] : openKeys}
         onOpenChange={handleOpenChange}
         onClick={handleMenuClick}
         items={menuItems}
+        triggerSubMenuAction="click"
         style={{
           borderRight: 0,
           background: "transparent",
