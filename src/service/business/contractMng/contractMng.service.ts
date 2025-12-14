@@ -35,6 +35,19 @@ export const searchContracts = async (
 };
 
 /**
+ * Tìm kiếm hợp đồng với phân trang (light version - không load cars để tối ưu performance)
+ */
+export const searchContractsLight = async (
+  params: ContractSearchDTO
+): Promise<ApiResponse<PageableObject<ContractDTO>>> => {
+  const res = await http.post<ApiResponse<PageableObject<ContractDTO>>>(
+    "/a/contract-mng/list-light",
+    params
+  );
+  return res.data;
+};
+
+/**
  * Lấy chi tiết hợp đồng
  */
 export const getContractDetail = async (

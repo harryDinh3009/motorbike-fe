@@ -1,9 +1,12 @@
 export interface ContractSearchDTO {
   keyword?: string;
+  customerId?: string; // Filter theo ID khách hàng
   startDateFrom?: Date; // ISO string
   startDateTo?: Date; // ISO string
   endDateFrom?: Date; // ISO string
   endDateTo?: Date; // ISO string
+  createdDateFrom?: Date; // Ngày đặt từ
+  createdDateTo?: Date;   // Ngày đặt đến
   pickupBranchId?: string;
   returnBranchId?: string;
   status?: string;
@@ -195,10 +198,13 @@ export interface ContractDTO {
 
 export interface PageableObject<T> {
   data: T[];
-  totalElements: number;
+  totalElements?: number; // Backend trả về totalRecords
+  totalRecords?: number; // Tổng số bản ghi theo filter
   totalPages: number;
-  page: number;
-  size: number;
+  page?: number;
+  currentPage?: number; // Backend trả về currentPage
+  size?: number;
+  totalAmount?: number; // Tổng tiền theo filter (optional)
 }
 
 export interface ContractDeliveryDTO {

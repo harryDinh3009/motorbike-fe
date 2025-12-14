@@ -14,6 +14,7 @@ interface TableBaseProps<T> extends TableProps<T> {
   onPageChange?: (page: number, pageSize: number) => void;
   paginationType?: "FE" | "BE";
   totalPages?: number;
+  totalRecords?: number; // Tổng số records (dùng cho Pagination total)
   getPage?: (page: number, pageSize: number) => void;
   hidePagination?: boolean;
 }
@@ -25,6 +26,7 @@ const TableBase = <T extends object>({
   onPageChange,
   paginationType = "BE",
   totalPages,
+  totalRecords,
   getPage,
   hidePagination = false,
   ...props
@@ -87,7 +89,7 @@ const TableBase = <T extends object>({
               simple={true}
               current={currentPage}
               pageSize={currentPageSize}
-              total={paginationType === "FE" ? data.length : totalPages}
+              total={paginationType === "FE" ? data.length : (totalRecords || (totalPages ? totalPages * currentPageSize : 0))}
               onChange={handlePageChange}
               className={styles["ant-pagination-simple-pager"]}
               showSizeChanger

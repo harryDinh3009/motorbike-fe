@@ -44,9 +44,17 @@ const ModalAddMotor = ({
       endDate,
     }).then((res) => {
       const cars = res.data.data || [];
-      setCarList(cars);
+      // Sắp xếp: xe khả dụng (AVAILABLE) lên trước, xe không khả dụng xuống dưới
+      const sortedCars = [...cars].sort((a, b) => {
+        const aIsAvailable = a.status === "AVAILABLE";
+        const bIsAvailable = b.status === "AVAILABLE";
+        if (aIsAvailable && !bIsAvailable) return -1; // a lên trước
+        if (!aIsAvailable && bIsAvailable) return 1;  // b lên trước
+        return 0; // giữ nguyên thứ tự nếu cùng trạng thái
+      });
+      setCarList(sortedCars);
       setMotors(
-        cars.map((car) => ({
+        sortedCars.map((car) => ({
           id: car.id,
           checked: false,
           priceDay: car.dailyPrice || 0,
