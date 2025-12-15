@@ -111,11 +111,7 @@ const ModalAddMotor = ({
     <TModal
       visible={open}
       onCancel={onClose}
-      title={
-        <div>
-          <div style={{ fontWeight: 600, fontSize: 18 }}>Chọn xe thuê</div>
-        </div>
-      }
+      title="Chọn xe thuê"
       width={1100}
       footer={
         <div

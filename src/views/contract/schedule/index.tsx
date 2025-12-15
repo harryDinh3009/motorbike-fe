@@ -573,10 +573,10 @@ const ContractSchedule: React.FC = () => {
   // Handle create contract with selected range (multiple cars)
   const handleCreateContractWithSelection = () => {
     if (selectionState && selectionState.carIds.length > 0) {
-      // Format datetime for datetime-local input (YYYY-MM-DDTHH:mm)
+      // Format datetime for API (YYYY-MM-DDTHH:mm:ss) - backend expects format yyyy-MM-dd'T'HH:mm:ss
       // Set start date to 7:00 AM and end date to 10:00 PM (22:00)
-      const startDate = selectionState.startDay.hour(7).minute(0).second(0).format("YYYY-MM-DDTHH:mm");
-      const endDate = selectionState.endDay.hour(22).minute(0).second(0).format("YYYY-MM-DDTHH:mm");
+      const startDate = selectionState.startDay.hour(7).minute(0).second(0).format("YYYY-MM-DDTHH:mm:ss");
+      const endDate = selectionState.endDay.hour(22).minute(0).second(0).format("YYYY-MM-DDTHH:mm:ss");
 
       // Pass multiple carIds as comma-separated
       const carIds = selectionState.carIds.join(",");
