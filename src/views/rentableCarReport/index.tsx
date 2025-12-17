@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Button, DatePicker, Select, Table, message } from "antd";
-import { SearchOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { Button, DatePicker, Select, Table, message, Tooltip } from "antd";
+import { SearchOutlined, FilePdfOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import dayjs from "dayjs";
-import { searchAvailableCars, exportRentableCarsReport } from "@/service/business/carMng/carMng.service";
+import { searchAvailableCars, exportRentableCarsReport, getConflictingContracts } from "@/service/business/carMng/carMng.service";
 import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 import { getCarModels } from "@/service/business/carMng/carModelMng.service";
 import { getCarTypes } from "@/service/business/carMng/carMng.service";
-import { CarDTO } from "@/service/business/carMng/carMng.type";
+import { CarDTO, ConflictingContractDTO } from "@/service/business/carMng/carMng.type";
+import { formatDateDMY } from "@/utils/common";
 
 const { RangePicker } = DatePicker;
 
@@ -34,6 +35,8 @@ const RentableCarReport: React.FC = () => {
   const [carList, setCarList] = useState<CarDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [conflictingContracts, setConflictingContracts] = useState<Map<string, ConflictingContractDTO[]>>(new Map());
+  const [loadingContracts, setLoadingContracts] = useState<Set<string>>(new Set());
 
   // Load options on mount
   useEffect(() => {
@@ -66,6 +69,49 @@ const RentableCarReport: React.FC = () => {
       });
   }, []);
 
+  // Helper function to format date from backend
+  const formatContractDate = (dateStr?: string | null): string => {
+    if (!dateStr) return "-";
+    if (/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(dateStr)) {
+      return dateStr;
+    }
+    return formatDateDMY(dateStr);
+  };
+
+  // Hàm lấy thông tin hợp đồng conflict cho xe
+  const fetchConflictingContracts = async (carId: string) => {
+    if (!dateRange[0] || !dateRange[1]) return;
+    
+    if (loadingContracts.has(carId) || conflictingContracts.has(carId)) {
+      return;
+    }
+
+    setLoadingContracts(prev => new Set([...prev, carId]));
+    
+    try {
+      const res = await getConflictingContracts(
+        carId,
+        dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
+        dateRange[1].format("YYYY-MM-DDTHH:mm:ss")
+      );
+
+      setConflictingContracts(prev => {
+        const newMap = new Map(prev);
+        newMap.set(carId, res.data || []);
+        return newMap;
+      });
+    } catch (err) {
+      console.error("Failed to fetch conflicting contracts:", err);
+      message.error("Không thể tải thông tin hợp đồng");
+    } finally {
+      setLoadingContracts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(carId);
+        return newSet;
+      });
+    }
+  };
+
   // Handle search
   const handleSearch = async () => {
     if (!dateRange[0] || !dateRange[1]) {
@@ -75,23 +121,29 @@ const RentableCarReport: React.FC = () => {
 
     setLoading(true);
     try {
-      // startDate: 00:00:00, endDate: 23:59:59
       const res = await searchAvailableCars({
         branchId: branchId || undefined,
         modelName: modelName || undefined,
         carType: carType || undefined,
-        startDate: dateRange[0].startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        endDate: dateRange[1].endOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+        startDate: dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
+        endDate: dateRange[1].format("YYYY-MM-DDTHH:mm:ss"),
         page: 1,
         size: 10000,
       });
 
       const allCars = res.data.data || [];
-      // Filter only AVAILABLE cars (not struck through in contract modal)
-      const availableCars = allCars.filter((car) => car.status === "AVAILABLE");
-      setCarList(availableCars);
+      // Hiển thị cả AVAILABLE và NOT_AVAILABLE (giống modal)
+      setCarList(allCars);
       setSearched(true);
-      message.success(`Đã tìm thấy ${availableCars.length} xe có thể thuê`);
+      setConflictingContracts(new Map()); // Reset conflict contracts
+      
+      const availableCount = allCars.filter(c => c.status === "AVAILABLE").length;
+      const rentedCount = allCars.filter(c => c.status === "NOT_AVAILABLE").length;
+      if (rentedCount > 0) {
+        message.success(`Đã tìm thấy ${availableCount} xe khả dụng và ${rentedCount} xe đã đặt thuê`);
+      } else {
+        message.success(`Đã tìm thấy ${availableCount} xe khả dụng`);
+      }
     } catch (err) {
       message.error("Lỗi khi tải dữ liệu!");
     } finally {
@@ -153,6 +205,90 @@ const RentableCarReport: React.FC = () => {
       align: "right" as const,
       render: (val: number) => formatCurrency(val),
     },
+    {
+      title: "Kết quả",
+      key: "result",
+      width: 150,
+      align: "center" as const,
+      render: (_: any, record: CarDTO) => {
+        const isNotAvailable = record.status === "NOT_AVAILABLE";
+        const contracts = conflictingContracts.get(record.id) || [];
+        const isLoading = loadingContracts.has(record.id);
+        
+        const tooltipContent = isLoading ? (
+          <div style={{ padding: "8px 0", color: "#fff" }}>Đang tải thông tin hợp đồng...</div>
+        ) : contracts.length > 0 ? (
+          <div style={{ maxWidth: 550 }}>
+            <div style={{ fontWeight: 600, marginBottom: 8, color: "#fff" }}>
+              Hợp đồng đã đặt ({contracts.length}):
+            </div>
+            {contracts.map((contract) => (
+              <div key={contract.id} style={{ marginBottom: 12, fontSize: 13, lineHeight: 1.6, paddingBottom: 12, borderBottom: contracts.indexOf(contract) < contracts.length - 1 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
+                <div style={{ fontWeight: 500, color: "#fff", marginBottom: 6 }}>
+                  {contract.contractCode || `HĐ-${contract.id.slice(0, 8)}`}
+                </div>
+                <div style={{ color: "#d9d9d9", fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ fontWeight: 500 }}>Ngày thuê:</span> {formatContractDate(contract.startDate)}
+                </div>
+                <div style={{ color: "#d9d9d9", fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ fontWeight: 500 }}>Ngày trả:</span> {formatContractDate(contract.endDate)}
+                </div>
+                {contract.customerName && (
+                  <div style={{ color: "#d9d9d9", fontSize: 12, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 500 }}>KH:</span> {contract.customerName}
+                  </div>
+                )}
+                {contract.statusNm && (
+                  <div style={{ color: "#d9d9d9", fontSize: 12 }}>
+                    <span style={{ fontWeight: 500 }}>TT:</span> {contract.statusNm}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ padding: "8px 0", color: "#fff" }}>Không có hợp đồng conflict</div>
+        );
+
+        return (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <span style={{ 
+              color: isNotAvailable ? "#ff4d4f" : "#52c41a", 
+              fontWeight: 500 
+            }}>
+              {isNotAvailable ? "Đã đặt thuê" : "Khả dụng"}
+            </span>
+            {isNotAvailable && (
+              <Tooltip 
+                title={tooltipContent}
+                placement="left"
+                trigger="click"
+                onOpenChange={(open) => {
+                  if (open && contracts.length === 0 && !isLoading) {
+                    fetchConflictingContracts(record.id);
+                  }
+                }}
+              >
+                <InfoCircleOutlined 
+                  style={{ 
+                    color: "#ff4d4f", 
+                    fontSize: 16,
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                />
+              </Tooltip>
+            )}
+          </div>
+        );
+      },
+    },
   ];
 
   // Export PDF using BE API
@@ -169,13 +305,12 @@ const RentableCarReport: React.FC = () => {
 
     setLoading(true);
     try {
-      // startDate: 00:00:00, endDate: 23:59:59
       const blob = await exportRentableCarsReport({
         branchId: branchId || undefined,
         modelName: modelName || undefined,
         carType: carType || undefined,
-        startDate: dateRange[0].startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        endDate: dateRange[1].endOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+        startDate: dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
+        endDate: dateRange[1].format("YYYY-MM-DDTHH:mm:ss"),
       });
       
       const url = window.URL.createObjectURL(blob);
@@ -289,9 +424,18 @@ const RentableCarReport: React.FC = () => {
                 fontWeight: 500,
               }}
             >
-              {carList.length > 0
-                ? `✅ Đã tìm thấy ${carList.length} xe khả dụng`
-                : "⚠️ Không tìm thấy xe nào khả dụng trong khoảng thời gian này"}
+              {carList.length > 0 ? (
+                <>
+                  ✅ Đã tìm thấy {carList.filter(c => c.status === "AVAILABLE").length} xe khả dụng
+                  {carList.filter(c => c.status === "NOT_AVAILABLE").length > 0 && (
+                    <span style={{ marginLeft: 8 }}>
+                      và {carList.filter(c => c.status === "NOT_AVAILABLE").length} xe đã đặt thuê
+                    </span>
+                  )}
+                </>
+              ) : (
+                "⚠️ Không tìm thấy xe nào trong khoảng thời gian này"
+              )}
             </div>
           )}
 

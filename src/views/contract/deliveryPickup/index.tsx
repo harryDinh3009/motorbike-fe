@@ -227,9 +227,11 @@ const DeliveryPickupPage = () => {
       
       let defaultTime = "";
       if (contractDetail?.deliveryTime) {
-        defaultTime = dayjs(contractDetail.deliveryTime).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Đã đúng timezone GMT+7 từ backend
+        defaultTime = dayjs(contractDetail.deliveryTime).format("YYYY-MM-DDTHH:mm:ss");
       } else if (contractDetail?.startDate) {
-        defaultTime = dayjs(contractDetail.startDate).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Đã đúng timezone GMT+7 từ backend
+        defaultTime = dayjs(contractDetail.startDate).format("YYYY-MM-DDTHH:mm:ss");
       } else {
         defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
       }
@@ -259,9 +261,11 @@ const DeliveryPickupPage = () => {
       
       let defaultTime = "";
       if (contractDetail?.returnTime) {
-        defaultTime = dayjs(contractDetail.returnTime).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Đã đúng timezone GMT+7 từ backend
+        defaultTime = dayjs(contractDetail.returnTime).format("YYYY-MM-DDTHH:mm:ss");
       } else if (contractDetail?.endDate) {
-        defaultTime = dayjs(contractDetail.endDate).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Đã đúng timezone GMT+7 từ backend
+        defaultTime = dayjs(contractDetail.endDate).format("YYYY-MM-DDTHH:mm:ss");
       } else {
         defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
       }

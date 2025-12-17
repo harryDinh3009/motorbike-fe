@@ -119,8 +119,8 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
     try {
       const res = await getConflictingContracts(
         carId,
-        dateRange[0].startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        dateRange[1].endOf("day").format("YYYY-MM-DDTHH:mm:ss")
+        dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
+        dateRange[1].format("YYYY-MM-DDTHH:mm:ss")
       );
 
       setConflictingContracts(prev => {
@@ -153,8 +153,8 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
         branchId: branchId || undefined,
         modelName: modelName || undefined,
         carType: carType || undefined,
-        startDate: dateRange[0].startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        endDate: dateRange[1].endOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+        startDate: dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
+        endDate: dateRange[1].format("YYYY-MM-DDTHH:mm:ss"),
         page: 1,
         size: 10000,
       });
@@ -331,8 +331,8 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
         branchId: branchId || undefined,
         modelName: modelName || undefined,
         carType: carType || undefined,
-        startDate: dateRange[0].startOf("day").format("YYYY-MM-DDTHH:mm:ss"),
-        endDate: dateRange[1].endOf("day").format("YYYY-MM-DDTHH:mm:ss"),
+        startDate: dateRange[0].format("YYYY-MM-DDTHH:mm:ss"),
+        endDate: dateRange[1].format("YYYY-MM-DDTHH:mm:ss"),
       });
       
       const url = window.URL.createObjectURL(blob);

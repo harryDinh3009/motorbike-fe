@@ -517,11 +517,11 @@ const ContractDetailComponent = () => {
       // Nếu check thành công, mở modal như cũ
       let defaultTime = "";
       if (contract?.deliveryTime) {
-        // Nếu đã có deliveryTime thì dùng nó và trừ 7 giờ
-        defaultTime = dayjs(contract.deliveryTime).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Nếu đã có deliveryTime thì dùng nó (đã đúng timezone GMT+7 từ backend)
+        defaultTime = dayjs(contract.deliveryTime).format("YYYY-MM-DDTHH:mm:ss");
       } else if (contract?.startDate) {
-        // Nếu chưa có thì lấy từ ngày thuê (startDate) và trừ 7 giờ
-        defaultTime = dayjs(contract.startDate).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Nếu chưa có thì lấy từ ngày thuê (startDate) (đã đúng timezone GMT+7 từ backend)
+        defaultTime = dayjs(contract.startDate).format("YYYY-MM-DDTHH:mm:ss");
       } else {
         // Fallback về thời gian hiện tại
         defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");
@@ -587,11 +587,11 @@ const ContractDetailComponent = () => {
       // Lấy thời gian mặc định từ ngày trả (endDate) hoặc returnTime nếu đã có
       let defaultTime = "";
       if (contract?.returnTime) {
-        // Nếu đã có returnTime thì dùng nó và trừ 7 giờ
-        defaultTime = dayjs(contract.returnTime).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Nếu đã có returnTime thì dùng nó (đã đúng timezone GMT+7 từ backend)
+        defaultTime = dayjs(contract.returnTime).format("YYYY-MM-DDTHH:mm:ss");
       } else if (contract?.endDate) {
-        // Nếu chưa có thì lấy từ ngày trả (endDate) và trừ 7 giờ
-        defaultTime = dayjs(contract.endDate).subtract(7, 'hour').format("YYYY-MM-DDTHH:mm:ss");
+        // Nếu chưa có thì lấy từ ngày trả (endDate) (đã đúng timezone GMT+7 từ backend)
+        defaultTime = dayjs(contract.endDate).format("YYYY-MM-DDTHH:mm:ss");
       } else {
         // Fallback về thời gian hiện tại
         defaultTime = dayjs().format("YYYY-MM-DDTHH:mm:ss");

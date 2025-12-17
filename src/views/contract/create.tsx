@@ -871,32 +871,8 @@ const ContractCreateComponent = () => {
       
       // Nếu là lỗi conflict với hợp đồng khác, parse để tìm xe conflict và hiển thị icon cảnh báo
       if (errorMessage && errorMessage.includes("không khả dụng vì đã được đặt trong hợp đồng")) {
-        // Fix timezone: trừ 7 giờ từ thời gian trong error message
-        const fixTimezoneInMessage = (msg: string): string => {
-          // Pattern: "từ 08/12/2025 07:00 đến 09/12/2025 07:51"
-          return msg.replace(
-            /(\d{2}\/\d{2}\/\d{4})\s+(\d{2}):(\d{2})/g,
-            (match, date, hour, minute) => {
-              // Parse date và time
-              const [day, month, year] = date.split("/");
-              const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour, 10), parseInt(minute, 10));
-              
-              // Trừ 7 giờ (7 * 60 * 60 * 1000 milliseconds)
-              dateObj.setTime(dateObj.getTime() - 7 * 60 * 60 * 1000);
-              
-              // Format lại
-              const newDay = String(dateObj.getDate()).padStart(2, "0");
-              const newMonth = String(dateObj.getMonth() + 1).padStart(2, "0");
-              const newYear = dateObj.getFullYear();
-              const newHour = String(dateObj.getHours()).padStart(2, "0");
-              const newMinute = String(dateObj.getMinutes()).padStart(2, "0");
-              
-              return `${newDay}/${newMonth}/${newYear} ${newHour}:${newMinute}`;
-            }
-          );
-        };
-        
-        const fixedErrorMessage = fixTimezoneInMessage(errorMessage);
+        // Backend đã format error message với timezone GMT+7, không cần fix timezone nữa
+        const fixedErrorMessage = errorMessage;
         
         // Parse biển số xe từ message: "Xe 30L1-66666 không khả dụng..."
         const plateMatch = fixedErrorMessage.match(/Xe\s+([A-Z0-9-]+)\s+không khả dụng/);
