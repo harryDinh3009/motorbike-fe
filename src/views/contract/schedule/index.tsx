@@ -297,8 +297,8 @@ const ContractSchedule: React.FC = () => {
   const STATUS_COLOR_MAP: Record<string, { bg: string; color: string; label: string }> = {
     AVAILABLE: { bg: "#D6F5E6", color: "#22A06B", label: "Hoạt động" },
     NOT_AVAILABLE: { bg: "#FFE066", color: "#B38600", label: "Không sẵn sàng" },
-    MAINTENANCE: { bg: "#E6E8EA", color: "#6B7280", label: "Đang bảo dưỡng" },
-    BROKEN: { bg: "#FFD6D6", color: "#E14D4D", label: "Hỏng hóc" },
+    MAINTENANCE: { bg: "#FFF4E6", color: "#FF8C00", label: "Đang bảo dưỡng" }, // Màu cam nổi bật thay vì xám
+    BROKEN: { bg: "#FFE0E0", color: "#D32F2F", label: "Hỏng hóc" }, // Màu đỏ đậm hơn để nổi bật
     LOST: { bg: "#FFD6D6", color: "#E14D4D", label: "Bị mất" },
   };
 

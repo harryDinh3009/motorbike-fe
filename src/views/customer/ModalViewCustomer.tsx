@@ -696,7 +696,6 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
                 columns={contractColumns}
                 paginationType="BE"
                 pageSize={appliedContractFilter.size || 10}
-                totalPages={totalPages}
                 totalRecords={contractTotal}
                 onPageChange={handleContractTableChange}
                 loading={contractsLoading}

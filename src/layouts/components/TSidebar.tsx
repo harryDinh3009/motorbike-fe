@@ -17,6 +17,7 @@ import {
   CalendarOutlined,
   SwapOutlined,
   AppstoreOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import { SCREEN } from "@/router/screen";
 import Logo from "@/assets/images/motorbike_logo_new.jpg";
@@ -52,6 +53,7 @@ const TSidebar: React.FC = () => {
     getItem("Quản lý xe", "car-management", <CarOutlined />, [
       getItem("Danh sách mẫu xe", SCREEN.motorbikeModel?.path || "#", <UnorderedListOutlined />),
       getItem("Danh sách xe", SCREEN.motorbike?.path || "#", <CarryOutOutlined />),
+      getItem("Danh sách hãng xe", SCREEN.brand?.path || "#", <ShopOutlined />),
     ]),
     getItem("Quản lý thuê xe", "contract-management", <FileTextOutlined />, [
       getItem("Danh sách hợp đồng", SCREEN.contractMng.path, <FileTextOutlined />),
@@ -80,7 +82,7 @@ const TSidebar: React.FC = () => {
     // và chỉ mở menu tương ứng với path hiện tại, không giữ các menu khác mở
     const newOpenKeys: string[] = [];
     
-    if (currentPath.includes("/motorbike") || currentPath.includes("/car-model")) {
+    if (currentPath.includes("/motorbike") || currentPath.includes("/car-model") || currentPath.includes("/brand")) {
       newOpenKeys.push("car-management");
     }
     if (

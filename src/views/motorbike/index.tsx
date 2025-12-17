@@ -44,9 +44,10 @@ import { message } from "antd";
 // Status color mapping for motorbike status
 const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
   "Hoạt động": { bg: "#D6F5E6", color: "#22A06B" },
-  "Đang bảo dưỡng": { bg: "#E6E8EA", color: "#6B7280" },
+  "Đang bảo dưỡng": { bg: "#FFF4E6", color: "#FF8C00" }, // Màu cam nổi bật thay vì xám
   "Không sẵn sàng": { bg: "#FFE066", color: "#B38600" },
   "Bị mất": { bg: "#FFD6D6", color: "#E14D4D" },
+  "Hỏng hóc": { bg: "#FFE0E0", color: "#D32F2F" }, // Màu đỏ đậm hơn để nổi bật
 };
 
 // Component hiển thị thông tin dạng label-value
@@ -110,6 +111,7 @@ const MotorbikeList = () => {
   const defaultFilter = {
     keyword: "",
     branchId: "",
+    modelName: "",
     carType: "",
     condition: "",
     status: undefined,
@@ -127,6 +129,9 @@ const MotorbikeList = () => {
   // Filter options state
   const [branchOptions, setBranchOptions] = useState([
     { value: "", label: "Chi nhánh" },
+  ]);
+  const [modelOptions, setModelOptions] = useState([
+    { value: "", label: "Mẫu xe" },
   ]);
   const [typeOptions, setTypeOptions] = useState([
     { value: "", label: "Loại xe" },
@@ -181,6 +186,15 @@ const MotorbikeList = () => {
       .catch(() => {
         // Nếu không lấy được chi nhánh thì giữ nguyên filter mặc định
       });
+    getCarModels().then((res) => {
+      setModelOptions([
+        { value: "", label: "Mẫu xe" },
+        ...(res.data || []).map((m: string) => ({
+          value: m,
+          label: m,
+        })),
+      ]);
+    });
     getCarTypes().then((res) => {
       setTypeOptions([
         { value: "", label: "Loại xe" },
@@ -219,6 +233,7 @@ const MotorbikeList = () => {
         ...params,
         keyword: params.keyword?.trim() ? params.keyword : undefined,
         branchId: params.branchId === "" ? undefined : params.branchId,
+        modelName: params.modelName === "" ? undefined : params.modelName,
         carType: params.carType === "" ? undefined : params.carType,
         condition: params.condition === "" ? undefined : params.condition,
         status: params.status === "" ? undefined : params.status,
@@ -363,10 +378,11 @@ const MotorbikeList = () => {
       ...record,
       license: record.licensePlate,
       branch: record.branchId,
-      year: record.yearOfManufacture,
-      odometer: record.currentOdometer,
+      brandId: record.brandId || "",
+      year: record.yearOfManufacture ? record.yearOfManufacture.toString() : "",
+      odometer: record.currentOdometer ? record.currentOdometer.toString() : "",
       image: record.imageUrl,
-      value: record.value,
+      value: record.value ? record.value.toString() : "",
       frameNo: record.frameNumber,
       engineNo: record.engineNumber,
       regNo: record.registrationNumber,
@@ -375,8 +391,8 @@ const MotorbikeList = () => {
       insuranceNo: record.insuranceContractNumber,
       insuranceExpire: record.insuranceExpiryDate,
       carType: record.carType,
-      dailyPrice: record.dailyPrice,
-      hourlyPrice: record.hourlyPrice,
+      dailyPrice: record.dailyPrice ? record.dailyPrice.toString() : "",
+      hourlyPrice: record.hourlyPrice ? record.hourlyPrice.toString() : "",
       status: record.status,
     });
     setShowModal(true);
@@ -499,6 +515,18 @@ const MotorbikeList = () => {
                 }
               />
               <SelectboxBase
+                label="Mẫu xe"
+                value={filterInput.modelName}
+                options={modelOptions}
+                style={{ minWidth: 130, flexShrink: 0 }}
+                onChange={(val) =>
+                  setFilterInput({
+                    ...filterInput,
+                    modelName: typeof val === "string" ? val : val[0] || "",
+                  })
+                }
+              />
+              <SelectboxBase
                 label="Loại xe"
                 value={filterInput.carType}
                 options={typeOptions}
@@ -507,18 +535,6 @@ const MotorbikeList = () => {
                   setFilterInput({
                     ...filterInput,
                     carType: typeof val === "string" ? val : val[0] || "",
-                  })
-                }
-              />
-              <SelectboxBase
-                label="Tình trạng xe"
-                value={filterInput.condition}
-                options={conditionOptions}
-                style={{ minWidth: 130, flexShrink: 0 }}
-                onChange={(val) =>
-                  setFilterInput({
-                    ...filterInput,
-                    condition: typeof val === "string" ? val : val[0] || "",
                   })
                 }
               />
@@ -695,24 +711,18 @@ const MotorbikeList = () => {
                   render: (val: string) => (val ? val : "-"),
                 },
                 {
-                  title: "Giá ngày (Đ)",
+                  title: "Giá ngày",
                   dataIndex: "dailyPrice",
                   key: "dailyPrice",
                   render: (val: number) =>
                     val != null ? val.toLocaleString() : "-",
                 },
                 {
-                  title: "Giá giờ (Đ)",
+                  title: "Giá giờ",
                   dataIndex: "hourlyPrice",
                   key: "hourlyPrice",
                   render: (val: number) =>
                     val != null ? val.toLocaleString() : "-",
-                },
-                {
-                  title: "Tình trạng xe",
-                  dataIndex: "condition",
-                  key: "condition",
-                  render: (val: string) => (val ? val : "-"),
                 },
                 {
                   title: "Trạng thái",
@@ -806,7 +816,7 @@ const MotorbikeList = () => {
                 },
               ]}
               pageSize={appliedFilter.size || 10}
-              totalPages={total}
+              totalRecords={total}
               onPageChange={handleTableChange}
             />
           </div>
@@ -821,22 +831,29 @@ const MotorbikeList = () => {
           onSave={async (motorbike) => {
             setLoading(true);
             try {
+              // Xử lý hourlyPrice: nếu là string rỗng hoặc undefined thì mặc định là 0
+              const hourlyPriceValue = motorbike.hourlyPrice && motorbike.hourlyPrice.toString().trim() !== ""
+                ? Number(motorbike.hourlyPrice)
+                : 0;
+              
+              // Xử lý odometer: nếu là string rỗng hoặc undefined thì mặc định là 0
+              const odometerValue = motorbike.odometer && motorbike.odometer.toString().trim() !== ""
+                ? Number(motorbike.odometer)
+                : 0;
+              
               const payload = {
                 ...(editMotorbike?.id ? { id: editMotorbike.id } : {}),
                 model: motorbike.model,
                 licensePlate: motorbike.license,
                 carType: motorbike.carType,
                 branchId: motorbike.branch,
+                brandId: motorbike.brandId || null,
                 dailyPrice: motorbike.dailyPrice
                   ? Number(motorbike.dailyPrice)
                   : undefined,
-                hourlyPrice: motorbike.hourlyPrice
-                  ? Number(motorbike.hourlyPrice)
-                  : undefined,
+                hourlyPrice: hourlyPriceValue,
                 condition: motorbike.condition,
-                currentOdometer: motorbike.odometer
-                  ? Number(motorbike.odometer)
-                  : undefined,
+                currentOdometer: odometerValue,
                 status: motorbike.status,
                 imageUrl: motorbike.imageUrl,
                 note: motorbike.note,
@@ -855,9 +872,18 @@ const MotorbikeList = () => {
                 insuranceExpiryDate: motorbike.insuranceExpire || undefined,
               };
               await saveCar(payload);
+              message.success(editMotorbike?.id ? "Cập nhật xe thành công!" : "Tạo xe thành công!");
               setShowModal(false);
               setEditMotorbike(null);
-              fetchMotorbikes(filter);
+              // Reset về trang 1 và reload để xe mới tạo hiện lên đầu danh sách
+              const newFilter = {
+                ...appliedFilter,
+                page: 1,
+              };
+              setAppliedFilter(newFilter);
+              fetchMotorbikes(newFilter);
+            } catch (err: any) {
+              message.error(err?.response?.data?.message || (editMotorbike?.id ? "Cập nhật xe thất bại!" : "Tạo xe thất bại!"));
             } finally {
               setLoading(false);
             }
@@ -983,8 +1009,8 @@ const MotorbikeList = () => {
                     Thông tin cơ bản
                   </div>
                   <InfoRow label="Loại xe" value={detailMotorbike.carType} />
+                  <InfoRow label="Hãng xe" value={detailMotorbike.brandName} />
                   <InfoRow label="Chi nhánh sở hữu" value={detailMotorbike.branchName} />
-                  <InfoRow label="Tình trạng xe" value={detailMotorbike.condition} />
                   <InfoRow label="Màu sắc" value={detailMotorbike.color} />
                   <InfoRow label="Năm sản xuất" value={detailMotorbike.yearOfManufacture} />
                   <InfoRow label="Xuất xứ" value={detailMotorbike.origin} />

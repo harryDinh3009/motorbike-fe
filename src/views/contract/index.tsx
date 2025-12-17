@@ -869,7 +869,7 @@ const ContractComponent = () => {
                 ]}
                 pageSize={appliedFilter.size || 10}
                 // currentPage removed to fix lint error
-                totalPages={total}
+                totalRecords={total}
                 paginationType="BE"
                 onPageChange={handleTableChange}
                 style={{ minWidth: 1400 }}

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import InputBase from "@/component/common/input/InputBase";
-import SelectboxBase from "@/component/common/input/SelectboxBase";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import TableBase from "@/component/common/table/TableBase";
 import {
@@ -11,123 +10,102 @@ import {
   DeleteOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import ModalSaveBranch from "./ModalSaveBranch";
+import ModalSaveBrand from "./ModalSaveBrand";
 import {
-  searchBranches,
-  saveBranch as apiSaveBranch,
-  deleteBranch as apiDeleteBranch,
-  getBranchDetail,
-} from "@/service/business/branchMng/branchMng.service";
+  searchBrands,
+  saveBrand as apiSaveBrand,
+  deleteBrand as apiDeleteBrand,
+  getBrandDetail,
+} from "@/service/business/brandMng/brandMng.service";
 import {
-  BranchDTO,
-  BranchSaveDTO,
-} from "@/service/business/branchMng/branchMng.type";
+  BrandDTO,
+  BrandSaveDTO,
+} from "@/service/business/brandMng/brandMng.type";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
 import { useAlert } from "@/plugins/global";
+import { message } from "antd";
 
-const statusOptions = [
-  { value: "", label: "Trạng thái" },
-  { value: 1, label: "Hoạt động" },
-  { value: 0, label: "Ngừng" },
-];
-
-const statusMap: Record<number, { label: string; color: string; bg: string }> =
-  {
-    1: { label: "Hoạt động", color: "#27ae60", bg: "#eafbe7" },
-    0: { label: "Ngừng", color: "#ff4d4f", bg: "#fff1f0" },
-  };
-
-const BranchList = () => {
+const BrandList = () => {
   const [filter, setFilter] = useState<{
     search: string;
-    status: string | number;
-  }>({ search: "", status: 1 }); // Default to active branches
-  const [branches, setBranches] = useState<BranchDTO[]>([]);
+  }>({ search: "" });
+  const [brands, setBrands] = useState<BrandDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [editBranch, setEditBranch] = useState<BranchDTO | null>(null);
+  const [editBrand, setEditBrand] = useState<BrandDTO | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const fetchBranches = async () => {
+  const fetchBrands = async () => {
     setLoading(true);
     setError(null);
     try {
       const params = {
         keyword: filter.search,
-        status: filter.status === "" ? undefined : Number(filter.status),
         page: page,
         size: pageSize,
       };
-      const res = await searchBranches(params);
+      const res = await searchBrands(params);
       const apiData = res.data as any;
-      console.log(res);
 
-      setBranches(apiData.data || []);
-
+      setBrands(apiData.data || []);
       setTotal(apiData.totalRecords || 0);
     } catch (err: any) {
-      setError("Không thể tải danh sách chi nhánh");
+      setError("Không thể tải danh sách hãng xe");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBranches();
+    fetchBrands();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, page, pageSize]);
 
-  const handleEdit = async (branch: BranchDTO) => {
+  const handleEdit = async (brand: BrandDTO) => {
     setLoading(true);
     try {
-      const res = await getBranchDetail(branch.id);
-      setEditBranch(res.data);
+      const res = await getBrandDetail(brand.id);
+      setEditBrand(res.data);
       setShowModal(true);
     } catch (err) {
-      setError("Không thể lấy thông tin chi nhánh");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const { alert } = useAlert() || {};
-  const handleDelete = async (branchId: string) => {
-    setLoading(true);
-    try {
-      await apiDeleteBranch(branchId);
-      fetchBranches();
-    } catch (err: any) {
-      alert(err?.response?.data?.message);
+      setError("Không thể lấy thông tin hãng xe");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async (branch: any) => {
+  const { alert } = useAlert() || {};
+  const handleDelete = async (brandId: string) => {
     setLoading(true);
     try {
-      const payload: BranchSaveDTO = {
-        id: branch.id,
-        name: branch.name,
-        phoneNumber: branch.phone || branch.phoneNumber,
-        address: branch.address,
-        note: branch.note,
-        status:
-          branch.status === true ||
-          branch.status === 1 ||
-          branch.status === "active"
-            ? 1
-            : 0,
+      await apiDeleteBrand(brandId);
+      message.success("Xóa hãng xe thành công");
+      fetchBrands();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Xóa hãng xe thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (brand: any) => {
+    setLoading(true);
+    try {
+      const payload: BrandSaveDTO = {
+        id: brand.id,
+        name: brand.name,
+        description: brand.description,
       };
-      await apiSaveBranch(payload);
+      await apiSaveBrand(payload);
+      message.success(brand.id ? "Cập nhật hãng xe thành công" : "Thêm hãng xe thành công");
       setShowModal(false);
-      setEditBranch(null);
-      fetchBranches();
-    } catch (err) {
-      setError("Lưu chi nhánh thất bại");
+      setEditBrand(null);
+      fetchBrands();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || "Lưu hãng xe thất bại");
     } finally {
       setLoading(false);
     }
@@ -137,10 +115,10 @@ const BranchList = () => {
     <div className="content_wrap">
       <div id="content" className="grid_content">
         <BreadcrumbBase
-          title="Danh sách chi nhánh"
+          title="Danh sách hãng xe"
           items={[
             { label: "Dashboard", path: "/", icon: <HomeOutlined /> },
-            { label: "Danh sách chi nhánh", path: "/branch" },
+            { label: "Danh sách hãng xe", path: "/brand" },
           ]}
         />
         <ContainerBase>
@@ -157,7 +135,7 @@ const BranchList = () => {
               <div style={{ minWidth: 200, flex: 1, flexShrink: 0 }}>
                 <InputBase
                   modelValue={filter.search}
-                  placeholder="Tìm theo tên chi nhánh , số điện thoại"
+                  placeholder="Tìm theo tên hãng xe, mô tả"
                   prefixIcon="search"
                   style={{ width: "100%" }}
                   onChange={(val) =>
@@ -165,24 +143,6 @@ const BranchList = () => {
                   }
                 />
               </div>
-              <SelectboxBase
-                label="Trạng thái"
-                value={filter.status}
-                options={statusOptions}
-                style={{ minWidth: 130, flexShrink: 0 }}
-                onChange={(val) => {
-                  let v: string | number = "";
-                  if (Array.isArray(val)) {
-                    v = val[0] || "";
-                  } else if (
-                    typeof val === "string" ||
-                    typeof val === "number"
-                  ) {
-                    v = val;
-                  }
-                  setFilter({ ...filter, status: v });
-                }}
-              />
             </div>
           </div>
         </ContainerBase>
@@ -201,26 +161,22 @@ const BranchList = () => {
               }}
             >
               <p className="box_title_sm" style={{ marginBottom: 0 }}>
-                Danh sách chi nhánh
+                Danh sách hãng xe
               </p>
               <ButtonBase
-                label="Thêm chi nhánh"
+                label="Thêm hãng xe"
                 className="btn_primary"
                 icon={<PlusOutlined />}
                 style={{ minWidth: 140, whiteSpace: "nowrap" }}
                 onClick={() => {
-                  setEditBranch(null);
+                  setEditBrand(null);
                   setShowModal(true);
                 }}
               />
             </div>
             <TableBase
-              data={branches.map((b, idx) => ({
+              data={brands.map((b, idx) => ({
                 ...b,
-                phone: b.phoneNumber,
-                statusLabel: statusMap[b.status]?.label,
-                statusColor: statusMap[b.status]?.color,
-                statusBg: statusMap[b.status]?.bg,
                 idx,
               }))}
               columns={[
@@ -233,42 +189,14 @@ const BranchList = () => {
                     (page - 1) * pageSize + idx + 1,
                 },
                 {
-                  title: "Tên chi nhánh",
+                  title: "Tên hãng xe",
                   dataIndex: "name",
                   key: "name",
                 },
                 {
-                  title: "Địa chỉ",
-                  dataIndex: "address",
-                  key: "address",
-                },
-                {
-                  title: "Số điện thoại",
-                  dataIndex: "phone",
-                  key: "phone",
-                },
-                {
-                  title: "Trạng thái",
-                  dataIndex: "status",
-                  key: "status",
-                  width: 160,
-                  render: (val: number, record: any) => (
-                    <span
-                      style={{
-                        background: record.statusBg,
-                        color: record.statusColor,
-                        borderRadius: 8,
-                        padding: "2px 12px",
-                        fontWeight: 500,
-                        fontSize: 14,
-                        display: "inline-block",
-                        minWidth: 80,
-                        textAlign: "center",
-                      }}
-                    >
-                      {record.statusLabel}
-                    </span>
-                  ),
+                  title: "Mô tả",
+                  dataIndex: "description",
+                  key: "description",
                 },
                 {
                   title: "Hành động",
@@ -304,12 +232,12 @@ const BranchList = () => {
             />
           </div>
         </ContainerBase>
-        <ModalSaveBranch
+        <ModalSaveBrand
           open={showModal}
-          branch={editBranch}
+          brand={editBrand}
           onClose={() => {
             setShowModal(false);
-            setEditBranch(null);
+            setEditBrand(null);
           }}
           onSave={handleSave}
         />
@@ -318,4 +246,5 @@ const BranchList = () => {
   );
 };
 
-export default BranchList;
+export default BrandList;
+

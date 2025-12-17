@@ -79,6 +79,11 @@ export const routes: RouteType[] = [
         name: SCREEN.motorbikeModel.name,
         component: getView("motorbikeModel/index"),
       },
+      {
+        path: SCREEN.brand.path,
+        name: SCREEN.brand.name,
+        component: getView("brand/index"),
+      },
       // Báo cáo xe khả dụng đã được thay thế bằng Báo cáo xe có thể thuê
       // {
       //   path: SCREEN.carAvailableReport.path,

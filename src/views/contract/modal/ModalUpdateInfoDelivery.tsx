@@ -6,9 +6,10 @@ import DatePickerBase from "@/component/common/datepicker/DatePickerBase";
 // Status color mapping giống màn quản lý xe
 const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
   "Hoạt động": { bg: "#D6F5E6", color: "#22A06B" },
-  "Đang bảo dưỡng": { bg: "#E6E8EA", color: "#6B7280" },
+  "Đang bảo dưỡng": { bg: "#FFF4E6", color: "#FF8C00" }, // Màu cam nổi bật thay vì xám
   "Không sẵn sàng": { bg: "#FFE066", color: "#B38600" },
   "Bị mất": { bg: "#FFD6D6", color: "#E14D4D" },
+  "Hỏng hóc": { bg: "#FFE0E0", color: "#D32F2F" }, // Màu đỏ đậm hơn để nổi bật
 };
 
 function getStatusStyle(status: string): React.CSSProperties {

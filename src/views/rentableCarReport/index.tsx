@@ -138,12 +138,6 @@ const RentableCarReport: React.FC = () => {
       width: 100,
     },
     {
-      title: "Tình trạng",
-      dataIndex: "condition",
-      key: "condition",
-      width: 120,
-    },
-    {
       title: "Giá ngày",
       dataIndex: "dailyPrice",
       key: "dailyPrice",

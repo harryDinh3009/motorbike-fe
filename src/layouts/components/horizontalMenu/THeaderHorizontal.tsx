@@ -85,6 +85,11 @@ const THeaderHorizontal = () => {
           path: SCREEN.motorbike?.path || "#",
           subMenus: [],
         },
+        {
+          name: "Danh sách hãng xe",
+          path: SCREEN.brand?.path || "#",
+          subMenus: [],
+        },
       ],
     },
     {

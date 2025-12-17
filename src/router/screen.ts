@@ -43,6 +43,10 @@ export const SCREEN = {
     path: "/branch",
     name: "Branch",
   },
+  brand: {
+    path: "/brand",
+    name: "Brand",
+  },
   employee: {
     path: "/employee",
     name: "Employee",

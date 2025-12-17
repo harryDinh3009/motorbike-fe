@@ -406,7 +406,7 @@ const EmployeeList = () => {
               ]}
               pageSize={pageSize}
               paginationType="BE"
-              totalPages={total}
+              totalRecords={total}
               onPageChange={(p, ps) => {
                 setPage(p);
                 setPageSize(ps);

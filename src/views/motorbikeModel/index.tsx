@@ -205,7 +205,7 @@ const CarModelList = () => {
                 },
               ]}
               pageSize={filter.size || 10}
-              totalPages={Math.ceil(total / (filter.size || 10))}
+              totalRecords={total}
               onPageChange={handleTableChange}
               loading={loading}
             />
