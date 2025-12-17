@@ -346,8 +346,8 @@ const ContractSchedule: React.FC = () => {
     );
   };
 
-  // Parse datetime string without timezone conversion
-  // API returns datetime in Vietnam timezone (GMT+7), we need to parse it as-is
+  // Parse datetime string without timezone conversion (for calculation)
+  // API returns datetime in Vietnam timezone (GMT+7), parse as-is for accurate bar positioning
   const parseDateTimeAsLocal = (dateStr: string): Dayjs => {
     // Handle format: "2024-12-02T17:12:00" or "2024-12-02 17:12:00"
     // Parse as local time without timezone conversion
@@ -365,7 +365,15 @@ const ContractSchedule: React.FC = () => {
       .second(second || 0);
   };
 
+  // Parse datetime string and add 7 hours for display (to compensate for -7 hours timezone offset)
+  const parseDateTimeForDisplay = (dateStr: string): Dayjs => {
+    const parsed = parseDateTimeAsLocal(dateStr);
+    // Add 7 hours to compensate for -7 hours timezone offset when displaying
+    return parsed.add(7, "hour");
+  };
+
   // Calculate bar position and width for a contract in a specific day
+  // Use parseDateTimeForDisplay to add 7 hours offset for accurate positioning
   const calculateBarPosition = (
     contractStartDate: string,
     contractEndDate: string,
@@ -373,8 +381,9 @@ const ContractSchedule: React.FC = () => {
   ): { left: string; width: string } | null => {
     const dayStart = dayDate.startOf("day");
     const dayEnd = dayDate.endOf("day");
-    const contractStart = parseDateTimeAsLocal(contractStartDate);
-    const contractEnd = parseDateTimeAsLocal(contractEndDate);
+    // Use parseDateTimeForDisplay to add 7 hours offset, matching the display time
+    const contractStart = parseDateTimeForDisplay(contractStartDate);
+    const contractEnd = parseDateTimeForDisplay(contractEndDate);
 
     // If contract doesn't overlap with this day
     if (contractEnd.isBefore(dayStart) || contractStart.isAfter(dayEnd)) {
@@ -396,9 +405,16 @@ const ContractSchedule: React.FC = () => {
     };
   };
 
-  // Format time from datetime string
+  // Format time from datetime string (using parseDateTimeAsLocal to avoid timezone conversion)
   const formatTime = (datetime: string): string => {
-    return dayjs(datetime).format("HH:mm");
+    return parseDateTimeAsLocal(datetime).format("HH:mm");
+  };
+
+  // Format date with time using parseDateTimeForDisplay to show correct time (+7 hours)
+  const formatDateDMYLocal = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return "-";
+    const parsed = parseDateTimeForDisplay(dateStr);
+    return parsed.format("DD/MM/YYYY HH:mm");
   };
 
   // Handle bar click - show modal
@@ -855,7 +871,7 @@ const ContractSchedule: React.FC = () => {
                                       e.stopPropagation(); // Prevent cell click when clicking bar
                                       handleBarClick(contract);
                                     }}
-                                    title={`${contract.customerName} (${contract.customerPhone})\n${formatDateDMY(contract.startDate)} → ${formatDateDMY(contract.endDate)}\nClick để xem chi tiết`}
+                                    title={`${contract.customerName} (${contract.customerPhone})\n${formatDateDMYLocal(contract.startDate)} → ${formatDateDMYLocal(contract.endDate)}\nClick để xem chi tiết`}
                                   />
                                 );
                               })}
@@ -950,10 +966,10 @@ const ContractSchedule: React.FC = () => {
               )}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày thuê">
-              {formatDateDMY(selectedContract.startDate)}
+              {formatDateDMYLocal(selectedContract.startDate)}
             </Descriptions.Item>
             <Descriptions.Item label="Ngày trả">
-              {formatDateDMY(selectedContract.endDate)}
+              {formatDateDMYLocal(selectedContract.endDate)}
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái">
               <span

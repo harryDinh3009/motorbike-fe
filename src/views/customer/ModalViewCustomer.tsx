@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import TModal from "@/component/common/modal/TModal";
-import { Tabs, Input, Select, Button, DatePicker } from "antd";
+import { Tabs, Button } from "antd";
 import { SearchOutlined, ReloadOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
+import InputBase from "@/component/common/input/InputBase";
+import SelectboxBase from "@/component/common/input/SelectboxBase";
 import { CustomerDTO } from "@/service/business/customerMng/customerMng.type";
 import { getCustomerDetail } from "@/service/business/customerMng/customerMng.service";
 import { searchContractsLight, getContractStatuses } from "@/service/business/contractMng/contractMng.service";
@@ -13,8 +14,6 @@ import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import TableBase from "@/component/common/table/TableBase";
 import type { ColumnsType } from "antd/es/table";
 import { formatDateDMY } from "@/utils/common";
-
-const { RangePicker } = DatePicker;
 
 const { TabPane } = Tabs;
 
@@ -53,7 +52,6 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
   const [statusOptions, setStatusOptions] = useState([
     { value: "", label: "Trạng thái" },
   ]);
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
 
   useEffect(() => {
     if (open && customerId) {
@@ -65,8 +63,6 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
         keyword: "",
         pickupBranchId: "",
         status: "",
-        createdDateFrom: undefined,
-        createdDateTo: undefined,
         page: 1,
         size: 10,
       };
@@ -77,7 +73,6 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       setContractTotal(0);
       setTotalPages(0);
       setTotalAmount(0);
-      setDateRange([null, null]);
     } else {
       setCustomer(null);
       setContracts([]);
@@ -169,12 +164,6 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       if (appliedContractFilter.status && appliedContractFilter.status.trim() !== "") {
         cleanFilter.status = appliedContractFilter.status;
       }
-      if (appliedContractFilter.createdDateFrom) {
-        cleanFilter.createdDateFrom = appliedContractFilter.createdDateFrom;
-      }
-      if (appliedContractFilter.createdDateTo) {
-        cleanFilter.createdDateTo = appliedContractFilter.createdDateTo;
-      }
       
       console.log("Fetching contracts with params:", cleanFilter); // Debug
       const res = await searchContractsLight(cleanFilter);
@@ -231,8 +220,6 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       keyword: contractFilter.keyword || undefined,
       pickupBranchId: contractFilter.pickupBranchId || undefined,
       status: contractFilter.status || undefined,
-      createdDateFrom: contractFilter.createdDateFrom || undefined,
-      createdDateTo: contractFilter.createdDateTo || undefined,
     };
     setAppliedContractFilter(newFilter);
   };
@@ -243,14 +230,11 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       keyword: "",
       pickupBranchId: "",
       status: "",
-      createdDateFrom: undefined,
-      createdDateTo: undefined,
       page: 1,
       size: 10,
     };
     setContractFilter(resetFilter);
     setAppliedContractFilter(resetFilter);
-    setDateRange([null, null]);
   };
 
   const handleContractTableChange = (page: number, pageSize: number) => {
@@ -273,24 +257,43 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       title: "Mã hợp đồng",
       dataIndex: "contractCode",
       key: "contractCode",
+      width: 120,
       render: (val: string) => val || "-",
     },
     {
       title: "Chi nhánh thuê",
       dataIndex: "pickupBranchName",
       key: "pickupBranchName",
+      width: 130,
       render: (val: string) => val || "-",
     },
     {
-      title: "Ngày đặt",
-      dataIndex: "createdDate",
-      key: "createdDate",
-      render: (val: string) => (val ? formatDateDMY(val) : "-"),
+      title: "Ngày thuê",
+      dataIndex: "startDate",
+      key: "startDate",
+      width: 150,
+      render: (val: string) => {
+        if (!val) return "-";
+        // Backend đã format với GMT+7, formatDateDMY sẽ parse và hiển thị cả giờ phút
+        return formatDateDMY(val);
+      },
+    },
+    {
+      title: "Ngày trả",
+      dataIndex: "endDate",
+      key: "endDate",
+      width: 150,
+      render: (val: string) => {
+        if (!val) return "-";
+        // Backend đã format với GMT+7, formatDateDMY sẽ parse và hiển thị cả giờ phút
+        return formatDateDMY(val);
+      },
     },
     {
       title: "Tổng tiền",
       dataIndex: "finalAmount",
       key: "finalAmount",
+      width: 130,
       align: "right" as const,
       render: (val: number) => (val != null ? val.toLocaleString("vi-VN") + " đ" : "-"),
     },
@@ -298,6 +301,7 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       title: "Còn lại",
       dataIndex: "remainingAmount",
       key: "remainingAmount",
+      width: 130,
       align: "right" as const,
       render: (val: number) => (val != null ? val.toLocaleString("vi-VN") + " đ" : "-"),
     },
@@ -305,6 +309,7 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       title: "Trạng thái",
       dataIndex: "statusNm",
       key: "statusNm",
+      width: 120,
       render: (val: string) => {
         const STATUS_COLOR_MAP: Record<string, { bg: string; color: string }> = {
           "Đã xác nhận": { bg: "#FFD600", color: "#222" },
@@ -349,7 +354,7 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
       visible={open}
       onCancel={onClose}
       title="Chi tiết khách hàng"
-      width={1000}
+      width={1400}
       hideOkButton={true}
       hideCancelButton={false}
     >
@@ -593,67 +598,51 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
                   alignItems: "flex-end",
                 }}
               >
-                <Input
+                <InputBase
+                  label="Tìm theo mã hợp đồng"
+                  modelValue={contractFilter.keyword || ""}
                   placeholder="Tìm theo mã hợp đồng"
-                  value={contractFilter.keyword || ""}
-                  onChange={(e) =>
-                    setContractFilter({ ...contractFilter, keyword: e.target.value })
-                  }
+                  prefixIcon="search"
                   style={{ width: 200 }}
-                  onPressEnter={handleContractSearch}
-                />
-                <RangePicker
-                  value={dateRange}
-                  onChange={(dates) => {
-                    setDateRange(dates);
-                    if (dates && dates[0] && dates[1]) {
-                      setContractFilter({
-                        ...contractFilter,
-                        createdDateFrom: dates[0].startOf('day').toDate(),
-                        createdDateTo: dates[1].endOf('day').toDate(),
-                      });
-                    } else {
-                      setContractFilter({
-                        ...contractFilter,
-                        createdDateFrom: undefined,
-                        createdDateTo: undefined,
-                      });
+                  onChange={(val) =>
+                    setContractFilter({ ...contractFilter, keyword: val as string })
+                  }
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleContractSearch();
                     }
                   }}
-                  format="DD/MM/YYYY"
-                  style={{ width: 250 }}
-                  placeholder={["Từ ngày", "Đến ngày"]}
                 />
-                <Select
-                  placeholder="Chi nhánh thuê"
-                  value={contractFilter.pickupBranchId || undefined}
+                <SelectboxBase
+                  label="Chi nhánh thuê"
+                  value={contractFilter.pickupBranchId || ""}
+                  options={[
+                    { value: "", label: "Tất cả" },
+                    ...branches.map((branch) => ({
+                      value: branch.id,
+                      label: branch.name,
+                    })),
+                  ]}
                   onChange={(val) =>
-                    setContractFilter({ ...contractFilter, pickupBranchId: val || "" })
+                    setContractFilter({
+                      ...contractFilter,
+                      pickupBranchId: typeof val === "string" ? val : val[0] || "",
+                    })
                   }
                   style={{ width: 200 }}
-                  allowClear
-                >
-                  {branches.map((branch) => (
-                    <Select.Option key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-                <Select
-                  placeholder="Trạng thái"
-                  value={contractFilter.status || undefined}
+                />
+                <SelectboxBase
+                  label="Trạng thái"
+                  value={contractFilter.status || ""}
+                  options={statusOptions}
                   onChange={(val) =>
-                    setContractFilter({ ...contractFilter, status: val || "" })
+                    setContractFilter({
+                      ...contractFilter,
+                      status: typeof val === "string" ? val : val[0] || "",
+                    })
                   }
                   style={{ width: 150 }}
-                  allowClear
-                >
-                  {statusOptions.map((opt) => (
-                    <Select.Option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </Select.Option>
-                  ))}
-                </Select>
+                />
                 <Button
                   type="primary"
                   icon={<SearchOutlined />}
@@ -687,6 +676,14 @@ const ModalViewCustomer = ({ open, customerId, onClose }: Props) => {
                 </div>
                 <div>
                   Tổng tiền: <strong style={{ color: "#52c41a" }}>{totalAmount.toLocaleString()} đ</strong>
+                </div>
+                <div>
+                  Còn phải trả: <strong style={{ color: "#ff4d4f" }}>
+                    {contracts.reduce((sum, contract) => {
+                      const remaining = contract.remainingAmount || 0;
+                      return sum + (typeof remaining === 'number' ? remaining : parseFloat(String(remaining)) || 0);
+                    }, 0).toLocaleString("vi-VN")} đ
+                  </strong>
                 </div>
               </div>
 

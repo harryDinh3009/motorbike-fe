@@ -815,12 +815,37 @@ const ContractCreateComponent = () => {
       alert("Vui lòng chọn ít nhất một xe thuê!");
       return;
     }
+    
+    // Validate carId cho tất cả xe
+    const invalidCars = carRentalList.filter(
+      (car) => !(car.carId || car.id || car.contractCarId)
+    );
+    if (invalidCars.length > 0) {
+      message.error("Một số xe không có ID hợp lệ. Vui lòng kiểm tra lại!");
+      console.error("Invalid cars:", invalidCars);
+      return;
+    }
+    // Convert datetime format từ "YYYY-MM-DD HH:mm" sang "YYYY-MM-DDTHH:mm:ss" cho backend
+    const formatDateTimeForBackend = (dateTimeStr: string): string => {
+      if (!dateTimeStr) return "";
+      // Nếu đã có format đúng thì giữ nguyên
+      if (dateTimeStr.includes("T") && dateTimeStr.includes(":")) {
+        // Đảm bảo có đủ giây
+        if (dateTimeStr.split(":").length === 2) {
+          return dateTimeStr + ":00";
+        }
+        return dateTimeStr;
+      }
+      // Convert từ "YYYY-MM-DD HH:mm" sang "YYYY-MM-DDTHH:mm:ss"
+      return dateTimeStr.replace(" ", "T") + ":00";
+    };
+    
     const contractPayload: ContractSaveDTO = {
       ...(isEditMode ? { id: contractId } : {}),
       customerId: form.customer,
       source: form.source,
-      startDate: form.startDate,
-      endDate: form.endDate,
+      startDate: formatDateTimeForBackend(form.startDate),
+      endDate: formatDateTimeForBackend(form.endDate),
       pickupBranchId: form.branchRent,
       returnBranchId: form.branchReturn,
       pickupAddress: form.deliveryAddress,
@@ -828,27 +853,75 @@ const ContractCreateComponent = () => {
       needPickupDelivery: form.needDelivery,
       needReturnDelivery: form.needReceive,
       notes: form.note,
-      discountType: form.discountType as any,
+      ...(form.discountType && form.discountType !== "" 
+        ? { discountType: form.discountType as "PERCENTAGE" | "AMOUNT" } 
+        : {}),
       discountValue: Number(form.discountValue) || 0,
-      cars: carRentalList.map((car) => ({
-        carId: car.carId || car.id || "",
-        dailyPrice: car.priceDay,
-        hourlyPrice: car.priceHour,
-        totalAmount: car.rentalTotal, // Đã tính chuẩn cả giờ lẻ
-        notes: "",
-        startOdometer: car.startOdometer ?? null,
-      })),
-      surcharges: feeList.map((fee) => ({
-        surchargeTypeId: fee.type || fee.surchargeTypeId || "", // Ưu tiên dùng type từ state
-        description: fee.desc,
-        amount: fee.amount,
-        notes: fee.note,
-        quantity: fee.quantity || 1,
-        unitPrice: fee.unitPrice || fee.amount || 0,
-      })),
+      cars: carRentalList
+        .filter((car) => {
+          // Lọc bỏ các xe không có carId hợp lệ
+          const validCarId = car.carId || car.id || car.contractCarId;
+          return !!validCarId;
+        })
+        .map((car) => {
+          const carId = car.carId || car.id || car.contractCarId || "";
+          if (!carId) {
+            console.warn("Car without valid carId:", car);
+          }
+          const carPayload: any = {
+            carId,
+            dailyPrice: car.priceDay || 0,
+            hourlyPrice: car.priceHour || 0,
+            totalAmount: car.rentalTotal || 0, // Đã tính chuẩn cả giờ lẻ
+            notes: car.notes || "",
+            startOdometer: car.startOdometer ?? null,
+          };
+          
+          // Khi edit mode, thêm id của contract_car nếu có để update thay vì tạo mới
+          if (isEditMode && car.contractCarId) {
+            carPayload.id = car.contractCarId;
+          }
+          
+          return carPayload;
+        }),
+      surcharges: feeList
+        .filter((fee) => {
+          // Lọc bỏ các phụ thu không có surchargeTypeId hợp lệ (trừ khi có id để update)
+          const hasTypeId = fee.type || fee.surchargeTypeId;
+          const hasId = fee.id; // Nếu có id thì có thể là update, không cần typeId
+          return hasTypeId || hasId;
+        })
+        .map((fee) => {
+          const surchargeTypeId = fee.type || fee.surchargeTypeId;
+          const surchargePayload: any = {
+            description: fee.desc || "",
+            amount: fee.amount || 0,
+            notes: fee.note || "",
+            quantity: fee.quantity || 1,
+            unitPrice: fee.unitPrice || fee.amount || 0,
+          };
+          
+          // Chỉ thêm surchargeTypeId nếu có giá trị (không phải empty string)
+          if (surchargeTypeId) {
+            surchargePayload.surchargeTypeId = surchargeTypeId;
+          }
+          
+          // Khi edit mode, thêm id của surcharge nếu có để update thay vì tạo mới
+          if (isEditMode && fee.id) {
+            surchargePayload.id = fee.id;
+          }
+          
+          return surchargePayload;
+        }),
       depositAmount: payment.deposit,
       status: "CONFIRMED",
     };
+    
+    // Log payload để debug
+    console.log("Contract payload:", JSON.stringify(contractPayload, null, 2));
+    console.log("Is edit mode:", isEditMode);
+    console.log("Contract ID:", contractId);
+    
     try {
       const res = await saveContract(contractPayload);
       const newId = res.data.id;

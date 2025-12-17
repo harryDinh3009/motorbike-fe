@@ -98,6 +98,44 @@ const checkRequiredSurcharges = (contract: ContractDTO | null): string[] => {
   return warnings;
 };
 
+// Hàm tính số giờ và phút trả muộn (hiển thị chính xác, không làm tròn)
+const calculateLateReturnTime = (returnTime: string | null | undefined, endDate: string | null | undefined): string | null => {
+  if (!returnTime || !endDate) {
+    return null;
+  }
+  
+  const returnTimeMs = new Date(returnTime).getTime();
+  const endDateMs = new Date(endDate).getTime();
+  
+  // Chỉ tính nếu returnTime > endDate
+  if (returnTimeMs <= endDateMs) {
+    return null;
+  }
+  
+  // Tính số milliseconds chênh lệch
+  const diffMs = returnTimeMs - endDateMs;
+  // Chuyển sang phút
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  
+  // Nếu trả muộn dưới 30 phút thì không hiển thị
+  if (diffMinutes < 30) {
+    return null;
+  }
+  
+  // Tính số giờ và phút chính xác
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+  
+  // Format: "X giờ Y phút"
+  if (hours > 0 && minutes > 0) {
+    return `${hours} giờ ${minutes} phút`;
+  } else if (hours > 0) {
+    return `${hours} giờ`;
+  } else {
+    return `${minutes} phút`;
+  }
+};
+
 // Hàm tính số ngày, số giờ phát sinh và tổng tiền thuê cho từng xe
 function calcRentalInfo(
   start: string,
@@ -309,15 +347,19 @@ const ContractDetailComponent = () => {
   const rentalEnd = contract.endDate;
   
   // Tính thời gian thuê thực tế (không áp dụng các quy tắc làm tròn)
-  const actualRentalDurationText = calcActualRentalDuration(rentalStart, rentalEnd);
+  const actualRentalDurationText = rentalStart && rentalEnd 
+    ? calcActualRentalDuration(rentalStart, rentalEnd)
+    : "";
   
   // Tính thời gian tính tiền thuê (dùng giá mặc định vì durationText không phụ thuộc vào giá)
-  const { durationText: rentalDurationText } = calcRentalInfo(
-    rentalStart,
-    rentalEnd,
-    1, // dailyPrice mặc định (chỉ để tính durationText)
-    1  // hourlyPrice mặc định (chỉ để tính durationText)
-  );
+  const { durationText: rentalDurationText } = rentalStart && rentalEnd
+    ? calcRentalInfo(
+        rentalStart,
+        rentalEnd,
+        1, // dailyPrice mặc định (chỉ để tính durationText)
+        1  // hourlyPrice mặc định (chỉ để tính durationText)
+      )
+    : { durationText: "" };
   
   // Hàm format công thức tính tiền thuê để hiển thị trong tooltip
   const formatRentalCalculation = (car: any) => {
@@ -334,12 +376,14 @@ const ContractDetailComponent = () => {
   };
   
   const carRentalList = (contract.cars || []).map((c) => {
-    const { days, extraHours, total, durationText } = calcRentalInfo(
-      rentalStart,
-      rentalEnd,
-      c.dailyPrice || 0,
-      c.hourlyPrice || 0
-    );
+    const { days, extraHours, total, durationText } = rentalStart && rentalEnd
+      ? calcRentalInfo(
+          rentalStart,
+          rentalEnd,
+          c.dailyPrice || 0,
+          c.hourlyPrice || 0
+        )
+      : { days: 0, extraHours: 0, total: 0, durationText: "" };
     return {
       ...c,
       rentalDays: days,
@@ -396,11 +440,6 @@ const ContractDetailComponent = () => {
       contractId: contract.id,
       cars,
       deliveryUserId: data.staff,
-      deliveryUserName:
-        currentUser?.userCurrent?.fullName ||
-        currentUser?.userCurrent?.userName ||
-        currentUser?.userCurrent?.username ||
-        "",
       deliveryTime: data.time,
     });
     setShowModalDelivery(false);
@@ -428,11 +467,6 @@ const ContractDetailComponent = () => {
         contractId: contract.id,
         cars,
         returnUserId: data.staff,
-        returnUserName:
-          currentUser?.userCurrent?.fullName ||
-          currentUser?.userCurrent?.userName ||
-          currentUser?.userCurrent?.username ||
-          "",
         returnTime: data.time,
       });
       
@@ -1056,6 +1090,10 @@ const ContractDetailComponent = () => {
                       { label: "Địa điểm giao xe", value: contract.pickupAddress || "-" },
                       { label: "Thời gian giao xe", value: contract.deliveryTime ? formatDateDMY(contract.deliveryTime) : "-" },
                       { label: "Người giao xe", value: contract.deliveryUserName || "-" },
+                      // Thêm trường "Trả xe muộn" - chỉ hiển thị khi >= 30 phút, màu đỏ
+                      ...(calculateLateReturnTime(contract.returnTime, contract.endDate) !== null 
+                        ? [{ label: "Trả xe muộn", value: calculateLateReturnTime(contract.returnTime, contract.endDate) || "-", isRed: true }] 
+                        : []),
                     ].map((item, idx, arr) => (
                       <div
                         key={idx}
@@ -1068,7 +1106,7 @@ const ContractDetailComponent = () => {
                         <div style={{ minWidth: 130, color: "#666", fontSize: 14, fontWeight: 500 }}>
                           {item.label}:
                         </div>
-                        <div style={{ flex: 1, color: "#222", fontSize: 14 }}>
+                        <div style={{ flex: 1, color: (item as any).isRed ? "#ff4d4f" : "#222", fontSize: 14 }}>
                           {item.value}
                         </div>
                       </div>
@@ -1080,7 +1118,7 @@ const ContractDetailComponent = () => {
                       { label: "Địa điểm trả xe", value: contract.returnAddress || "-" },
                       { label: "Thời gian nhận xe", value: contract.returnTime ? formatDateDMY(contract.returnTime) : "-" },
                       { label: "Người nhận xe", value: contract.returnUserName || "-" },
-                      ...(contract.statusNm === "Hoàn thành" ? [{ label: "Ngày hoàn thành", value: contract.completedDate ? formatDateDMY(contract.completedDate) : "-", bold: true }] : []),
+                      ...(contract.statusNm === "Hoàn thành" ? [{ label: "Ngày hoàn thành", value: contract.completedDate ? formatDateDMY(contract.completedDate) : "-", isGreen: true }] : []),
                     ].map((item, idx, arr) => (
                       <div
                         key={idx}
@@ -1093,7 +1131,7 @@ const ContractDetailComponent = () => {
                         <div style={{ minWidth: 130, color: "#666", fontSize: 14, fontWeight: 500 }}>
                           {item.label}:
                         </div>
-                        <div style={{ flex: 1, color: "#222", fontSize: 14, fontWeight: item.bold ? 600 : 400 }}>
+                        <div style={{ flex: 1, color: (item as any).isGreen ? "#52c41a" : "#222", fontSize: 14, fontWeight: (item as any).bold ? 600 : 400 }}>
                           {item.value}
                         </div>
                       </div>
@@ -1349,7 +1387,7 @@ const ContractDetailComponent = () => {
               ]}
               dataSource={carRentalList}
               pagination={false}
-              rowKey={(r, idx) => idx.toString()}
+              rowKey={(r, idx) => (idx ?? 0).toString()}
               style={{ marginTop: 8 }}
               footer={() => (
                 <div style={{ textAlign: "right", fontWeight: 500 }}>
@@ -1443,7 +1481,7 @@ const ContractDetailComponent = () => {
               ]}
               dataSource={surchargeList}
               pagination={false}
-              rowKey={(_, idx) => idx.toString()}
+              rowKey={(_, idx) => (idx ?? 0).toString()}
               style={{ marginTop: 8 }}
               footer={() => (
                 <div style={{ textAlign: "right", fontWeight: 500 }}>
@@ -1645,7 +1683,7 @@ const ContractDetailComponent = () => {
               ]}
               dataSource={paymentHistory}
               pagination={false}
-              rowKey={(_, idx) => idx.toString()}
+              rowKey={(_, idx) => (idx ?? 0).toString()}
               style={{ marginTop: 8 }}
               bordered
               className="contract-table"
@@ -1674,14 +1712,13 @@ const ContractDetailComponent = () => {
             odometer: c.endOdometer ?? c.startOdometer ?? "", // Truyền odo hiện tại (ưu tiên endOdometer nếu đã có, nếu chưa thì lấy startOdometer)
             startOdometer: c.startOdometer, // Odometer ban đầu (không edit)
             condition: "", // truyền lại nếu có field tình trạng
-            status: c.status || "", // Truyền status sang modal
+            status: (c as any).status || "", // Truyền status sang modal
           }))}
           staffOptions={staffOptions}
           defaultStaff={pickupDefault.staff}
           defaultTime={pickupDefault.time}
           totalCar={totalCar}
           totalSurcharge={totalSurcharge}
-          carStatusOptions={carStatusOptions}
         />
         <ModalUpdateInfoDelivery
           open={showModalDelivery}
@@ -1695,7 +1732,7 @@ const ContractDetailComponent = () => {
             licensePlate: c.licensePlate,
             startOdometer: c.startOdometer,
             currentOdometer: c.currentOdometer, // Odometer hiện tại từ bảng car
-            status: c.status || "", // Trạng thái hiện tại của xe từ bảng car
+            status: (c as any).status || "", // Trạng thái hiện tại của xe từ bảng car
           }))}
           staffOptions={staffOptions}
           defaultStaff={deliveryDefault.staff}

@@ -23,6 +23,13 @@ const genderOptions = [
 const countryOptions = [
   { value: "", label: "Chọn quốc gia" },
   { value: "Việt Nam", label: "Việt Nam" },
+  { value: "Trung Quốc", label: "Trung Quốc" },
+  { value: "Hàn Quốc", label: "Hàn Quốc" },
+  { value: "Nhật Bản", label: "Nhật Bản" },
+  { value: "Thái Lan", label: "Thái Lan" },
+  { value: "Singapore", label: "Singapore" },
+  { value: "Malaysia", label: "Malaysia" },
+  { value: "Đài Loan", label: "Đài Loan" },
   { value: "USA", label: "USA" },
   { value: "Japan", label: "Japan" },
 ];

@@ -214,6 +214,10 @@ const BranchList = () => {
                 }}
               />
             </div>
+            {/* Thống kê */}
+            <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
+              Có {total} chi nhánh
+            </div>
             <TableBase
               data={branches.map((b, idx) => ({
                 ...b,

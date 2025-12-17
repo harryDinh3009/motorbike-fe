@@ -305,6 +305,10 @@ const EmployeeList = () => {
                 }}
               />
             </div>
+            {/* Thống kê */}
+            <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
+              Có {total} nhân viên
+            </div>
             <TableBase
               data={employees.map((e, idx) => ({
                 ...e,

@@ -470,7 +470,7 @@ const ContractComponent = () => {
               }}
             >
               {/* Thống kê */}
-              <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
+              <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right", paddingRight: "20px" }}>
                 <div>Số hợp đồng: {total}</div>
                 <div>Tổng tiền: {calculateTotalAmount().toLocaleString('vi-VN')} đ</div>
               </div>
