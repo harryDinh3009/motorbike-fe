@@ -227,20 +227,90 @@ const ModelRentalReport: React.FC = () => {
           </div>
 
           {/* Result message */}
-          {searched && (
+          {searched && rentalData.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                gap: '16px',
+                marginBottom: 16,
+                justifyContent: 'center'
+              }}
+            >
+              {/* KPI 1: Mẫu xe */}
+              <div
+                style={{
+                  flex: 1,
+                  background: 'linear-gradient(135deg, #fff9c4 0%, #fff176 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #ffc107'
+                }}
+              >
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f57c00', marginBottom: '8px' }}>
+                  {rentalData.length}
+                </div>
+                <div style={{ fontSize: '14px', color: '#e65100', fontWeight: '600' }}>
+                  Mẫu xe được thuê
+                </div>
+              </div>
+
+              {/* KPI 2: Lượt thuê */}
+              <div
+                style={{
+                  flex: 1,
+                  background: 'linear-gradient(135deg, #fff9c4 0%, #fff176 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #ffc107'
+                }}
+              >
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f57c00', marginBottom: '8px' }}>
+                  {totals.rentalCount}
+                </div>
+                <div style={{ fontSize: '14px', color: '#e65100', fontWeight: '600' }}>
+                  Lượt thuê
+                </div>
+              </div>
+
+              {/* KPI 3: Tiền thuê */}
+              <div
+                style={{
+                  flex: 1,
+                  background: 'linear-gradient(135deg, #fff9c4 0%, #fff176 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #ffc107'
+                }}
+              >
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f57c00', marginBottom: '8px' }}>
+                  {formatCurrency(totals.rentalAmount)}
+                </div>
+                <div style={{ fontSize: '14px', color: '#e65100', fontWeight: '600' }}>
+                  Tiền thuê
+                </div>
+              </div>
+            </div>
+          )}
+
+          {searched && rentalData.length === 0 && (
             <div
               style={{
                 padding: "12px 16px",
-                background: rentalData.length > 0 ? "#f6ffed" : "#fff7e6",
-                border: `1px solid ${rentalData.length > 0 ? "#b7eb8f" : "#ffd591"}`,
+                background: "#fff7e6",
+                border: "1px solid #ffd591",
                 borderRadius: 8,
                 marginBottom: 16,
                 fontWeight: 500,
+                textAlign: 'center'
               }}
             >
-              {rentalData.length > 0
-                ? `✅ Tìm thấy ${rentalData.length} mẫu xe được thuê | Tổng ${totals.rentalCount} lượt thuê | Tiền thuê: ${formatCurrency(totals.rentalAmount)}`
-                : "⚠️ Không có dữ liệu lượt thuê trong khoảng thời gian này"}
+              ⚠️ Không có dữ liệu lượt thuê trong khoảng thời gian này
             </div>
           )}
 

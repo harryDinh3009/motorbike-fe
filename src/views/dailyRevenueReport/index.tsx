@@ -253,21 +253,132 @@ const DailyRevenueReport: React.FC = () => {
             )}
           </div>
 
-          {/* Result message */}
-          {searched && (
+          {/* KPI Cards */}
+          {searched && revenueData.some((r) => r.contractCount > 0) && (
+            <div
+              style={{
+                display: 'flex',
+                gap: '16px',
+                marginBottom: 16,
+                justifyContent: 'center',
+                flexWrap: 'wrap'
+              }}
+            >
+              {/* KPI 1: Số HĐ hoàn thành */}
+              <div
+                style={{
+                  flex: '1 1 200px',
+                  background: 'linear-gradient(135deg, #fff9c4 0%, #fff176 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #ffc107'
+                }}
+              >
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f57c00', marginBottom: '8px' }}>
+                  {totals.contractCount}
+                </div>
+                <div style={{ fontSize: '14px', color: '#e65100', fontWeight: '600' }}>
+                  Số HĐ hoàn thành
+                </div>
+              </div>
+
+              {/* KPI 2: Tiền thuê xe */}
+              <div
+                style={{
+                  flex: '1 1 200px',
+                  background: 'linear-gradient(135deg, #fff9c4 0%, #fff176 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #ffc107'
+                }}
+              >
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f57c00', marginBottom: '8px' }}>
+                  {formatCurrency(totals.rentalAmount)}
+                </div>
+                <div style={{ fontSize: '14px', color: '#e65100', fontWeight: '600' }}>
+                  Tiền thuê xe
+                </div>
+              </div>
+
+              {/* KPI 3: Tiền phụ thu */}
+              <div
+                style={{
+                  flex: '1 1 200px',
+                  background: 'linear-gradient(135deg, #fff9c4 0%, #fff176 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #ffc107'
+                }}
+              >
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f57c00', marginBottom: '8px' }}>
+                  {formatCurrency(totals.surchargeAmount)}
+                </div>
+                <div style={{ fontSize: '14px', color: '#e65100', fontWeight: '600' }}>
+                  Tiền phụ thu
+                </div>
+              </div>
+
+              {/* KPI 4: Giảm giá */}
+              <div
+                style={{
+                  flex: '1 1 200px',
+                  background: 'linear-gradient(135deg, #fff9c4 0%, #fff176 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #ffc107'
+                }}
+              >
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f57c00', marginBottom: '8px' }}>
+                  {formatCurrency(totals.discountAmount)}
+                </div>
+                <div style={{ fontSize: '14px', color: '#e65100', fontWeight: '600' }}>
+                  Giảm giá
+                </div>
+              </div>
+
+              {/* KPI 5: Tổng doanh thu */}
+              <div
+                style={{
+                  flex: '1 1 200px',
+                  background: 'linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
+                  padding: '20px',
+                  textAlign: 'center',
+                  border: '2px solid #4caf50'
+                }}
+              >
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#2e7d32', marginBottom: '8px' }}>
+                  {formatCurrency(totals.revenue)}
+                </div>
+                <div style={{ fontSize: '14px', color: '#1b5e20', fontWeight: '600' }}>
+                  Tổng doanh thu
+                </div>
+              </div>
+            </div>
+          )}
+
+          {searched && !revenueData.some((r) => r.contractCount > 0) && (
             <div
               style={{
                 padding: "12px 16px",
-                background: revenueData.some((r) => r.contractCount > 0) ? "#f6ffed" : "#fff7e6",
-                border: `1px solid ${revenueData.some((r) => r.contractCount > 0) ? "#b7eb8f" : "#ffd591"}`,
+                background: "#fff7e6",
+                border: "1px solid #ffd591",
                 borderRadius: 8,
                 marginBottom: 16,
                 fontWeight: 500,
+                textAlign: 'center'
               }}
             >
-              {revenueData.some((r) => r.contractCount > 0)
-                ? `✅ Tổng ${totals.contractCount} hợp đồng hoàn thành | Doanh thu: ${formatCurrency(totals.revenue)}`
-                : "⚠️ Không có hợp đồng hoàn thành trong khoảng thời gian này"}
+              ⚠️ Không có hợp đồng hoàn thành trong khoảng thời gian này
             </div>
           )}
 
