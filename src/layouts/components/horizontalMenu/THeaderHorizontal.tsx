@@ -6,6 +6,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getUserInfo, removeUserInfo } from "@/utils/storage";
 import { getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
 import { formatDateDMYOnly } from "@/utils/common";
+import { canManageBrand, canManageCarModel, canManageEmployee, canManageBranch } from "@/utils/permission";
 
 type MenuItem = {
   name: string;
@@ -65,6 +66,25 @@ const THeaderHorizontal = () => {
       .catch(() => setBranchName(""));
   }, []);
 
+  // Nhân viên vẫn thấy menu mẫu xe và hãng xe (chỉ ẩn button trong trang)
+  const carManagementSubMenus: MenuItem[] = [
+    {
+      name: "Danh sách mẫu xe",
+      path: SCREEN.motorbikeModel?.path || "#",
+      subMenus: [],
+    },
+    {
+      name: "Danh sách xe",
+      path: SCREEN.motorbike?.path || "#",
+      subMenus: [],
+    },
+    {
+      name: "Danh sách hãng xe",
+      path: SCREEN.brand?.path || "#",
+      subMenus: [],
+    },
+  ];
+
   const subMenus: MenuItem[] = [
     {
       name: "Trang chủ",
@@ -74,23 +94,7 @@ const THeaderHorizontal = () => {
     {
       name: "Quản lý xe",
       path: "#",
-      subMenus: [
-        {
-          name: "Danh sách mẫu xe",
-          path: SCREEN.motorbikeModel?.path || "#",
-          subMenus: [],
-        },
-        {
-          name: "Danh sách xe",
-          path: SCREEN.motorbike?.path || "#",
-          subMenus: [],
-        },
-        {
-          name: "Danh sách hãng xe",
-          path: SCREEN.brand?.path || "#",
-          subMenus: [],
-        },
-      ],
+      subMenus: carManagementSubMenus,
     },
     {
       name: "Quản lý thuê xe",
@@ -118,12 +122,12 @@ const THeaderHorizontal = () => {
       path: SCREEN.customer?.path || "#",
       subMenus: [],
     },
-    {
+    canManageBranch() && {
       name: "Chi nhánh",
       path: SCREEN.branch?.path || "#",
       subMenus: [],
     },
-    {
+    canManageEmployee() && {
       name: "Nhân viên",
       path: SCREEN.employee?.path || "#",
       subMenus: [],
@@ -154,7 +158,7 @@ const THeaderHorizontal = () => {
         },
       ],
     },
-  ];
+  ].filter(Boolean) as MenuItem[];
 
   const navigate = useNavigate();
   const location = useLocation();

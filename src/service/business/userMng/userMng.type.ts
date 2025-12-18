@@ -15,6 +15,7 @@ export interface UserMngListDTO {
   email?: string;
   genderNm?: string;
   roleNm?: string;
+  roleCd?: string;
   phoneNumber?: string;
   address?: string;
   branchId?: string;

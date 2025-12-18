@@ -20,8 +20,7 @@ const genderOptions = [
 const roleOptions = [
   { value: "", label: "Vai trò" },
   { value: "ADMIN", label: "Quản trị viên" },
-  { value: "MANAGER", label: "Quản lý" },
-  { value: "STAFF", label: "Nhân viên" },
+  { value: "EMPLOYEE", label: "Nhân viên" },
 ];
 
 const statusOptions = [

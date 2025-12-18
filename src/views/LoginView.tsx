@@ -9,6 +9,7 @@ import { setUserInfo, setToken } from "@/utils/storage";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "@/router/screen";
+import { getUserCurrentInfo } from "@/service/common/user/userService";
 
 const LoginView = () => {
   const [form, setForm] = useState({
@@ -40,20 +41,37 @@ const LoginView = () => {
         username: form.username,
         password: form.password,
       });
-      // Lấy info user từ accessToken
-      let userCurrent = {};
-      try {
-        userCurrent = jwtDecode(res.data.accessToken);
-      } catch {}
-      // Lưu thông tin user và token vào localStorage
-      setUserInfo({
-        username: res.data.username,
-        accessToken: res.data.accessToken,
-        tokenType: res.data.tokenType,
-        expiresIn: res.data.expiresIn,
-        userCurrent,
-      });
+      
       setToken(res.data.accessToken);
+      
+      // Lấy thông tin user đầy đủ (có roles)
+      try {
+        const userInfoRes = await getUserCurrentInfo();
+        const userCurrent = userInfoRes.data;
+        
+        setUserInfo({
+          username: res.data.username,
+          accessToken: res.data.accessToken,
+          tokenType: res.data.tokenType,
+          expiresIn: res.data.expiresIn,
+          userCurrent: userCurrent, // Có đầy đủ thông tin bao gồm roles
+        });
+      } catch (err) {
+        // Fallback: decode từ JWT nếu API lỗi
+        let userCurrent = {};
+        try {
+          userCurrent = jwtDecode(res.data.accessToken);
+        } catch {}
+        
+        setUserInfo({
+          username: res.data.username,
+          accessToken: res.data.accessToken,
+          tokenType: res.data.tokenType,
+          expiresIn: res.data.expiresIn,
+          userCurrent,
+        });
+      }
+      
       // Ghi nhớ đăng nhập nếu được chọn
       if (remember) {
         localStorage.setItem("remember_username", form.username);
@@ -62,7 +80,6 @@ const LoginView = () => {
       }
       setLoading(false);
       navigate(SCREEN.dashboard.path);
-      // TODO: Redirect to dashboard or home
     } catch (e) {
       setLoading(false);
       alert("Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản/mật khẩu.");

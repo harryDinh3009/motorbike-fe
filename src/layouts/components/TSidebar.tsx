@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import { SCREEN } from "@/router/screen";
 import Logo from "@/assets/images/motorbike_logo_new.jpg";
+import { canManageBrand, canManageCarModel, canManageEmployee, canManageBranch } from "@/utils/permission";
 
 const { Sider } = Layout;
 
@@ -47,31 +48,37 @@ const TSidebar: React.FC = () => {
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
 
-  // Menu items
+  // Menu items - ẩn theo quyền
+  // Nhân viên vẫn thấy menu mẫu xe và hãng xe (chỉ ẩn button trong trang)
+  const carManagementChildren: MenuItem[] = [
+    getItem("Danh sách mẫu xe", SCREEN.motorbikeModel?.path || "#", <UnorderedListOutlined />),
+    getItem("Danh sách xe", SCREEN.motorbike?.path || "#", <CarryOutOutlined />),
+    getItem("Danh sách hãng xe", SCREEN.brand?.path || "#", <ShopOutlined />),
+  ];
+
+  // Ẩn menu nhân viên và chi nhánh với role EMPLOYEE
+  const catalogManagementChildren: MenuItem[] = [
+    getItem("Khách hàng", SCREEN.customer?.path || "#", <TeamOutlined />),
+    canManageEmployee() && getItem("Nhân viên", SCREEN.employee?.path || "#", <UserOutlined />),
+    canManageBranch() && getItem("Chi nhánh", SCREEN.branch?.path || "#", <BankOutlined />),
+  ].filter(Boolean) as MenuItem[];
+
   const menuItems: MenuItem[] = [
     getItem("Trang chủ", SCREEN.dashboard?.path || "/", <HomeOutlined />),
-    getItem("Quản lý xe", "car-management", <CarOutlined />, [
-      getItem("Danh sách mẫu xe", SCREEN.motorbikeModel?.path || "#", <UnorderedListOutlined />),
-      getItem("Danh sách xe", SCREEN.motorbike?.path || "#", <CarryOutOutlined />),
-      getItem("Danh sách hãng xe", SCREEN.brand?.path || "#", <ShopOutlined />),
-    ]),
+    getItem("Quản lý xe", "car-management", <CarOutlined />, carManagementChildren),
     getItem("Quản lý thuê xe", "contract-management", <FileTextOutlined />, [
       getItem("Danh sách hợp đồng", SCREEN.contractMng.path, <FileTextOutlined />),
       getItem("Giao nhận xe", SCREEN.contractDeliveryPickup.path, <SwapOutlined />),
       getItem("Xem lịch thuê xe", SCREEN.contractSchedule.path, <CalendarOutlined />),
     ]),
-    getItem("Quản lý danh mục", "catalog-management", <AppstoreOutlined />, [
-      getItem("Khách hàng", SCREEN.customer?.path || "#", <TeamOutlined />),
-      getItem("Nhân viên", SCREEN.employee?.path || "#", <UserOutlined />),
-      getItem("Chi nhánh", SCREEN.branch?.path || "#", <BankOutlined />),
-    ]),
+    catalogManagementChildren.length > 0 && getItem("Quản lý danh mục", "catalog-management", <AppstoreOutlined />, catalogManagementChildren),
     getItem("Báo cáo", "reports", <BarChartOutlined />, [
       getItem("Thống kê xe khả dụng", SCREEN.rentableCarReport?.path || "#"),
       getItem("Lượt thuê theo mẫu xe", SCREEN.modelRentalReport?.path || "#"),
       getItem("Doanh thu theo ngày", SCREEN.dailyRevenueReport?.path || "#"),
       getItem("Doanh thu theo tháng", SCREEN.revenueReport?.path || "#"),
     ]),
-  ];
+  ].filter(Boolean) as MenuItem[];
 
   // Update selected keys based on current path
   useEffect(() => {

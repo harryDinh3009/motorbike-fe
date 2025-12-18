@@ -8,6 +8,7 @@ import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import ModalSaveCarModel from "./ModalSaveCarModel";
 import { useCarModelList } from "./useCarModelList";
 import { CarModelDTO } from "@/service/business/carMng/carModelMng.type";
+import { canManageCarModel } from "@/utils/permission";
 
 const CarModelList = () => {
   const {
@@ -112,23 +113,25 @@ const CarModelList = () => {
               <p className="box_title_sm" style={{ marginBottom: 0 }}>
                 Danh sách mẫu xe
               </p>
-              <ButtonBase
-                label="Thêm mẫu xe"
-                className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{
-                  minWidth: 140,
-                  borderRadius: 6,
-                  fontWeight: 500,
-                  fontSize: 15,
-                  height: 40,
-                }}
-                onClick={() => {
-                  setEditingModel(null);
-                  setViewOnly(false);
-                  setShowModal(true);
-                }}
-              />
+              {canManageCarModel() && (
+                <ButtonBase
+                  label="Thêm mẫu xe"
+                  className="btn_primary"
+                  icon={<PlusOutlined />}
+                  style={{
+                    minWidth: 140,
+                    borderRadius: 6,
+                    fontWeight: 500,
+                    fontSize: 15,
+                    height: 40,
+                  }}
+                  onClick={() => {
+                    setEditingModel(null);
+                    setViewOnly(false);
+                    setShowModal(true);
+                  }}
+                />
+              )}
             </div>
             {/* Thống kê */}
             <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
@@ -177,34 +180,36 @@ const CarModelList = () => {
                   key: "actions",
                   width: 120,
                   render: (_: any, record: CarModelDTO) => (
-                    <div className="dp_flex" style={{ gap: 8 }}>
-                      <ButtonBase
-                        label=""
-                        icon={<EditOutlined />}
-                        className="btn_gray"
-                        onClick={() => {
-                          setEditingModel(record);
-                          setViewOnly(false);
-                          setShowModal(true);
-                        }}
-                        title="Sửa"
-                      />
-                      <ButtonBase
-                        label=""
-                        icon={<DeleteOutlined />}
-                        className="btn_gray"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              "Bạn có chắc chắn muốn xóa mẫu xe này?"
-                            )
-                          ) {
-                            handleDelete(record.id);
-                          }
-                        }}
-                        title="Xóa"
-                      />
-                    </div>
+                    canManageCarModel() && (
+                      <div className="dp_flex" style={{ gap: 8 }}>
+                        <ButtonBase
+                          label=""
+                          icon={<EditOutlined />}
+                          className="btn_gray"
+                          onClick={() => {
+                            setEditingModel(record);
+                            setViewOnly(false);
+                            setShowModal(true);
+                          }}
+                          title="Sửa"
+                        />
+                        <ButtonBase
+                          label=""
+                          icon={<DeleteOutlined />}
+                          className="btn_gray"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                "Bạn có chắc chắn muốn xóa mẫu xe này?"
+                              )
+                            ) {
+                              handleDelete(record.id);
+                            }
+                          }}
+                          title="Xóa"
+                        />
+                      </div>
+                    )
                   ),
                 },
               ]}

@@ -25,6 +25,7 @@ import {
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import { c } from "vite/dist/node/types.d-aGj9QkWt";
 import { useAlert } from "@/plugins/global";
+import { canManageBranch } from "@/utils/permission";
 
 const statusOptions = [
   { value: "", label: "Trạng thái" },
@@ -203,16 +204,18 @@ const BranchList = () => {
               <p className="box_title_sm" style={{ marginBottom: 0 }}>
                 Danh sách chi nhánh
               </p>
-              <ButtonBase
-                label="Thêm chi nhánh"
-                className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{ minWidth: 140, whiteSpace: "nowrap" }}
-                onClick={() => {
-                  setEditBranch(null);
-                  setShowModal(true);
-                }}
-              />
+              {canManageBranch() && (
+                <ButtonBase
+                  label="Thêm chi nhánh"
+                  className="btn_primary"
+                  icon={<PlusOutlined />}
+                  style={{ minWidth: 140, whiteSpace: "nowrap" }}
+                  onClick={() => {
+                    setEditBranch(null);
+                    setShowModal(true);
+                  }}
+                />
+              )}
             </div>
             {/* Thống kê */}
             <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
@@ -279,22 +282,24 @@ const BranchList = () => {
                   key: "actions",
                   width: 100,
                   render: (_: any, record: any) => (
-                    <div className="dp_flex" style={{ gap: 8 }}>
-                      <ButtonBase
-                        icon={<EditOutlined />}
-                        className="btn_gray"
-                        onClick={() => handleEdit(record)}
-                        title="Sửa"
-                        label=""
-                      />
-                      <ButtonBase
-                        icon={<DeleteOutlined />}
-                        className="btn_gray"
-                        onClick={() => handleDelete(record.id)}
-                        title="Xóa"
-                        label=""
-                      />
-                    </div>
+                    canManageBranch() && (
+                      <div className="dp_flex" style={{ gap: 8 }}>
+                        <ButtonBase
+                          icon={<EditOutlined />}
+                          className="btn_gray"
+                          onClick={() => handleEdit(record)}
+                          title="Sửa"
+                          label=""
+                        />
+                        <ButtonBase
+                          icon={<DeleteOutlined />}
+                          className="btn_gray"
+                          onClick={() => handleDelete(record.id)}
+                          title="Xóa"
+                          label=""
+                        />
+                      </div>
+                    )
                   ),
                 },
               ]}

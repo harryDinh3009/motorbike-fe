@@ -29,12 +29,12 @@ import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import { getAllActiveBranches } from "@/service/business/branchMng/branchMng.service";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 import { useAlert } from "@/plugins/global";
+import { canManageEmployee } from "@/utils/permission";
 
 const roleOptions = [
   { value: "", label: "Chức vụ" },
   { value: "ADMIN", label: "Quản trị viên" },
-  { value: "MANAGER", label: "Quản lý" },
-  { value: "STAFF", label: "Nhân viên" },
+  { value: "EMPLOYEE", label: "Nhân viên" },
 ];
 
 const statusOptions = [
@@ -294,16 +294,18 @@ const EmployeeList = () => {
               <p className="box_title_sm" style={{ marginBottom: 0 }}>
                 Danh sách nhân viên
               </p>
-              <ButtonBase
-                label="Thêm nhân viên"
-                className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{ minWidth: 140, whiteSpace: "nowrap" }}
-                onClick={() => {
-                  setEditEmployee(null);
-                  setShowModal(true);
-                }}
-              />
+              {canManageEmployee() && (
+                <ButtonBase
+                  label="Thêm nhân viên"
+                  className="btn_primary"
+                  icon={<PlusOutlined />}
+                  style={{ minWidth: 140, whiteSpace: "nowrap" }}
+                  onClick={() => {
+                    setEditEmployee(null);
+                    setShowModal(true);
+                  }}
+                />
+              )}
             </div>
             {/* Thống kê */}
             <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
@@ -390,20 +392,24 @@ const EmployeeList = () => {
                         title="Xem chi tiết"
                         label=""
                       />
-                      <ButtonBase
-                        icon={<EditOutlined />}
-                        className="btn_gray"
-                        onClick={() => handleEdit(record)}
-                        title="Sửa"
-                        label=""
-                      />
-                      <ButtonBase
-                        icon={<DeleteOutlined />}
-                        className="btn_gray"
-                        onClick={() => handleDelete(record.id)}
-                        title="Xóa"
-                        label=""
-                      />
+                      {canManageEmployee() && (
+                        <>
+                          <ButtonBase
+                            icon={<EditOutlined />}
+                            className="btn_gray"
+                            onClick={() => handleEdit(record)}
+                            title="Sửa"
+                            label=""
+                          />
+                          <ButtonBase
+                            icon={<DeleteOutlined />}
+                            className="btn_gray"
+                            onClick={() => handleDelete(record.id)}
+                            title="Xóa"
+                            label=""
+                          />
+                        </>
+                      )}
                     </div>
                   ),
                 },

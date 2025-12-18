@@ -24,6 +24,7 @@ import {
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 import { useAlert } from "@/plugins/global";
 import { message } from "antd";
+import { canManageBrand } from "@/utils/permission";
 
 const BrandList = () => {
   const [filter, setFilter] = useState<{
@@ -163,16 +164,18 @@ const BrandList = () => {
               <p className="box_title_sm" style={{ marginBottom: 0 }}>
                 Danh sách hãng xe
               </p>
-              <ButtonBase
-                label="Thêm hãng xe"
-                className="btn_primary"
-                icon={<PlusOutlined />}
-                style={{ minWidth: 140, whiteSpace: "nowrap" }}
-                onClick={() => {
-                  setEditBrand(null);
-                  setShowModal(true);
-                }}
-              />
+              {canManageBrand() && (
+                <ButtonBase
+                  label="Thêm hãng xe"
+                  className="btn_primary"
+                  icon={<PlusOutlined />}
+                  style={{ minWidth: 140, whiteSpace: "nowrap" }}
+                  onClick={() => {
+                    setEditBrand(null);
+                    setShowModal(true);
+                  }}
+                />
+              )}
             </div>
             <TableBase
               data={brands.map((b, idx) => ({
@@ -203,22 +206,24 @@ const BrandList = () => {
                   key: "actions",
                   width: 100,
                   render: (_: any, record: any) => (
-                    <div className="dp_flex" style={{ gap: 8 }}>
-                      <ButtonBase
-                        icon={<EditOutlined />}
-                        className="btn_gray"
-                        onClick={() => handleEdit(record)}
-                        title="Sửa"
-                        label=""
-                      />
-                      <ButtonBase
-                        icon={<DeleteOutlined />}
-                        className="btn_gray"
-                        onClick={() => handleDelete(record.id)}
-                        title="Xóa"
-                        label=""
-                      />
-                    </div>
+                    canManageBrand() && (
+                      <div className="dp_flex" style={{ gap: 8 }}>
+                        <ButtonBase
+                          icon={<EditOutlined />}
+                          className="btn_gray"
+                          onClick={() => handleEdit(record)}
+                          title="Sửa"
+                          label=""
+                        />
+                        <ButtonBase
+                          icon={<DeleteOutlined />}
+                          className="btn_gray"
+                          onClick={() => handleDelete(record.id)}
+                          title="Xóa"
+                          label=""
+                        />
+                      </div>
+                    )
                   ),
                 },
               ]}
