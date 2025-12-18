@@ -4,6 +4,7 @@ import TModal from "@/component/common/modal/TModal";
 import { SearchOutlined } from "@ant-design/icons";
 import { searchAvailableCarsLight } from "@/service/business/carMng/carMng.service";
 import { AvailableCarDTO } from "@/service/business/carMng/carMng.type";
+import { isEmployee } from "@/utils/permission";
 
 interface MotorSelect {
   id: string;
@@ -229,7 +230,8 @@ const ModalAddMotor = ({
             const strikeStyle = !isAvailable
               ? { textDecoration: "line-through", color: "#ff4d4f" }
               : {};
-            const isDisabled = !isAvailable || isAlreadySelected;
+            const isCheckboxDisabled = !isAvailable || isAlreadySelected;
+            const isPriceInputDisabled = !isAvailable || isAlreadySelected || isEmployee();
             
             return (
               <div
@@ -255,7 +257,7 @@ const ModalAddMotor = ({
                       height: 18,
                       accentColor: "#222",
                     }}
-                    disabled={isDisabled}
+                    disabled={isCheckboxDisabled}
                   />
                 </div>
                 <div style={{ flex: 1, minWidth: 180, paddingLeft: 8, ...strikeStyle }}>{motor.model}</div>
@@ -298,7 +300,7 @@ const ModalAddMotor = ({
                       textDecoration: !isAvailable ? "line-through" : undefined,
                       color: !isAvailable ? "#ff4d4f" : undefined,
                     }}
-                    disabled={isDisabled}
+                    disabled={isPriceInputDisabled}
                   />
                   <span
                     style={{
@@ -342,7 +344,7 @@ const ModalAddMotor = ({
                       textDecoration: !isAvailable ? "line-through" : undefined,
                       color: !isAvailable ? "#ff4d4f" : undefined,
                     }}
-                    disabled={isDisabled}
+                    disabled={isPriceInputDisabled}
                   />
                   <span
                     style={{

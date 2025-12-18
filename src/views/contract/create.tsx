@@ -36,6 +36,7 @@ import ModalSaveInfoCustomer from "@/views/customer/ModalSaveInfoCustomer";
 import TModal from "@/component/common/modal/TModal";
 import { PlusOutlined, InfoCircleOutlined, QuestionCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { formatDateDMYOnly } from "@/utils/common";
+import { isEmployee } from "@/utils/permission";
 
 const getPageTitle = (isEdit: boolean) =>
   isEdit ? "Cập nhật hợp đồng thuê xe" : "Tạo hợp đồng thuê xe";
@@ -1429,7 +1430,7 @@ const ContractCreateComponent = () => {
               <thead style={{ background: "#e6f4ff" }}>
                 <tr>
                   <th style={{ padding: "8px 4px" }}>STT</th>
-                  <th>Mã xe</th>
+                  {isEditMode && <th>Mã xe</th>}
                   <th>Loại xe</th>
                   <th>Xe</th>
                   <th>Biển số xe</th>
@@ -1437,11 +1438,11 @@ const ContractCreateComponent = () => {
                   <th style={{ textAlign: "right" }}>Giá/giờ</th>
                   <th style={{ position: "relative", textAlign: "right" }}>
                     Tiền thuê
-                    <QuestionCircleOutlined 
+                    <QuestionCircleOutlined
                       onClick={() => setShowRentalCalculationModal(true)}
-                      style={{ 
-                        fontSize: 16, 
-                        color: "#1677ff", 
+                      style={{
+                        fontSize: 16,
+                        color: "#1677ff",
                         cursor: "pointer",
                         marginLeft: 6,
                         verticalAlign: "middle",
@@ -1469,16 +1470,16 @@ const ContractCreateComponent = () => {
                   const conflictMessage = carConflictMessages.get(carId);
                   
                   return (
-                    <tr 
+                    <tr
                       key={idx}
                       data-car-id={carId}
-                      style={{ 
-                        borderBottom: "1px solid #d9d9d9", 
-                        background: isUnavailable ? "#fff1f0" : undefined 
+                      style={{
+                        borderBottom: "1px solid #d9d9d9",
+                        background: isUnavailable ? "#fff1f0" : undefined
                       }}
                     >
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
-                    <td>{car.vehicleCode || "-"}</td>
+                    {isEditMode && <td>{car.vehicleCode || "-"}</td>}
                     <td>{car.type}</td>
                     <td>{car.name}</td>
                     <td>
@@ -1526,7 +1527,7 @@ const ContractCreateComponent = () => {
                       </div>
                     </td>
                     <td style={{ textAlign: "right" }}>
-                      {isEditMode ? (
+                      {(isEditMode || isEmployee()) ? (
                         <span>{car.priceDay?.toLocaleString() || 0}</span>
                       ) : (
                         <input
@@ -1551,7 +1552,7 @@ const ContractCreateComponent = () => {
                       )}
                     </td>
                     <td style={{ textAlign: "right" }}>
-                      {isEditMode ? (
+                      {(isEditMode || isEmployee()) ? (
                         <span>{car.priceHour?.toLocaleString() || 0}</span>
                       ) : (
                         <input

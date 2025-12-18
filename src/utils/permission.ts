@@ -36,11 +36,11 @@ export const isEmployee = (): boolean => {
 
 // Các hàm kiểm tra quyền cụ thể
 export const canManageBrand = (): boolean => {
-  return isAdmin();
+  return isAdmin() || isEmployee();
 };
 
 export const canManageCarModel = (): boolean => {
-  return isAdmin();
+  return isAdmin() || isEmployee();
 };
 
 export const canManageEmployee = (): boolean => {

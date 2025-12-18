@@ -266,6 +266,12 @@ const CarModelList = () => {
                   render: (val: number) => val ? `${val.toLocaleString()} VND` : "-",
                 },
                 {
+                  title: "Số xe",
+                  dataIndex: "carCount",
+                  key: "carCount",
+                  render: (val: number) => val ? `${val.toLocaleString()} xe` : "0 xe",
+                },
+                {
                   title: "Hành động",
                   key: "actions",
                   width: 120,

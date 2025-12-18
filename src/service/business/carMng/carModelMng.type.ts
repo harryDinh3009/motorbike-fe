@@ -7,6 +7,7 @@ export interface CarModelDTO {
   baseDailyPrice?: number;
   baseHourlyPrice?: number;
   active: boolean;
+  carCount?: number; // Số lượng xe của mẫu xe này
 }
 
 export interface CarModelSaveDTO {
