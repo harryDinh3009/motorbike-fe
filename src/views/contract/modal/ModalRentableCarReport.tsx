@@ -160,7 +160,6 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
       });
 
       const allCars = res.data.data || [];
-      // Không filter nữa - backend đã filter chỉ lấy xe có status = 'AVAILABLE' ban đầu
       // Backend sẽ tự động set status = 'NOT_AVAILABLE' nếu xe đã được đặt trong khoảng thời gian
       setCarList(allCars);
       setSearched(true);
@@ -192,6 +191,13 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
       key: "stt",
       width: 60,
       render: (_: any, __: any, index: number) => index + 1,
+    },
+    {
+      title: "Mã xe",
+      dataIndex: "vehicleCode",
+      key: "vehicleCode",
+      width: 110,
+      render: (value: string) => value || "-",
     },
     {
       title: "Mẫu xe",
@@ -473,7 +479,7 @@ const ModalRentableCarReport: React.FC<ModalRentableCarReportProps> = ({
               rowKey="id"
               loading={loading}
               pagination={false}
-              scroll={{ x: 1000 }}
+              scroll={{ x: 1110 }}
               bordered
             />
           </div>

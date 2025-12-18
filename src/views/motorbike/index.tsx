@@ -35,6 +35,7 @@ import {
   uploadCarImage,
 } from "@/service/business/carMng/carMng.service";
 import { getAllActiveBranches, getBranchByCurrentUser } from "@/service/business/branchMng/branchMng.service";
+import { getAllBrands } from "@/service/business/brandMng/brandMng.service";
 import { CarSearchDTO, CarDTO } from "@/service/business/carMng/carMng.type";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
 import TModal from "@/component/common/modal/TModal";
@@ -111,6 +112,7 @@ const MotorbikeList = () => {
   const defaultFilter = {
     keyword: "",
     branchId: "",
+    brandId: "",
     modelName: "",
     carType: "",
     condition: "",
@@ -129,6 +131,9 @@ const MotorbikeList = () => {
   // Filter options state
   const [branchOptions, setBranchOptions] = useState([
     { value: "", label: "Chi nhánh" },
+  ]);
+  const [brandOptions, setBrandOptions] = useState([
+    { value: "", label: "Hãng xe" },
   ]);
   const [modelOptions, setModelOptions] = useState([
     { value: "", label: "Mẫu xe" },
@@ -222,6 +227,15 @@ const MotorbikeList = () => {
         })),
       ]);
     });
+    getAllBrands().then((res) => {
+      setBrandOptions([
+        { value: "", label: "Hãng xe" },
+        ...(res.data || []).map((b: any) => ({
+          value: b.id,
+          label: b.name,
+        })),
+      ]);
+    });
   }, []);
 
   // Fetch list
@@ -233,6 +247,7 @@ const MotorbikeList = () => {
         ...params,
         keyword: params.keyword?.trim() ? params.keyword : undefined,
         branchId: params.branchId === "" ? undefined : params.branchId,
+        brandId: params.brandId === "" ? undefined : params.brandId,
         modelName: params.modelName === "" ? undefined : params.modelName,
         carType: params.carType === "" ? undefined : params.carType,
         condition: params.condition === "" ? undefined : params.condition,
@@ -489,7 +504,7 @@ const MotorbikeList = () => {
               <div style={{ minWidth: 200, flex: 1, flexShrink: 0 }}>
                 <InputBase
                   modelValue={filterInput.keyword}
-                  placeholder="Tìm theo tên xe, biển số"
+                  placeholder="Tìm theo mã xe, tên xe, biển số"
                   prefixIcon="search"
                   style={{ width: "100%" }}
                   onChange={(val) =>
@@ -511,6 +526,18 @@ const MotorbikeList = () => {
                   setFilterInput({
                     ...filterInput,
                     branchId: typeof val === "string" ? val : val[0] || "",
+                  })
+                }
+              />
+              <SelectboxBase
+                label="Hãng xe"
+                value={filterInput.brandId}
+                options={brandOptions}
+                style={{ minWidth: 130, flexShrink: 0 }}
+                onChange={(val) =>
+                  setFilterInput({
+                    ...filterInput,
+                    brandId: typeof val === "string" ? val : val[0] || "",
                   })
                 }
               />
@@ -683,11 +710,12 @@ const MotorbikeList = () => {
                       : idx + 1,
                 },
                 {
-                  title: "Biển số",
-                  dataIndex: "licensePlate",
-                  key: "licensePlate",
+                  title: "Mã xe",
+                  dataIndex: "vehicleCode",
+                  key: "vehicleCode",
+                  width: 100,
                   render: (val: string) => (
-                    <span style={{ whiteSpace: "nowrap", display: "block" }}>
+                    <span style={{ whiteSpace: "nowrap", display: "block", fontWeight: 500 }}>
                       {val ? val : "-"}
                     </span>
                   ),
@@ -697,6 +725,16 @@ const MotorbikeList = () => {
                   dataIndex: "model",
                   key: "model",
                   render: (val: string) => (val ? val : "-"),
+                },
+                {
+                  title: "Biển số",
+                  dataIndex: "licensePlate",
+                  key: "licensePlate",
+                  render: (val: string) => (
+                    <span style={{ whiteSpace: "nowrap", display: "block" }}>
+                      {val ? val : "-"}
+                    </span>
+                  ),
                 },
                 {
                   title: "Loại xe",
@@ -974,6 +1012,9 @@ const MotorbikeList = () => {
                     <div style={{ fontSize: 20, fontWeight: 600, color: "#1677ff", marginBottom: 4 }}>
                       {detailMotorbike.model || "-"}
                     </div>
+                    <div style={{ fontSize: 16, color: "#666", marginBottom: 4 }}>
+                      Mã xe: {detailMotorbike.vehicleCode || "-"}
+                    </div>
                     <div style={{ fontSize: 16, color: "#666", marginBottom: 12 }}>
                       {detailMotorbike.licensePlate || "-"}
                     </div>
@@ -1044,7 +1085,7 @@ const MotorbikeList = () => {
                 </div>
               </div>
 
-              {/* Thông tin đăng ký và bảo hiểm */}
+              {/* Thông tin bổ sung */}
               <div style={{ 
                 marginTop: 24,
                 paddingTop: 24,
@@ -1056,7 +1097,7 @@ const MotorbikeList = () => {
                   color: "#333",
                   marginBottom: 16
                 }}>
-                  Thông tin đăng ký và bảo hiểm
+                  Thông tin bổ sung
                 </div>
                 <div style={{ 
                   display: "grid", 

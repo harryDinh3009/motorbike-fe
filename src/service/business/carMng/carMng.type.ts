@@ -3,6 +3,7 @@ export type CarStatus = "AVAILABLE" | "NOT_AVAILABLE" | "LOST" | "RENTED" | "MAI
 export interface CarSearchDTO {
   keyword?: string;
   branchId?: string;
+  brandId?: string;
   modelName?: string;
   carType?: string;
   condition?: string;
@@ -17,6 +18,7 @@ export interface CarDTO {
   id: string;
   model: string;
   licensePlate: string;
+  vehicleCode?: string;
   carType: string;
   branchId: string;
   branchName: string;
@@ -49,6 +51,7 @@ export interface AvailableCarDTO {
   id: string;
   model: string;
   licensePlate: string;
+  vehicleCode?: string;
   carType?: string;
   branchId: string;
   branchName: string;
@@ -63,6 +66,7 @@ export interface CarSaveDTO {
   id?: string;
   model: string;
   licensePlate: string;
+  vehicleCode?: string;
   carType: string;
   branchId: string;
   dailyPrice?: number;

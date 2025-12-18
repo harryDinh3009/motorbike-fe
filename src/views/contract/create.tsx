@@ -415,6 +415,7 @@ const ContractCreateComponent = () => {
                 carId: targetCar.id,
                 type: targetCar.carType || "",
                 name: targetCar.model || "",
+                vehicleCode: targetCar.vehicleCode || "",
                 plate: targetCar.licensePlate || "",
                 priceDay: targetCar.dailyPrice || 0,
                 priceHour: targetCar.hourlyPrice || 0,
@@ -472,6 +473,7 @@ const ContractCreateComponent = () => {
             type: car.carType,
             name: car.carModel,
             plate: car.licensePlate,
+            vehicleCode: car.vehicleCode || "", // ← THÊM DÒNG NÀY
             priceDay: car.dailyPrice || 0,
             priceHour: car.hourlyPrice || 0,
             total: car.totalAmount || 0,
@@ -538,18 +540,23 @@ const ContractCreateComponent = () => {
           });
           // Sau mỗi lần thêm, reload lại danh sách xe từ server để đồng bộ state
           const res = await getContractDetail(contractId);
+          console.log("Contract detail response cars:", res.data.cars);
           setCarList(
-            (res.data.cars || []).map((car) => ({
-              id: car.id,
-              carId: car.carId,
-              type: car.carType,
-              name: car.carModel,
-              plate: car.licensePlate,
-              priceDay: car.dailyPrice || 0,
-              priceHour: car.hourlyPrice || 0,
-              total: car.totalAmount || 0,
-              startOdometer: car.startOdometer ?? null,
-            }))
+            (res.data.cars || []).map((car) => {
+              console.log("Processing car:", car);
+              return {
+                id: car.id,
+                carId: car.carId,
+                type: car.carType,
+                name: car.carModel,
+                vehicleCode: car.vehicleCode || "",
+                plate: car.licensePlate,
+                priceDay: car.dailyPrice || 0,
+                priceHour: car.hourlyPrice || 0,
+                total: car.totalAmount || 0,
+                startOdometer: car.startOdometer ?? null,
+              };
+            })
           );
         } catch {
           message.error("Thêm xe vào hợp đồng thất bại!");
@@ -1422,6 +1429,7 @@ const ContractCreateComponent = () => {
               <thead style={{ background: "#e6f4ff" }}>
                 <tr>
                   <th style={{ padding: "8px 4px" }}>STT</th>
+                  <th>Mã xe</th>
                   <th>Loại xe</th>
                   <th>Xe</th>
                   <th>Biển số xe</th>
@@ -1470,6 +1478,7 @@ const ContractCreateComponent = () => {
                       }}
                     >
                     <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                    <td>{car.vehicleCode || "-"}</td>
                     <td>{car.type}</td>
                     <td>{car.name}</td>
                     <td>

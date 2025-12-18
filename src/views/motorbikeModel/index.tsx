@@ -3,11 +3,14 @@ import ContainerBase from "@/component/common/block/container/ContainerBase";
 import BreadcrumbBase from "@/component/common/breadcrumb/Breadcrumb";
 import ButtonBase from "@/component/common/button/ButtonBase";
 import InputBase from "@/component/common/input/InputBase";
+import SelectboxBase from "@/component/common/input/SelectboxBase";
 import TableBase from "@/component/common/table/TableBase";
 import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import ModalSaveCarModel from "./ModalSaveCarModel";
 import { useCarModelList } from "./useCarModelList";
 import { CarModelDTO } from "@/service/business/carMng/carModelMng.type";
+import { getAllBrands } from "@/service/business/brandMng/brandMng.service";
+import { BrandDTO } from "@/service/business/brandMng/brandMng.type";
 import { canManageCarModel } from "@/utils/permission";
 
 const CarModelList = () => {
@@ -24,26 +27,68 @@ const CarModelList = () => {
   // Thêm state để xác định modal ở chế độ xem chi tiết hay chỉnh sửa/thêm
   const [viewOnly, setViewOnly] = useState(false);
 
-  // Filter state (bỏ brand)
+  // Filter state
   const [filter, setFilter] = useState({
     keyword: "",
+    brandId: "",
     page: 1,
     size: 10,
   });
   const [filteredModels, setFilteredModels] = useState<CarModelDTO[]>([]);
   const [total, setTotal] = useState(0);
 
-  // Filter logic (bỏ brand)
+  // Brand options state
+  const [brandOptions, setBrandOptions] = useState([
+    { value: "", label: "Tất cả hãng xe" },
+  ]);
+
+  // Search trigger state
+  const [searchTrigger, setSearchTrigger] = useState(0);
+
+  // Load brands on mount
+  useEffect(() => {
+    getAllBrands().then((res) => {
+      setBrandOptions([
+        { value: "", label: "Tất cả hãng xe" },
+        ...(res.data || []).map((b: BrandDTO) => ({
+          value: b.id,
+          label: b.name,
+        })),
+      ]);
+    });
+  }, []);
+
+  // Filter logic - chỉ filter khi có searchTrigger
   useEffect(() => {
     let data = models;
     if (filter.keyword.trim()) {
       const kw = filter.keyword.trim().toLowerCase();
       data = data.filter((m) => m.name?.toLowerCase().includes(kw));
     }
+    if (filter.brandId) {
+      data = data.filter((m) => m.brandId === filter.brandId);
+    }
     setTotal(data.length);
     const start = ((filter.page || 1) - 1) * (filter.size || 10);
     setFilteredModels(data.slice(start, start + (filter.size || 10)));
-  }, [models, filter]);
+  }, [models, searchTrigger]); // Chỉ phụ thuộc vào models và searchTrigger
+
+  // Function để trigger search
+  const handleSearch = () => {
+    setSearchTrigger(prev => prev + 1);
+    setFilter(prev => ({ ...prev, page: 1 })); // Reset về trang đầu
+  };
+
+  // Function để reset filter
+  const handleReset = () => {
+    setFilter({
+      keyword: "",
+      brandId: "",
+      page: 1,
+      size: 10,
+    });
+    setSearchTrigger(prev => prev + 1);
+  };
 
   // Reload when modal close
   const handleSaved = async (data: any) => {
@@ -94,8 +139,41 @@ const CarModelList = () => {
                 prefixIcon="search"
                 style={{ minWidth: 320, flex: 1 }}
                 onChange={(val) =>
-                  setFilter({ ...filter, keyword: val as string, page: 1 })
+                  setFilter({ ...filter, keyword: val as string })
                 }
+              />
+              <SelectboxBase
+                value={filter.brandId}
+                options={brandOptions}
+                placeholder="Chọn hãng xe"
+                style={{ minWidth: 200 }}
+                onChange={(val) =>
+                  setFilter({ ...filter, brandId: val as string })
+                }
+              />
+              <ButtonBase
+                label="Tìm kiếm"
+                className="btn_primary"
+                onClick={handleSearch}
+                style={{
+                  minWidth: 100,
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 14,
+                  height: 40,
+                }}
+              />
+              <ButtonBase
+                label="Reset"
+                className="btn_lightgray"
+                onClick={handleReset}
+                style={{
+                  minWidth: 80,
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 14,
+                  height: 40,
+                }}
               />
             </div>
           </div>
@@ -135,7 +213,7 @@ const CarModelList = () => {
             </div>
             {/* Thống kê */}
             <div style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#000", textAlign: "right" }}>
-              Có {total} mẫu xe
+              Có {total} mẫu xe {(filter.keyword || filter.brandId) && searchTrigger > 0 ? "(đã lọc)" : ""}
             </div>
             <TableBase
               data={filteredModels}
@@ -170,10 +248,22 @@ const CarModelList = () => {
                   ),
                 },
                 {
-                  title: "Mô tả",
-                  dataIndex: "description",
-                  key: "description",
+                  title: "Hãng xe",
+                  dataIndex: "brandName",
+                  key: "brandName",
                   render: (val: string) => val || "-",
+                },
+                {
+                  title: "Giá ngày mặc định",
+                  dataIndex: "baseDailyPrice",
+                  key: "baseDailyPrice",
+                  render: (val: number) => val ? `${val.toLocaleString()} VND` : "-",
+                },
+                {
+                  title: "Giá giờ mặc định",
+                  dataIndex: "baseHourlyPrice",
+                  key: "baseHourlyPrice",
+                  render: (val: number) => val ? `${val.toLocaleString()} VND` : "-",
                 },
                 {
                   title: "Hành động",

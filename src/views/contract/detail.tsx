@@ -1276,9 +1276,10 @@ const ContractDetailComponent = () => {
                   render: (_: any, __: any, idx: number) => idx + 1,
                 },
                 {
-                  title: "Loại xe",
-                  dataIndex: "carType",
-                  key: "carType",
+                  title: "Mã xe",
+                  dataIndex: "vehicleCode",
+                  key: "vehicleCode",
+                  width: 120,
                 },
                 {
                   title: "Xe",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import TModal from "@/component/common/modal/TModal";
 import InputBase from "@/component/common/input/InputBase";
 import SelectboxBase from "@/component/common/input/SelectboxBase";
@@ -15,13 +15,14 @@ import {
   getCarColors,
   getCarStatuses,
   uploadCarImage,
+  getNextVehicleCode,
+  getCarModelInfo,
 } from "@/service/business/carMng/carMng.service";
 import {
   getAllActiveBranches,
   getBranchByCurrentUser,
 } from "@/service/business/branchMng/branchMng.service";
 import { BranchDTO } from "@/service/business/branchMng/branchMng.type";
-import { getAllBrands } from "@/service/business/brandMng/brandMng.service";
 import LoadingIndicator from "@/component/common/loading/LoadingCommon";
 
 interface Props {
@@ -33,6 +34,18 @@ interface Props {
 
 const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
   const [activeTab, setActiveTab] = useState("1");
+
+  // Function để lấy next vehicle code
+  const fetchNextVehicleCode = useCallback(async (): Promise<string> => {
+    try {
+      const response = await getNextVehicleCode();
+      return response.data || 'XE0001';
+    } catch (error) {
+      console.error('Error getting next vehicle code:', error);
+      return 'XE0001';
+    }
+  }, []);
+
   
   // Style chuẩn cho label
   const labelStyle: React.CSSProperties = {
@@ -46,6 +59,7 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
     model: string;
     branch: string;
     license: string;
+    vehicleCode: string;
     condition: string;
     odometer: string;
     note: string;
@@ -74,6 +88,7 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
     model: "",
     branch: "",
     license: "",
+    vehicleCode: "",
     condition: "",
     odometer: "",
     note: "",
@@ -123,9 +138,14 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
   const [statusOptions, setStatusOptions] = useState([
     { value: "", label: "Trạng thái" },
   ]);
-  const [brandOptions, setBrandOptions] = useState([
-    { value: "", label: "Hãng xe" },
-  ]);
+
+  // Model info state for auto-populating brand and prices
+  const [selectedModelInfo, setSelectedModelInfo] = useState<{
+    brandId?: string;
+    brandName?: string;
+    baseDailyPrice?: number;
+    baseHourlyPrice?: number;
+  } | null>(null);
 
   // Fetch static options on mount
   useEffect(() => {
@@ -175,15 +195,6 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
         ...statusList,
       ]);
     });
-    getAllBrands().then((res) => {
-      setBrandOptions([
-        { value: "", label: "Hãng xe" },
-        ...(res.data || []).map((b: any) => ({
-          value: b.id,
-          label: b.name,
-        })),
-      ]);
-    });
   }, []);
 
   // Always fetch current branch when modal opens
@@ -202,14 +213,19 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
   // Reset form khi mở modal mới
   useEffect(() => {
     if (!open) return;
-    
-    // Reset errors khi mở modal
+
+    // Reset errors và model info khi mở modal
     setErrors({});
+    setSelectedModelInfo(null);
     
     if (motorbike) {
+      // Debug logs for vehicle code
+      console.log("DEBUG: Loading vehicle with code:", motorbike?.vehicleCode);
+
       setForm({
         ...form,
         ...motorbike,
+        vehicleCode: motorbike.vehicleCode || "",
         carType: motorbike.carType || "",
         dailyPrice: motorbike.dailyPrice ? motorbike.dailyPrice.toString() : "",
         hourlyPrice: motorbike.hourlyPrice ? motorbike.hourlyPrice.toString() : "",
@@ -223,41 +239,79 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
         value: motorbike.value ? motorbike.value.toString() : "",
         brandId: motorbike.brandId || "",
       });
+
+      console.log("DEBUG Frontend: Form set with vehicleCode:", motorbike.vehicleCode || "");
     } else {
-      // Khi tạo mới, set giá trị mặc định
-      setForm({
-        model: "",
-        branch: "",
-        license: "",
-        condition: "",
-        odometer: "",
-        note: "",
-        image: "",
-        imageUrl: "",
-        imagePreview: "",
-        year: "",
-        origin: "",
-        value: "",
-        frameNo: "",
-        engineNo: "",
-        color: "",
-        regNo: "",
-        regName: "",
-        regPlace: "",
-        insuranceNo: "",
-        insuranceExpire: "",
-        carType: "",
-        dailyPrice: "",
-        hourlyPrice: "",
-        status: "AVAILABLE", // Mặc định là "Hoạt động"
-        brandId: "",
+      // Khi tạo mới, lấy vehicle code tiếp theo và set form
+      fetchNextVehicleCode().then((vehicleCode) => {
+        setForm({
+          model: "",
+          branch: "",
+          license: "",
+          vehicleCode: vehicleCode, // Sử dụng vehicle code từ API
+          condition: "",
+          odometer: "",
+          note: "",
+          image: "",
+          imageUrl: "",
+          imagePreview: "",
+          year: "",
+          origin: "",
+          value: "",
+          frameNo: "",
+          engineNo: "",
+          color: "",
+          regNo: "",
+          regName: "",
+          regPlace: "",
+          insuranceNo: "",
+          insuranceExpire: "",
+          carType: "",
+          dailyPrice: "",
+          hourlyPrice: "",
+          status: "AVAILABLE", // Mặc định là "Hoạt động"
+          brandId: "",
+        });
+      }).catch((error) => {
+        console.error("Failed to get next vehicle code:", error);
+        // Fallback với mã mặc định
+        setForm({
+          model: "",
+          branch: "",
+          license: "",
+          vehicleCode: "XE0001", // Fallback
+          condition: "",
+          odometer: "",
+          note: "",
+          image: "",
+          imageUrl: "",
+          imagePreview: "",
+          year: "",
+          origin: "",
+          value: "",
+          frameNo: "",
+          engineNo: "",
+          color: "",
+          regNo: "",
+          regName: "",
+          regPlace: "",
+          insuranceNo: "",
+          insuranceExpire: "",
+          carType: "",
+          dailyPrice: "",
+          hourlyPrice: "",
+          status: "AVAILABLE",
+          brandId: "",
+        });
       });
+
     }
     setActiveTab("1");
   }, [open, motorbike]);
 
   const handleChange = (key: string, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+
     // Xóa lỗi khi user nhập lại
     if (errors[key]) {
       setErrors((prev) => {
@@ -265,6 +319,31 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
         delete newErrors[key];
         return newErrors;
       });
+    }
+  };
+
+  // Handle model selection - fetch model info and auto-populate brand/prices
+  const handleModelChange = async (modelName: string) => {
+    setForm((prev) => ({ ...prev, model: modelName }));
+
+    if (modelName && modelName.trim() !== "") {
+      try {
+        const response = await getCarModelInfo(modelName);
+        const modelInfo = response.data;
+        setSelectedModelInfo(modelInfo);
+
+        // Auto-populate prices from base prices if not already set
+        setForm((prev) => ({
+          ...prev,
+          dailyPrice: prev.dailyPrice || (modelInfo.baseDailyPrice ? modelInfo.baseDailyPrice.toString() : ""),
+          hourlyPrice: prev.hourlyPrice || (modelInfo.baseHourlyPrice ? modelInfo.baseHourlyPrice.toString() : ""),
+        }));
+      } catch (error) {
+        console.error("Error fetching model info:", error);
+        setSelectedModelInfo(null);
+      }
+    } else {
+      setSelectedModelInfo(null);
     }
   };
 
@@ -312,6 +391,7 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
       return;
     }
 
+
     setSaving(true);
     let imageUrl = form.imageUrl || "";
     try {
@@ -340,13 +420,32 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
         ? form.odometer 
         : "0";
       
-      await onSave({
+      const payload = {
+        id: motorbike?.id || form.id, // Đảm bảo ID được gửi
         ...form,
+        brandId: selectedModelInfo?.brandId || form.brandId, // Set brand từ model
         hourlyPrice,
         odometer,
         imageUrl,
         image: undefined,
-      });
+      };
+
+      console.log("DEBUG: Submitting vehicle code:", payload.vehicleCode);
+
+      await onSave(payload);
+      message.success("Lưu xe thành công!");
+      onClose();
+    } catch (error: any) {
+      console.error("Save error:", error);
+
+      // Handle specific error codes
+      if (error.response?.data?.code === "400037") { // VEHICLE_CODE_EXISTS
+        message.error("Mã xe đã tồn tại trong hệ thống. Vui lòng chọn mã xe khác!");
+      } else if (error.response?.data?.message) {
+        message.error("Lỗi: " + error.response.data.message);
+      } else {
+        message.error("Có lỗi xảy ra khi lưu xe. Vui lòng thử lại!");
+      }
     } finally {
       setSaving(false);
     }
@@ -381,8 +480,8 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                 gap: 24,
               }}
             >
-              {/* Hàng 1: Mẫu xe */}
-              <div style={{ gridColumn: "span 2" }}>
+              {/* Hàng 1: Mẫu xe - Mã xe */}
+              <div>
                 <label style={labelStyle}>
                   Mẫu xe <span style={{ color: 'red' }}>*</span>
                 </label>
@@ -392,7 +491,7 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   value={form.model}
                   options={modelOptions}
                   placeholder="Ví dụ: Honda Wave Alpha"
-                  onChange={(val) => handleChange("model", val)}
+                  onChange={handleModelChange}
                   style={{ width: "100%" }}
                 />
                 {errors.model && (
@@ -401,8 +500,21 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   </div>
                 )}
               </div>
-              
-              {/* Hàng 2: Chi nhánh - Biển số xe */}
+              <div>
+                <label style={labelStyle}>
+                  Mã xe
+                </label>
+                <InputBase
+                  id="vehicleCode"
+                  modelValue={form.vehicleCode}
+                  placeholder="Mã xe"
+                  onChange={(val) => handleChange("vehicleCode", val)}
+                  style={{ width: "100%" }}
+                  disabled={true} // Luôn disabled - mã xe tự sinh
+                />
+              </div>
+
+              {/* Hàng 2: Chi nhánh sở hữu - Biển số xe */}
               <div>
                 <label style={labelStyle}>
                   Chi nhánh sở hữu <span style={{ color: 'red' }}>*</span>
@@ -436,24 +548,8 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   </div>
                 )}
               </div>
-              
-              {/* Hàng 3: Hãng xe - Loại xe */}
-              <div>
-                <label style={labelStyle}>
-                  Hãng xe
-                </label>
-                <SelectboxBase
-                  value={form.brandId}
-                  options={brandOptions}
-                  placeholder="Chọn hãng xe"
-                  onChange={(val) => {
-                    let v = val;
-                    if (Array.isArray(val)) v = val[0];
-                    handleChange("brandId", v || "");
-                  }}
-                  width="100%"
-                />
-              </div>
+
+              {/* Hàng 3: Loại xe */}
               <div>
                 <label style={labelStyle}>
                   Loại xe
@@ -466,8 +562,28 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   style={{ width: "100%" }}
                 />
               </div>
-              
-              {/* Hàng 4: Odometer hiện tại - Trạng thái */}
+              {/* Ô trống để cân đối layout */}
+              <div></div>
+
+              {/* Hàng 4: Trạng thái - Odometer hiện tại */}
+              <div>
+                <label style={labelStyle}>
+                  Trạng thái <span style={{ color: 'red' }}>*</span>
+                </label>
+                <SelectboxBase
+                  required
+                  value={form.status}
+                  options={statusOptions}
+                  placeholder="Chọn trạng thái"
+                  onChange={(val) => handleChange("status", val)}
+                  style={{ width: "100%" }}
+                />
+                {errors.status && (
+                  <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>
+                    {errors.status}
+                  </div>
+                )}
+              </div>
               <div>
                 <label style={labelStyle}>
                   Odometer hiện tại{" "}
@@ -490,25 +606,7 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                   style={{ width: "100%" }}
                 />
               </div>
-              <div>
-                <label style={labelStyle}>
-                  Trạng thái <span style={{ color: 'red' }}>*</span>
-                </label>
-                <SelectboxBase
-                  required
-                  value={form.status}
-                  options={statusOptions}
-                  placeholder="Chọn trạng thái"
-                  onChange={(val) => handleChange("status", val)}
-                  style={{ width: "100%" }}
-                />
-                {errors.status && (
-                  <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>
-                    {errors.status}
-                  </div>
-                )}
-              </div>
-              
+
               {/* Hàng 5: Giá ngày - Giá giờ */}
               <div>
                 <label style={labelStyle}>
@@ -517,15 +615,10 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                 <InputBase
                   required
                   modelValue={form.dailyPrice}
-                  placeholder="Nhập giá ngày"
+                  placeholder="Nhập giá thuê theo ngày"
                   onChange={(val) => handleChange("dailyPrice", val)}
                   style={{ width: "100%" }}
                 />
-                {errors.dailyPrice && (
-                  <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>
-                    {errors.dailyPrice}
-                  </div>
-                )}
               </div>
               <div>
                 <label style={labelStyle}>
@@ -533,28 +626,22 @@ const ModalSaveMotorbike = ({ open, motorbike, onClose, onSave }: Props) => {
                 </label>
                 <InputBase
                   modelValue={form.hourlyPrice}
-                  placeholder="Nhập giá giờ"
+                  placeholder="Nhập giá thuê theo giờ"
                   onChange={(val) => handleChange("hourlyPrice", val)}
                   style={{ width: "100%" }}
                 />
-                {errors.hourlyPrice && (
-                  <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>
-                    {errors.hourlyPrice}
-                  </div>
-                )}
               </div>
-              
-              {/* Cuối cùng: Ghi chú */}
+
+              {/* Hàng 6: Ghi chú */}
               <div style={{ gridColumn: "span 2" }}>
                 <label style={labelStyle}>
                   Ghi chú
                 </label>
                 <TextAreaBase
-                  id="note"
-                  placeholder="Nhập ghi chú"
-                  defaultValue={form.note}
+                  modelValue={form.note}
+                  placeholder="Nhập ghi chú về xe"
                   onChange={(val) => handleChange("note", val)}
-                  rows={2}
+                  rows={3}
                   style={{ width: "100%" }}
                 />
               </div>

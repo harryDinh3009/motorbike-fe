@@ -166,6 +166,13 @@ const RentableCarReport: React.FC = () => {
       render: (_: any, __: any, index: number) => index + 1,
     },
     {
+      title: "Mã xe",
+      dataIndex: "vehicleCode",
+      key: "vehicleCode",
+      width: 110,
+      render: (value: string) => value || "-",
+    },
+    {
       title: "Mẫu xe",
       dataIndex: "model",
       key: "model",
@@ -447,7 +454,7 @@ const RentableCarReport: React.FC = () => {
               rowKey="id"
               loading={loading}
               pagination={false}
-              scroll={{ x: 1000 }}
+              scroll={{ x: 1110 }}
               bordered
             />
           )}

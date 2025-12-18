@@ -35,6 +35,7 @@ export interface ContractCarDTO {
   carModel: string;
   carType: string;
   licensePlate: string;
+  vehicleCode?: string;
   dailyPrice?: number;
   hourlyPrice?: number;
   totalAmount?: number;

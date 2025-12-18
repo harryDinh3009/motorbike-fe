@@ -36,12 +36,27 @@ const ModalAddMotor = ({
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+
+    // Format dates to backend expected format
+    const formatDate = (date: string | undefined) => {
+      if (!date) return undefined;
+      const d = new Date(date);
+      // Format to yyyy-MM-ddTHH:mm:ss
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
     searchAvailableCarsLight({
       keyword: search,
       page: 1,
       size: 10000,
-      startDate,
-      endDate,
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
     }).then((res) => {
       const cars = res.data.data || [];
       // Sắp xếp: xe khả dụng (AVAILABLE) lên trước, xe không khả dụng xuống dưới
@@ -93,6 +108,7 @@ const ModalAddMotor = ({
           type: info?.carType || "",
           name: info?.model || "",
           plate: info?.licensePlate || "",
+          vehicleCode: info?.vehicleCode || "",
           branch: info?.branchName || "",
           status: info?.statusNm || "",
           condition: "", // AvailableCarDTO không có condition
@@ -148,7 +164,7 @@ const ModalAddMotor = ({
         <div style={{ position: "relative", marginBottom: 0 }}>
           <input
             type="text"
-            placeholder="Tìm theo Tên xe, Biển số"
+            placeholder="Tìm theo Mã xe, Tên xe, Biển số"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -194,7 +210,7 @@ const ModalAddMotor = ({
             fontSize: 15,
           }}
         >
-          <div style={{ width: 50, textAlign: "center" }} /> 
+          <div style={{ width: 50, textAlign: "center" }} />
           <div style={{ flex: 1, minWidth: 180, textAlign: "left", paddingLeft: 8 }}>Tên xe</div>
           <div style={{ width: 140, textAlign: "left", paddingLeft: 8 }}>Biển số</div>
           <div style={{ width: 140, textAlign: "left", paddingLeft: 8 }}>Trạng thái</div>

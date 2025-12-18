@@ -9,6 +9,7 @@ import {
   CarImportResult,
   ConflictingContractDTO,
 } from "./carMng.type";
+import { CarModelInfoDTO } from "./carModelMng.type";
 
 /**
  * Tìm kiếm xe với phân trang
@@ -85,6 +86,14 @@ export const deleteCar = async (id: string): Promise<ApiResponse<boolean>> => {
  */
 export const getAllCars = async (): Promise<ApiResponse<CarDTO[]>> => {
   const res = await http.get<ApiResponse<CarDTO[]>>("/a/car-mng/all");
+  return res.data;
+};
+
+/**
+ * Lấy mã xe tiếp theo
+ */
+export const getNextVehicleCode = async (): Promise<ApiResponse<string>> => {
+  const res = await http.get<ApiResponse<string>>("/a/car-mng/generate-vehicle-code");
   return res.data;
 };
 
@@ -242,6 +251,18 @@ export const getConflictingContracts = async (
     {
       params: { startDate, endDate },
     }
+  );
+  return res.data;
+};
+
+/**
+ * Lấy thông tin model để populate vào car
+ */
+export const getCarModelInfo = async (
+  modelName: string
+): Promise<ApiResponse<CarModelInfoDTO>> => {
+  const res = await http.get<ApiResponse<CarModelInfoDTO>>(
+    `/a/car-mng/car-model-info?modelName=${encodeURIComponent(modelName)}`
   );
   return res.data;
 };
